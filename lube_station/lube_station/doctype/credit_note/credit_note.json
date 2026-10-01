@@ -1,0 +1,17 @@
+{
+  "name": "Credit Note",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:CN-{####}",
+  "naming_rule": "Expression",
+  "is_submittable": 1,
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer", "reqd": 1},
+    {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "reqd": 1},
+    {"fieldname": "reason", "fieldtype": "Small Text", "label": "Reason"},
+    {"fieldname": "reference_invoice", "fieldtype": "Data", "label": "Reference Invoice"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "submit": 1, "cancel": 1}]
+}

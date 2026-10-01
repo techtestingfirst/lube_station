@@ -141,7 +141,7 @@
       "dependencies": [
         "P2-F1"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Credit Note queryable",
         "auto-apply to future invoices"
