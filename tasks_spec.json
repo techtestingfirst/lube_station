@@ -285,7 +285,7 @@
         "P4-F1",
         "P5-F4"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Payment Gateway records documented",
         "one-off invoice payment link"
