@@ -177,7 +177,7 @@
       "dependencies": [
         "P3-F1"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Coupon queryable",
         "usage limits enforced"

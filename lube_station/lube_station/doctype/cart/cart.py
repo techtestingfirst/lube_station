@@ -22,16 +22,21 @@ def recalc(doc):
         item.quantity = item.quantity or 1
         subtotal += item.unit_price * item.quantity
     doc.subtotal = subtotal
-    doc.discount_total = discount_for(doc.coupon_code, subtotal)
+    doc.discount_total = discount_for(doc.coupon_code, subtotal, doc)
     doc.grand_total = max(subtotal - doc.discount_total, 0)
 
 
-def discount_for(coupon_code: str | None, subtotal: float) -> float:
+def discount_for(coupon_code: str | None, subtotal: float, cart=None) -> float:
     if not coupon_code or not frappe.db.exists("DocType", "Coupon"):
         return 0
     if not frappe.db.exists("Coupon", {"code": coupon_code}):
         return 0
     coupon = frappe.get_doc("Coupon", {"code": coupon_code})
+    if cart is not None:
+        try:
+            coupon.check_cart(cart)
+        except Exception:
+            return 0
     return coupon.discount_amount(subtotal)
 
 
@@ -71,7 +76,9 @@ def remove_item(cart: str, row: str):
 @frappe.whitelist(methods=["POST"])
 def apply_coupon(cart: str, coupon_code: str):
     doc = frappe.get_doc("Cart", cart)
-    doc.coupon_code = coupon_code
+    coupon = frappe.get_doc("Coupon", {"code": coupon_code})
+    coupon.check_cart(doc)
+    doc.coupon_code = coupon.code
     doc.save()
     return {"discount": doc.discount_total, "grand_total": doc.grand_total}
 

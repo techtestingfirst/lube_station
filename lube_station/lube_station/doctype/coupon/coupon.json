@@ -1,0 +1,21 @@
+{
+  "name": "Coupon",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "field:code",
+  "naming_rule": "By fieldname",
+  "fields": [
+    {"fieldname": "code", "fieldtype": "Data", "label": "Code", "reqd": 1, "unique": 1},
+    {"fieldname": "discount_type", "fieldtype": "Select", "label": "Discount Type", "options": "Percentage\nFixed Amount", "default": "Percentage", "reqd": 1},
+    {"fieldname": "value", "fieldtype": "Float", "label": "Value", "reqd": 1},
+    {"fieldname": "eligible_groups", "fieldtype": "Table", "label": "Eligible Groups", "options": "Coupon Eligible Group"},
+    {"fieldname": "minimum_cycle", "fieldtype": "Select", "label": "Minimum Cycle", "options": "\nMonthly\nQuarterly\nSemi-Annually\nAnnually\nBiennially\nTriennially\nOne Time"},
+    {"fieldname": "maximum_uses", "fieldtype": "Int", "label": "Maximum Uses", "default": "0"},
+    {"fieldname": "used_count", "fieldtype": "Int", "label": "Used Count", "default": "0"},
+    {"fieldname": "valid_from", "fieldtype": "Date", "label": "Valid From"},
+    {"fieldname": "valid_to", "fieldtype": "Date", "label": "Valid To"},
+    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
