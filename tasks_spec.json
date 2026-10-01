@@ -194,7 +194,7 @@
       "dependencies": [
         "P3-F1"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "availability adapter with cache + rate limit",
         "available/taken/premium responses"
