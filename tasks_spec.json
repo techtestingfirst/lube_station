@@ -388,7 +388,7 @@
       "dependencies": [
         "P6-F1"
       ],
-      "status": "stub",
+      "status": "done",
       "acceptance_criteria": [
         "Provisioning Module queryable",
         "create/suspend/unsuspend/terminate/change password/package via bg job"
