@@ -1,0 +1,11 @@
+{
+  "name": "Tax Eligible Group",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "istable": 1,
+  "fields": [
+    {"fieldname": "client_group", "fieldtype": "Link", "label": "Client Group", "options": "Client Group", "reqd": 1}
+  ],
+  "permissions": []
+}

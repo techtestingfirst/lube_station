@@ -1,0 +1,17 @@
+{
+  "name": "Tax Rule",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:TAX-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "country", "fieldtype": "Data", "label": "Country"},
+    {"fieldname": "state", "fieldtype": "Data", "label": "State"},
+    {"fieldname": "tax_name", "fieldtype": "Data", "label": "Tax Name", "reqd": 1},
+    {"fieldname": "percentage", "fieldtype": "Float", "label": "Percentage", "reqd": 1},
+    {"fieldname": "eligible_groups", "fieldtype": "Table", "label": "Eligible Groups", "options": "Tax Eligible Group"},
+    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
