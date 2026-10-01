@@ -1,0 +1,26 @@
+{
+  "name": "Payment Gateway Adapter",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "field:adapter_name",
+  "naming_rule": "By fieldname",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "adapter_name", "fieldtype": "Data", "label": "Adapter Name", "reqd": 1, "unique": 1},
+    {"fieldname": "vendor_name", "fieldtype": "Data", "label": "Vendor Name", "reqd": 1},
+    {"fieldname": "class_path", "fieldtype": "Data", "label": "Class Path", "reqd": 1},
+    {"fieldname": "supported_methods", "fieldtype": "Small Text", "label": "Supported Methods"},
+    {"fieldname": "supports_one_time", "fieldtype": "Check", "label": "Supports One Time", "default": "1"},
+    {"fieldname": "supports_recurring", "fieldtype": "Check", "label": "Supports Recurring", "default": "0"},
+    {"fieldname": "supports_tokenization", "fieldtype": "Check", "label": "Supports Tokenization", "default": "0"},
+    {"fieldname": "supports_refunds", "fieldtype": "Check", "label": "Supports Refunds", "default": "0"},
+    {"fieldname": "supports_partial_refunds", "fieldtype": "Check", "label": "Supports Partial Refunds", "default": "0"},
+    {"fieldname": "webhook_events", "fieldtype": "Small Text", "label": "Webhook Events"},
+    {"fieldname": "supported_currencies", "fieldtype": "Small Text", "label": "Supported Currencies"},
+    {"fieldname": "supported_countries", "fieldtype": "Small Text", "label": "Supported Countries"},
+    {"fieldname": "sandbox_supported", "fieldtype": "Check", "label": "Sandbox Supported", "default": "1"},
+    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "0"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

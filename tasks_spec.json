@@ -15,9 +15,9 @@
       "Migration Service",
       "Downloadable Product"
     ],
-    "provider_scope": "multi-API (vendor names pending)",
-    "registrar_scope": "multi-registrar (vendor names pending)",
-    "gateways": "all at once (Stripe, Razorpay, PayPal, PayTM, Braintree)",
+    "provider_scope": "cPanel,Plesk,DirectAdmin MVP; Virtualizor,Proxmox,Hetzner,AWS,Cloudflare later",
+    "registrar_scope": "OpenSRS,Namecheap,GoDaddy,LogicBoxes MVP; eNom,CentralNic,HEXONET,Porkbun,Internet.bs,Nominet later",
+    "gateways": "Stripe,Razorpay,PayPal,BankTransfer MVP; CCAvenue,PayU,Cashfree,Mollie,GoCardless,2Checkout later",
     "secrets": "Password field",
     "inventory_lock": "lease table, fully custom",
     "dunning": "per-plan rules, fully custom",
@@ -282,7 +282,8 @@
     {
       "feature_id": "P5-F1",
       "dependencies": [
-        "P4-F1"
+        "P4-F1",
+        "P5-F4"
       ],
       "status": "pending",
       "acceptance_criteria": [
@@ -330,9 +331,10 @@
     {
       "feature_id": "P6-F1",
       "dependencies": [
-        "P1-F3"
+        "P1-F3",
+        "P5-F4"
       ],
-      "status": "blocked: vendor names pending",
+      "status": "pending",
       "acceptance_criteria": [
         "Infrastructure Provider + Provider Product + Reseller Agreement queryable",
         "adapter contract 11 methods + retries + audit log + manual adapter"
@@ -437,9 +439,10 @@
     {
       "feature_id": "P7",
       "dependencies": [
-        "P6-F5"
+        "P6-F5",
+        "P5-F4"
       ],
-      "status": "blocked: registrar vendor names pending",
+      "status": "pending",
       "acceptance_criteria": [
         "Registrar Account + Domain + DNS Record queryable",
         "register/renew/transfer/ns update + renewal invoice"
@@ -532,6 +535,25 @@
       "auto_check": {
         "integration_test": "test_create_to_terminate",
         "manual_review": "security/live-pay/secrets/domain/destructive"
+      }
+    },
+    {
+      "feature_id": "P5-F4",
+      "dependencies": [],
+      "status": "done",
+      "acceptance_criteria": [
+        "3 registry DocTypes exist",
+        "28 fixture rows seeded",
+        "factories importable",
+        "mocked contract tests pass"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Payment Gateway Adapter",
+          "Provisioning Adapter",
+          "Registrar Adapter"
+        ],
+        "integration_test": "test_vendor_registry"
       }
     }
   ]
