@@ -1,0 +1,23 @@
+{
+  "name": "Hosting Customer",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:CUST-{####}",
+  "naming_rule": "Expression",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "user", "fieldtype": "Link", "label": "User", "options": "User", "reqd": 1, "unique": 1},
+    {"fieldname": "company", "fieldtype": "Data", "label": "Company"},
+    {"fieldname": "client_group", "fieldtype": "Link", "label": "Client Group", "options": "Client Group"},
+    {"fieldname": "credit_balance", "fieldtype": "Currency", "label": "Credit Balance", "default": "0"},
+    {"fieldname": "tax_id", "fieldtype": "Data", "label": "Tax / VAT ID"},
+    {"fieldname": "billing_address", "fieldtype": "Small Text", "label": "Billing Address"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nSuspended\nClosed", "default": "Active", "reqd": 1},
+    {"fieldname": "marketing_opt_in", "fieldtype": "Check", "label": "Marketing Opt-In", "default": "0"}
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Customer", "read": 1, "write": 0, "create": 0, "delete": 0, "if_owner": 1}
+  ]
+}

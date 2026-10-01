@@ -123,7 +123,7 @@
       "dependencies": [
         "P1-F3"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Hosting Customer + Client Group queryable",
         "owner permission enforced"
