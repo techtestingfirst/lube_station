@@ -493,7 +493,7 @@
         "P4-F1",
         "P6-F5"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "MRR/aging/churn/inventory/margin reports",
         "Affiliate credit only after full payment"
