@@ -18,15 +18,12 @@ def _mark_paid(invoice: str):
 
 
 def _unsuspend_services(inv):
-    if not frappe.db.exists("DocType", "Service"):
+    try:
+        from lube_station.lube_station.doctype.service.service import on_invoice_paid
+
+        on_invoice_paid(inv.name)
+    except Exception:
         return
-    for svc in frappe.db.get_all("Service", {"status": "Suspended"}, ["name"]):
-        try:
-            doc = frappe.get_doc("Service", svc.name)
-            if hasattr(doc, "unsuspend"):
-                doc.unsuspend()
-        except Exception:
-            continue
 
 
 @frappe.whitelist(methods=["POST"], allow_guest=True)

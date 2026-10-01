@@ -406,7 +406,7 @@
         "P6-F4",
         "P4-F1"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Service queryable",
         "Pending/Active/Suspended/Terminated/Cancelled",
