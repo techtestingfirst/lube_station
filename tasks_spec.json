@@ -462,7 +462,7 @@
         "P2-F1",
         "P6-F5"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "HD Ticket link table works",
         "SLA per product type"

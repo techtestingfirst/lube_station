@@ -1,0 +1,15 @@
+{
+  "name": "Ticket Hosting Reference",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:THR-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "ticket", "fieldtype": "Link", "label": "Ticket", "options": "HD Ticket", "reqd": 1, "unique": 1},
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer"},
+    {"fieldname": "service", "fieldtype": "Link", "label": "Service", "options": "Service"},
+    {"fieldname": "invoice", "fieldtype": "Link", "label": "Invoice", "options": "Hosting Invoice"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
