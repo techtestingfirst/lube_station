@@ -1,0 +1,17 @@
+{
+  "name": "Cart Item",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "istable": 1,
+  "fields": [
+    {"fieldname": "item_type", "fieldtype": "Select", "label": "Type", "options": "Hosting Plan\nDomain", "default": "Hosting Plan", "reqd": 1},
+    {"fieldname": "hosting_plan", "fieldtype": "Link", "label": "Hosting Plan", "options": "Hosting Plan"},
+    {"fieldname": "billing_cycle", "fieldtype": "Select", "label": "Billing Cycle", "options": "Monthly\nQuarterly\nSemi-Annually\nAnnually\nBiennially\nTriennially\nOne Time", "default": "Monthly"},
+    {"fieldname": "domain", "fieldtype": "Data", "label": "Domain"},
+    {"fieldname": "quantity", "fieldtype": "Int", "label": "Quantity", "default": "1"},
+    {"fieldname": "configuration_json", "fieldtype": "Code", "label": "Configuration JSON"},
+    {"fieldname": "unit_price", "fieldtype": "Currency", "label": "Unit Price", "default": "0"}
+  ],
+  "permissions": []
+}
