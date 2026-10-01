@@ -1,0 +1,17 @@
+{
+  "name": "Saved Payment Method",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:PM-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer", "reqd": 1},
+    {"fieldname": "gateway", "fieldtype": "Data", "label": "Gateway", "reqd": 1},
+    {"fieldname": "token", "fieldtype": "Password", "label": "Token", "reqd": 1},
+    {"fieldname": "default_method", "fieldtype": "Check", "label": "Default", "default": "0"},
+    {"fieldname": "last_four", "fieldtype": "Data", "label": "Last Four"},
+    {"fieldname": "expiry", "fieldtype": "Data", "label": "Expiry"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
