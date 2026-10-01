@@ -353,7 +353,7 @@
       "dependencies": [
         "P6-F1"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "VPS Configuration queryable",
         "create/rebuild/power/snapshot/restore/console/usage/IP audited"

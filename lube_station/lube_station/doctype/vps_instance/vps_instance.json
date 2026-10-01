@@ -1,0 +1,19 @@
+{
+  "name": "VPS Instance",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:VPS-{####}",
+  "naming_rule": "Expression",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "configuration", "fieldtype": "Link", "label": "Configuration", "options": "VPS Configuration", "reqd": 1},
+    {"fieldname": "order_ref", "fieldtype": "Link", "label": "Order", "options": "Order"},
+    {"fieldname": "provider", "fieldtype": "Link", "label": "Provider", "options": "Infrastructure Provider"},
+    {"fieldname": "image", "fieldtype": "Data", "label": "Image", "reqd": 1},
+    {"fieldname": "location", "fieldtype": "Data", "label": "Location", "reqd": 1},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Provisioning\nActive\nSuspended\nTerminated", "default": "Provisioning", "reqd": 1},
+    {"fieldname": "ipv4", "fieldtype": "Data", "label": "IPv4"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
