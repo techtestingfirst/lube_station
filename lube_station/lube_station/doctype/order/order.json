@@ -1,0 +1,19 @@
+{
+  "name": "Order",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:ORD-{####}",
+  "naming_rule": "Expression",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer"},
+    {"fieldname": "source_cart", "fieldtype": "Link", "label": "Source Cart", "options": "Cart"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending Review\nAccepted\nFraud\nCancelled", "default": "Pending Review", "reqd": 1},
+    {"fieldname": "fraud_score", "fieldtype": "Float", "label": "Fraud Score", "default": "0"},
+    {"fieldname": "coupon_code", "fieldtype": "Data", "label": "Coupon Code"},
+    {"fieldname": "items", "fieldtype": "Table", "label": "Items", "options": "Order Item"},
+    {"fieldname": "total", "fieldtype": "Currency", "label": "Total", "default": "0"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

@@ -212,7 +212,7 @@
         "P3-F1",
         "P3-F2"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Order + Order Item queryable",
         "immutable config snapshot",
