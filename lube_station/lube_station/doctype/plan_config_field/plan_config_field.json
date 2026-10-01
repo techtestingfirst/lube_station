@@ -1,0 +1,12 @@
+{
+  "name": "Plan Config Field",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "istable": 1,
+  "fields": [
+    {"fieldname": "field_key", "fieldtype": "Data", "label": "Field Key", "reqd": 1},
+    {"fieldname": "field_value", "fieldtype": "Data", "label": "Field Value"}
+  ],
+  "permissions": []
+}

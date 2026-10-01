@@ -1,0 +1,26 @@
+{
+  "name": "Hosting Plan",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:PLAN-{####}",
+  "naming_rule": "Expression",
+  "is_submittable": 0,
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "plan_name", "fieldtype": "Data", "label": "Plan Name", "reqd": 1, "unique": 1},
+    {"fieldname": "product_group", "fieldtype": "Link", "label": "Product Group", "options": "Product Group", "reqd": 1},
+    {"fieldname": "product_type", "fieldtype": "Select", "label": "Product Type", "options": "Shared Hosting\nReseller\nVPS\nDedicated Server\nCloud\nEmail Hosting\nWebsite Builder\nSSL\nBackup Addon\nMigration Service\nDownloadable Product", "reqd": 1},
+    {"fieldname": "provisioning_module", "fieldtype": "Link", "label": "Provisioning Module", "options": "Provisioning Module"},
+    {"fieldname": "server_group", "fieldtype": "Link", "label": "Server Group", "options": "Server Group"},
+    {"fieldname": "welcome_email_template", "fieldtype": "Link", "label": "Welcome Email Template", "options": "Email Template"},
+    {"fieldname": "product_type_schema", "fieldtype": "Link", "label": "Product Type Schema", "options": "Product Type Schema"},
+    {"fieldname": "config_fields", "fieldtype": "Table", "label": "Config Fields", "options": "Plan Config Field"},
+    {"fieldname": "is_active", "fieldtype": "Check", "label": "Is Active", "default": "1"},
+    {"fieldname": "stock_control", "fieldtype": "Check", "label": "Stock Control", "default": "0"},
+    {"fieldname": "qty_available", "fieldtype": "Int", "label": "Qty Available", "default": "0"}
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}
+  ]
+}

@@ -1,0 +1,538 @@
+{
+  "project": "lube_station hosting billing automation",
+  "decisions": {
+    "billing": "custom tables",
+    "product_types": [
+      "Shared Hosting",
+      "Reseller",
+      "VPS",
+      "Dedicated Server",
+      "Cloud",
+      "Email Hosting",
+      "Website Builder",
+      "SSL",
+      "Backup Addon",
+      "Migration Service",
+      "Downloadable Product"
+    ],
+    "provider_scope": "multi-API (vendor names pending)",
+    "registrar_scope": "multi-registrar (vendor names pending)",
+    "gateways": "all at once (Stripe, Razorpay, PayPal, PayTM, Braintree)",
+    "secrets": "Password field",
+    "inventory_lock": "lease table, fully custom",
+    "dunning": "per-plan rules, fully custom",
+    "helpdesk_link": "link table",
+    "portal": "full portal",
+    "affiliate": "full pay only",
+    "approval_gate": "comment + status, no new table",
+    "build_order": "strict P1-P12"
+  },
+  "features": [
+    {
+      "feature_id": "P1-F1",
+      "dependencies": [],
+      "status": "done",
+      "acceptance_criteria": [
+        "Product Group DocType queryable",
+        "test_product_group passes"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Product Group"
+        ],
+        "integration_test": "test_product_group"
+      }
+    },
+    {
+      "feature_id": "P1-F2",
+      "dependencies": [
+        "P1-F1"
+      ],
+      "status": "done",
+      "acceptance_criteria": [
+        "Product Type Schema + Requirement Field queryable",
+        "get_product_requirements(plan) whitelisted",
+        "server-side validation rejects missing required"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Product Type Schema",
+          "Product Requirement Field"
+        ],
+        "api_exists": [
+          "lube_station.lube_station.doctype.product_type_schema.product_type_schema.get_product_requirements"
+        ],
+        "integration_test": "test_product_requirements"
+      }
+    },
+    {
+      "feature_id": "P1-F3",
+      "dependencies": [
+        "P1-F2"
+      ],
+      "status": "done",
+      "acceptance_criteria": [
+        "Hosting Plan + Plan Pricing queryable"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Hosting Plan",
+          "Plan Pricing"
+        ],
+        "integration_test": "test_hosting_plan"
+      }
+    },
+    {
+      "feature_id": "P1-F4",
+      "dependencies": [
+        "P1-F3"
+      ],
+      "status": "done",
+      "acceptance_criteria": [
+        "Server + Server Group queryable",
+        "fill strategy Round Robin / Least Full / Manual"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Server",
+          "Server Group"
+        ],
+        "integration_test": "test_server_group"
+      }
+    },
+    {
+      "feature_id": "P1-F5",
+      "dependencies": [
+        "P1-F3"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Download Category + Downloadable Asset queryable",
+        "entitlement check helper exists"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Download Category",
+          "Downloadable Asset"
+        ],
+        "integration_test": "test_download_entitlement"
+      }
+    },
+    {
+      "feature_id": "P2-F1",
+      "dependencies": [
+        "P1-F3"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Hosting Customer + Client Group queryable",
+        "owner permission enforced"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Hosting Customer",
+          "Client Group"
+        ],
+        "integration_test": "test_customer_permissions"
+      }
+    },
+    {
+      "feature_id": "P2-F2",
+      "dependencies": [
+        "P2-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Credit Note queryable",
+        "auto-apply to future invoices"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Credit Note"
+        ],
+        "integration_test": "test_credit_apply"
+      }
+    },
+    {
+      "feature_id": "P3-F1",
+      "dependencies": [
+        "P2-F1",
+        "P1-F3"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Cart + Cart Item queryable",
+        "add/update/remove/coupon/totals APIs server-side recalc"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Cart",
+          "Cart Item"
+        ],
+        "integration_test": "test_cart_totals"
+      }
+    },
+    {
+      "feature_id": "P3-F2",
+      "dependencies": [
+        "P3-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Coupon queryable",
+        "usage limits enforced"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Coupon"
+        ],
+        "integration_test": "test_coupon"
+      }
+    },
+    {
+      "feature_id": "P3-F3",
+      "dependencies": [
+        "P3-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "availability adapter with cache + rate limit",
+        "available/taken/premium responses"
+      ],
+      "auto_check": {
+        "api_exists": [
+          "lube_station.lube_station.doctype.domain.domain.check_availability"
+        ],
+        "integration_test": "test_domain_availability"
+      }
+    },
+    {
+      "feature_id": "P3-F4",
+      "dependencies": [
+        "P3-F1",
+        "P3-F2"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Order + Order Item queryable",
+        "immutable config snapshot",
+        "Pending Review/Accepted/Fraud/Cancelled"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Order",
+          "Order Item"
+        ],
+        "integration_test": "test_order_snapshot"
+      }
+    },
+    {
+      "feature_id": "P4-F1",
+      "dependencies": [
+        "P3-F4"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Hosting Invoice + Invoice Item queryable",
+        "idempotent initial + renewal generation"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Hosting Invoice",
+          "Invoice Item"
+        ],
+        "integration_test": "test_invoice_idempotent"
+      }
+    },
+    {
+      "feature_id": "P4-F2",
+      "dependencies": [
+        "P4-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Tax Rule queryable",
+        "multiple matching taxes applied"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Tax Rule"
+        ],
+        "integration_test": "test_tax_multi"
+      }
+    },
+    {
+      "feature_id": "P4-F3",
+      "dependencies": [
+        "P4-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Dunning Rule + Step queryable",
+        "suspend after grace, terminate queued for approval"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Dunning Rule",
+          "Dunning Step"
+        ],
+        "integration_test": "test_dunning_suspend"
+      }
+    },
+    {
+      "feature_id": "P5-F1",
+      "dependencies": [
+        "P4-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Payment Gateway records documented",
+        "one-off invoice payment link"
+      ],
+      "auto_check": {
+        "integration_test": "test_payment_link"
+      }
+    },
+    {
+      "feature_id": "P5-F2",
+      "dependencies": [
+        "P5-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Payment Transaction queryable",
+        "webhook signature verify + idempotency + unsuspend on success"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Payment Transaction"
+        ],
+        "integration_test": "test_webhook_idempotent"
+      }
+    },
+    {
+      "feature_id": "P5-F3",
+      "dependencies": [
+        "P5-F2"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Saved Payment Method queryable",
+        "tokens only, auto-charge with dunning fallback"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Saved Payment Method"
+        ],
+        "integration_test": "test_auto_charge"
+      }
+    },
+    {
+      "feature_id": "P6-F1",
+      "dependencies": [
+        "P1-F3"
+      ],
+      "status": "blocked: vendor names pending",
+      "acceptance_criteria": [
+        "Infrastructure Provider + Provider Product + Reseller Agreement queryable",
+        "adapter contract 11 methods + retries + audit log + manual adapter"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Infrastructure Provider",
+          "Provider Product",
+          "Reseller Agreement"
+        ],
+        "integration_test": "test_provider_adapter"
+      }
+    },
+    {
+      "feature_id": "P6-F2",
+      "dependencies": [
+        "P6-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "VPS Configuration queryable",
+        "create/rebuild/power/snapshot/restore/console/usage/IP audited"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "VPS Configuration"
+        ],
+        "integration_test": "test_vps_actions"
+      }
+    },
+    {
+      "feature_id": "P6-F3",
+      "dependencies": [
+        "P6-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Dedicated inventory + config queryable",
+        "lease lock + wipe confirm before Available"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Dedicated Server Inventory",
+          "Dedicated Server Configuration"
+        ],
+        "integration_test": "test_dedicated_lease"
+      }
+    },
+    {
+      "feature_id": "P6-F4",
+      "dependencies": [
+        "P6-F1"
+      ],
+      "status": "stub",
+      "acceptance_criteria": [
+        "Provisioning Module queryable",
+        "create/suspend/unsuspend/terminate/change password/package via bg job"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Provisioning Module"
+        ],
+        "integration_test": "test_provision_lifecycle"
+      }
+    },
+    {
+      "feature_id": "P6-F5",
+      "dependencies": [
+        "P6-F4",
+        "P4-F1"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Service queryable",
+        "Pending/Active/Suspended/Terminated/Cancelled",
+        "invoice success <-> create/unsuspend, overdue <-> suspend"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Service"
+        ],
+        "integration_test": "test_service_lifecycle"
+      }
+    },
+    {
+      "feature_id": "P6-F6",
+      "dependencies": [
+        "P6-F5"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "Usage Snapshot queryable",
+        "daily pull + overage items"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Usage Snapshot"
+        ],
+        "integration_test": "test_usage_overage"
+      }
+    },
+    {
+      "feature_id": "P7",
+      "dependencies": [
+        "P6-F5"
+      ],
+      "status": "blocked: registrar vendor names pending",
+      "acceptance_criteria": [
+        "Registrar Account + Domain + DNS Record queryable",
+        "register/renew/transfer/ns update + renewal invoice"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Registrar Account",
+          "Domain",
+          "DNS Record"
+        ],
+        "integration_test": "test_domain_lifecycle"
+      }
+    },
+    {
+      "feature_id": "P8",
+      "dependencies": [
+        "P2-F1",
+        "P6-F5"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "HD Ticket link table works",
+        "SLA per product type"
+      ],
+      "auto_check": {
+        "integration_test": "test_helpdesk_link"
+      }
+    },
+    {
+      "feature_id": "P9",
+      "dependencies": [
+        "P3-F4",
+        "P4-F1",
+        "P6-F5",
+        "P7"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "portal auth/dashboard/store/checkout/cart/invoices/services/domains/downloads/support/pages via server APIs + permissions"
+      ],
+      "auto_check": {
+        "integration_test": "test_portal_apis"
+      }
+    },
+    {
+      "feature_id": "P10",
+      "dependencies": [
+        "P4-F1",
+        "P6-F5"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "MRR/aging/churn/inventory/margin reports",
+        "Affiliate credit only after full payment"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Affiliate"
+        ],
+        "integration_test": "test_affiliate_credit"
+      }
+    },
+    {
+      "feature_id": "P11",
+      "dependencies": [
+        "P4-F1",
+        "P6-F5"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "templates fire once with idempotency"
+      ],
+      "auto_check": {
+        "integration_test": "test_notify_once"
+      }
+    },
+    {
+      "feature_id": "P12",
+      "dependencies": [
+        "P9",
+        "P10",
+        "P11"
+      ],
+      "status": "pending",
+      "acceptance_criteria": [
+        "roles Customer/Support/Billing/Provisioning/SysMgr",
+        "owner/payment/provider/inventory/download/invoice/lifecycle tests green",
+        "CI + staging + backup + runbook, manual gates honored"
+      ],
+      "auto_check": {
+        "integration_test": "test_create_to_terminate",
+        "manual_review": "security/live-pay/secrets/domain/destructive"
+      }
+    }
+  ]
+}

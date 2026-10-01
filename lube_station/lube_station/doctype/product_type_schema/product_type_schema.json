@@ -1,0 +1,24 @@
+{
+  "name": "Product Type Schema",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "field:schema_name",
+  "naming_rule": "By fieldname",
+  "is_submittable": 0,
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "schema_name", "fieldtype": "Data", "label": "Schema Name", "reqd": 1, "unique": 1},
+    {"fieldname": "product_type", "fieldtype": "Select", "label": "Product Type", "options": "Shared Hosting\nReseller\nVPS\nDedicated Server\nCloud\nEmail Hosting\nWebsite Builder\nSSL\nBackup Addon\nMigration Service\nDownloadable Product", "reqd": 1},
+    {"fieldname": "requires_domain", "fieldtype": "Check", "label": "Requires Domain", "default": "0"},
+    {"fieldname": "requires_hostname", "fieldtype": "Check", "label": "Requires Hostname", "default": "0"},
+    {"fieldname": "requires_root_password", "fieldtype": "Check", "label": "Requires Root Password", "default": "0"},
+    {"fieldname": "requires_os", "fieldtype": "Check", "label": "Requires OS", "default": "0"},
+    {"fieldname": "requires_location", "fieldtype": "Check", "label": "Requires Location", "default": "0"},
+    {"fieldname": "requires_nameservers", "fieldtype": "Check", "label": "Requires Nameservers", "default": "0"},
+    {"fieldname": "fields", "fieldtype": "Table", "label": "Fields", "options": "Product Requirement Field"}
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}
+  ]
+}

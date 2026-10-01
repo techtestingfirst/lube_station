@@ -1,0 +1,14 @@
+{
+  "name": "Server Group",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "field:group_name",
+  "naming_rule": "By fieldname",
+  "fields": [
+    {"fieldname": "group_name", "fieldtype": "Data", "label": "Group Name", "reqd": 1, "unique": 1},
+    {"fieldname": "servers", "fieldtype": "Table", "label": "Servers", "options": "Server Group Entry"},
+    {"fieldname": "fill_strategy", "fieldtype": "Select", "label": "Fill Strategy", "options": "Round Robin\nLeast Full\nManual", "default": "Round Robin"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

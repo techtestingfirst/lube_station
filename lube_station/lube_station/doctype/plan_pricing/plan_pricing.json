@@ -1,0 +1,18 @@
+{
+  "name": "Plan Pricing",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:PRICE-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "hosting_plan", "fieldtype": "Link", "label": "Hosting Plan", "options": "Hosting Plan", "reqd": 1},
+    {"fieldname": "billing_cycle", "fieldtype": "Select", "label": "Billing Cycle", "options": "Monthly\nQuarterly\nSemi-Annually\nAnnually\nBiennially\nTriennially\nOne Time", "reqd": 1},
+    {"fieldname": "setup_fee", "fieldtype": "Currency", "label": "Setup Fee", "default": "0"},
+    {"fieldname": "recurring_amount", "fieldtype": "Currency", "label": "Recurring Amount", "reqd": 1},
+    {"fieldname": "currency", "fieldtype": "Link", "label": "Currency", "options": "Currency"}
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}
+  ]
+}

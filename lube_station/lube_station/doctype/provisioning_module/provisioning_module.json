@@ -1,0 +1,14 @@
+{
+  "name": "Provisioning Module",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "field:module_name",
+  "naming_rule": "By fieldname",
+  "fields": [
+    {"fieldname": "module_name", "fieldtype": "Data", "label": "Module Name", "reqd": 1, "unique": 1},
+    {"fieldname": "control_panel", "fieldtype": "Data", "label": "Control Panel"},
+    {"fieldname": "class_path", "fieldtype": "Data", "label": "Python Class Path", "reqd": 1}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
