@@ -424,7 +424,7 @@
       "dependencies": [
         "P6-F5"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Usage Snapshot queryable",
         "daily pull + overage items"

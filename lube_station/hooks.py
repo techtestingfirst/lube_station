@@ -155,23 +155,11 @@ permission_query_conditions = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"lube_station.tasks.all"
-# 	],
-# 	"daily": [
-# 		"lube_station.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"lube_station.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"lube_station.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"lube_station.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"daily": [
+		"lube_station.lube_station.usage.collect.daily"
+	],
+}
 
 # Testing
 # -------
