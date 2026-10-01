@@ -231,7 +231,7 @@
       "dependencies": [
         "P3-F4"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Hosting Invoice + Invoice Item queryable",
         "idempotent initial + renewal generation"
