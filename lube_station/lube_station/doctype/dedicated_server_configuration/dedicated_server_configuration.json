@@ -1,0 +1,19 @@
+{
+  "name": "Dedicated Server Configuration",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:DSCFG-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "hosting_plan", "fieldtype": "Link", "label": "Hosting Plan", "options": "Hosting Plan", "reqd": 1, "unique": 1},
+    {"fieldname": "server_class", "fieldtype": "Data", "label": "Server Class"},
+    {"fieldname": "location", "fieldtype": "Data", "label": "Location"},
+    {"fieldname": "os_image", "fieldtype": "Data", "label": "OS Image"},
+    {"fieldname": "control_panel", "fieldtype": "Data", "label": "Control Panel"},
+    {"fieldname": "managed_service", "fieldtype": "Check", "label": "Managed Service", "default": "0"},
+    {"fieldname": "ip_count", "fieldtype": "Int", "label": "IP Count", "default": "1"},
+    {"fieldname": "bandwidth_commitment", "fieldtype": "Int", "label": "Bandwidth Commitment", "default": "0"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
