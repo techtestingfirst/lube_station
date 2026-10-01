@@ -299,7 +299,7 @@
       "dependencies": [
         "P5-F1"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Payment Transaction queryable",
         "webhook signature verify + idempotency + unsuspend on success"
