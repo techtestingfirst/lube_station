@@ -479,7 +479,7 @@
         "P6-F5",
         "P7"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "portal auth/dashboard/store/checkout/cart/invoices/services/domains/downloads/support/pages via server APIs + permissions"
       ],
