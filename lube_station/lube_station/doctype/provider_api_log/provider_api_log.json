@@ -1,0 +1,16 @@
+{
+  "name": "Provider API Log",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "naming_rule": "Random",
+  "fields": [
+    {"fieldname": "provider", "fieldtype": "Link", "label": "Provider", "options": "Infrastructure Provider", "reqd": 1},
+    {"fieldname": "action", "fieldtype": "Data", "label": "Action", "reqd": 1},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Success\nFailed", "default": "Success", "reqd": 1},
+    {"fieldname": "error_text", "fieldtype": "Small Text", "label": "Error"},
+    {"fieldname": "idempotency_key", "fieldtype": "Data", "label": "Idempotency Key", "unique": 1}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0}]
+}

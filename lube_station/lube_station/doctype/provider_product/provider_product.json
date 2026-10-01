@@ -1,0 +1,18 @@
+{
+  "name": "Provider Product",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:PP-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "provider", "fieldtype": "Link", "label": "Provider", "options": "Infrastructure Provider", "reqd": 1},
+    {"fieldname": "external_product_id", "fieldtype": "Data", "label": "External Product ID"},
+    {"fieldname": "product_type", "fieldtype": "Select", "label": "Product Type", "options": "Shared Hosting\nReseller\nVPS\nDedicated Server\nCloud\nEmail Hosting\nWebsite Builder\nSSL\nBackup Addon\nMigration Service\nDownloadable Product", "reqd": 1},
+    {"fieldname": "regions_json", "fieldtype": "Code", "label": "Regions JSON"},
+    {"fieldname": "plans_json", "fieldtype": "Code", "label": "Plans JSON"},
+    {"fieldname": "available_quantity", "fieldtype": "Int", "label": "Available Quantity", "default": "0"},
+    {"fieldname": "sync_status", "fieldtype": "Data", "label": "Sync Status", "default": "Manual"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

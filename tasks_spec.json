@@ -334,7 +334,7 @@
         "P1-F3",
         "P5-F4"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Infrastructure Provider + Provider Product + Reseller Agreement queryable",
         "adapter contract 11 methods + retries + audit log + manual adapter"
