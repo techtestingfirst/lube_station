@@ -1,0 +1,17 @@
+{
+  "name": "DNS Record",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:DNS-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "domain", "fieldtype": "Link", "label": "Domain", "options": "Domain", "reqd": 1},
+    {"fieldname": "record_type", "fieldtype": "Select", "label": "Record Type", "options": "A\nAAAA\nCNAME\nMX\nTXT\nNS\nSRV", "default": "A", "reqd": 1},
+    {"fieldname": "hostname", "fieldtype": "Data", "label": "Hostname", "reqd": 1},
+    {"fieldname": "record_value", "fieldtype": "Data", "label": "Value", "reqd": 1},
+    {"fieldname": "ttl", "fieldtype": "Int", "label": "TTL", "default": "3600"},
+    {"fieldname": "priority", "fieldtype": "Int", "label": "Priority", "default": "0"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

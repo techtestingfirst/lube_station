@@ -5,9 +5,17 @@
   "engine": "InnoDB",
   "autoname": "field:domain_name",
   "naming_rule": "By fieldname",
+  "track_changes": 1,
   "fields": [
     {"fieldname": "domain_name", "fieldtype": "Data", "label": "Domain Name", "reqd": 1, "unique": 1},
-    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Available\nTaken\nPremium\nUnknown", "default": "Unknown"},
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer"},
+    {"fieldname": "registrar", "fieldtype": "Link", "label": "Registrar", "options": "Registrar Adapter"},
+    {"fieldname": "registration_date", "fieldtype": "Date", "label": "Registration Date"},
+    {"fieldname": "expiry_date", "fieldtype": "Date", "label": "Expiry Date"},
+    {"fieldname": "auto_renew", "fieldtype": "Check", "label": "Auto Renew", "default": "0"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Available\nTaken\nPremium\nUnknown\nRegistered\nExpired\nTransferred", "default": "Unknown"},
+    {"fieldname": "nameservers", "fieldtype": "Small Text", "label": "Nameservers"},
+    {"fieldname": "whois_privacy", "fieldtype": "Check", "label": "WHOIS Privacy", "default": "0"},
     {"fieldname": "last_checked", "fieldtype": "Datetime", "label": "Last Checked"},
     {"fieldname": "premium_price", "fieldtype": "Currency", "label": "Premium Price", "default": "0"}
   ],

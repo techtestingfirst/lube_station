@@ -1,0 +1,15 @@
+{
+  "name": "Registrar Account",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:RACC-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "registrar", "fieldtype": "Link", "label": "Registrar", "options": "Registrar Adapter", "reqd": 1},
+    {"fieldname": "api_key", "fieldtype": "Password", "label": "API Key"},
+    {"fieldname": "api_secret", "fieldtype": "Password", "label": "API Secret"},
+    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

@@ -250,3 +250,7 @@ export_python_type_annotations = True
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+# Load the frontend on every path under /lube_station
+website_route_rules = [
+	{"from_route": "/lube_station/<path:app_path>", "to_route": "lube_station"},
+]

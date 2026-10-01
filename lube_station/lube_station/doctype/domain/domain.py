@@ -1,6 +1,6 @@
 import frappe
 from frappe.model.document import Document
-from frappe.utils import now_datetime
+from frappe.utils import add_to_date, now_datetime, today
 
 
 class Domain(Document):
@@ -59,3 +59,63 @@ def _lookup(domain: str, registrar: str | None) -> dict:
         except Exception:
             pass
     return {"domain": domain, "status": "Available", "premium_price": 0}
+
+
+def _adapter_for(domain_name: str, registrar: str | None = None):
+    from lube_station.lube_station.adapters.registry import get_registrar_adapter
+
+    dom = frappe.get_doc("Domain", domain_name) if frappe.db.exists("Domain", domain_name) else None
+    name = registrar or (dom.registrar if dom and dom.registrar else None)
+    if not name:
+        for candidate in ["OpenSRS", "Namecheap", "GoDaddy", "ResellerClub / LogicBoxes"]:
+            if frappe.db.get_value("Registrar Adapter", candidate, "active"):
+                name = candidate
+                break
+    if not name:
+        frappe.throw("No active registrar")
+    return get_registrar_adapter(name), name
+
+
+@frappe.whitelist(methods=["POST"])
+def register_domain(domain: str, customer: str | None = None, registrar: str | None = None, years: int = 1) -> dict:
+    adapter, name = _adapter_for(domain, registrar)
+    out = adapter.register_domain(domain, {}, [])
+    if not frappe.db.exists("Domain", domain):
+        frappe.get_doc({"doctype": "Domain", "domain_name": domain, "customer": customer, "registrar": name, "registration_date": today(), "expiry_date": add_to_date(today(), years=years), "status": "Registered"}).insert(ignore_permissions=True)
+    else:
+        frappe.db.set_value("Domain", domain, {"status": "Registered", "registrar": name, "expiry_date": add_to_date(today(), years=years)})
+    return {"registered": domain, "vendor": out}
+
+
+@frappe.whitelist(methods=["POST"])
+def renew_domain(domain: str, years: int = 1) -> dict:
+    adapter, name = _adapter_for(domain)
+    out = adapter.renew_domain(domain, years)
+    if frappe.db.exists("Domain", domain):
+        dom = frappe.get_doc("Domain", domain)
+        base = dom.expiry_date or today()
+        dom.expiry_date = add_to_date(base, years=years)
+        dom.save(ignore_permissions=True)
+        if dom.customer:
+            frappe.get_doc({"doctype": "Hosting Invoice", "customer": dom.customer, "invoice_items": [{"description": f"Domain renewal {domain} x{years}y", "service_ref": domain, "amount": 15 * years}], "status": "Unpaid", "idempotency_key": f"domain-renew:{domain}:{dom.expiry_date}"}).insert(ignore_permissions=True)
+    return {"renewed": domain, "vendor": out}
+
+
+@frappe.whitelist(methods=["POST"])
+def transfer_domain(domain: str, auth_code: str, registrar: str | None = None) -> dict:
+    adapter, name = _adapter_for(domain, registrar)
+    out = adapter.transfer_domain(domain, auth_code)
+    if frappe.db.exists("Domain", domain):
+        frappe.db.set_value("Domain", domain, {"status": "Transferred", "registrar": name})
+    return {"transferred": domain, "vendor": out}
+
+
+@frappe.whitelist(methods=["POST"])
+def update_nameservers(domain: str, nameservers: list | str) -> dict:
+    adapter, _ = _adapter_for(domain)
+    if isinstance(nameservers, str):
+        nameservers = [n.strip() for n in nameservers.split(",")]
+    out = adapter.update_nameservers(domain, nameservers)
+    if frappe.db.exists("Domain", domain):
+        frappe.db.set_value("Domain", domain, "nameservers", ",".join(nameservers))
+    return {"domain": domain, "vendor": out}

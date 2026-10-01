@@ -442,7 +442,7 @@
         "P6-F5",
         "P5-F4"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Registrar Account + Domain + DNS Record queryable",
         "register/renew/transfer/ns update + renewal invoice"
