@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  web:
+    image: frappe/erpnext:v16
+    command: ["bench", "start"]
+    ports: ["8000:8000"]
+    volumes: ["bench:/home/frappe/frappe-bench", "sites:/home/frappe/frappe-bench/sites"]
+  worker:
+    image: frappe/erpnext:v16
+    command: ["bench", "worker"]
+    volumes: ["bench:/home/frappe/frappe-bench", "sites:/home/frappe/frappe-bench/sites"]
+  scheduler:
+    image: frappe/erpnext:v16
+    command: ["bench", "schedule"]
+    volumes: ["bench:/home/frappe/frappe-bench", "sites:/home/frappe/frappe-bench/sites"]
+volumes:
+  bench: {}
+  sites: {}

@@ -86,7 +86,7 @@ app_license = "mit"
 # ------------
 
 # before_install = "lube_station.install.before_install"
-# after_install = "lube_station.install.after_install"
+after_install = "lube_station.lube_station.security.roles.ensure_roles"
 
 # Uninstallation
 # ------------
