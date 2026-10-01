@@ -266,7 +266,7 @@
       "dependencies": [
         "P4-F1"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Dunning Rule + Step queryable",
         "suspend after grace, terminate queued for approval"
