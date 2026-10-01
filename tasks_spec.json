@@ -105,7 +105,7 @@
       "dependencies": [
         "P1-F3"
       ],
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "Download Category + Downloadable Asset queryable",
         "entitlement check helper exists"

@@ -1,0 +1,11 @@
+{
+  "name": "Download Allowed Product",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "istable": 1,
+  "fields": [
+    {"fieldname": "hosting_plan", "fieldtype": "Link", "label": "Hosting Plan", "options": "Hosting Plan", "reqd": 1}
+  ],
+  "permissions": []
+}

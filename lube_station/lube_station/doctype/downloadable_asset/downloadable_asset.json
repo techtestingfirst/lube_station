@@ -1,0 +1,22 @@
+{
+  "name": "Downloadable Asset",
+  "module": "Lube Station",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:DL-{####}",
+  "naming_rule": "Expression",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1},
+    {"fieldname": "category", "fieldtype": "Link", "label": "Category", "options": "Download Category"},
+    {"fieldname": "storage_type", "fieldtype": "Select", "label": "Storage Type", "options": "Frappe File\nPrivate Object Storage\nRemote URL", "default": "Frappe File", "reqd": 1},
+    {"fieldname": "file", "fieldtype": "Attach", "label": "File"},
+    {"fieldname": "remote_url", "fieldtype": "Data", "label": "Remote URL"},
+    {"fieldname": "access_policy", "fieldtype": "Select", "label": "Access Policy", "options": "Public\nLogged-in Customers\nPurchased Product\nActive Service", "default": "Logged-in Customers", "reqd": 1},
+    {"fieldname": "allowed_products", "fieldtype": "Table", "label": "Allowed Products", "options": "Download Allowed Product"},
+    {"fieldname": "version", "fieldtype": "Data", "label": "Version", "default": "1.0"},
+    {"fieldname": "download_count", "fieldtype": "Int", "label": "Download Count", "default": "0"},
+    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
