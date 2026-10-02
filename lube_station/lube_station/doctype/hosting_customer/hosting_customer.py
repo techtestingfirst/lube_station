@@ -8,6 +8,8 @@ class HostingCustomer(Document):
             frappe.throw("Linked User missing")
 
     def has_permission(self, permtype, user=None):
+        if self.flags.ignore_permissions:
+            return True
         user = user or frappe.session.user
         if "System Manager" in frappe.get_roles(user):
             return True

@@ -12,6 +12,7 @@
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending Review\nAccepted\nFraud\nCancelled", "default": "Pending Review", "reqd": 1},
     {"fieldname": "fraud_score", "fieldtype": "Float", "label": "Fraud Score", "default": "0"},
     {"fieldname": "coupon_code", "fieldtype": "Data", "label": "Coupon Code"},
+    {"fieldname": "customer_notes", "fieldtype": "Small Text", "label": "Customer Notes"},
     {"fieldname": "items", "fieldtype": "Table", "label": "Items", "options": "Order Item"},
     {"fieldname": "total", "fieldtype": "Currency", "label": "Total", "default": "0"}
   ],

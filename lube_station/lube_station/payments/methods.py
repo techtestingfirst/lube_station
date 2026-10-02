@@ -7,8 +7,15 @@ def _gateway_supports_recurring(gateway: str) -> bool:
 
 @frappe.whitelist(methods=["POST"])
 def charge_saved_method(payment_method: str, invoice: str) -> dict:
+    from lube_station.lube_station.portal.guards import assert_owns
+
     method = frappe.get_doc("Saved Payment Method", payment_method)
     inv = frappe.get_doc("Hosting Invoice", invoice)
+    if "System Manager" not in frappe.get_roles() and frappe.session.user != "Administrator":
+        assert_owns(inv.customer)
+        assert_owns(method.customer)
+    if method.customer != inv.customer:
+        frappe.throw("Payment method does not belong to invoice customer", frappe.PermissionError)
     if inv.status == "Paid":
         frappe.throw("Invoice already paid")
     if not _gateway_supports_recurring(method.gateway):

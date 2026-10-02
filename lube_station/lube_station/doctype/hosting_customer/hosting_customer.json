@@ -13,6 +13,13 @@
     {"fieldname": "credit_balance", "fieldtype": "Currency", "label": "Credit Balance", "default": "0"},
     {"fieldname": "tax_id", "fieldtype": "Data", "label": "Tax / VAT ID"},
     {"fieldname": "billing_address", "fieldtype": "Small Text", "label": "Billing Address"},
+    {"fieldname": "phone", "fieldtype": "Data", "label": "Phone"},
+    {"fieldname": "address_line1", "fieldtype": "Data", "label": "Street Address"},
+    {"fieldname": "city", "fieldtype": "Data", "label": "City"},
+    {"fieldname": "state", "fieldtype": "Data", "label": "State / County"},
+    {"fieldname": "postcode", "fieldtype": "Data", "label": "Postcode"},
+    {"fieldname": "country", "fieldtype": "Data", "label": "Country"},
+    {"fieldname": "tos_accepted", "fieldtype": "Check", "label": "TOS Accepted", "default": "0"},
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nSuspended\nClosed", "default": "Active", "reqd": 1},
     {"fieldname": "marketing_opt_in", "fieldtype": "Check", "label": "Marketing Opt-In", "default": "0"}
   ],

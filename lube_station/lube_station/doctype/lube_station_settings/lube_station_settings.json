@@ -1,0 +1,29 @@
+{
+  "name": "Lube Station Settings",
+  "doctype": "DocType",
+  "module": "Lube Station",
+  "issingle": 1,
+  "fields": [
+    {"fieldname": "company_section", "fieldtype": "Section Break", "label": "Business"},
+    {"fieldname": "company_name", "fieldtype": "Data", "label": "Company Name", "default": "Lube Station"},
+    {"fieldname": "company_address", "fieldtype": "Small Text", "label": "Company Address"},
+    {"fieldname": "support_email", "fieldtype": "Data", "label": "Support Email", "options": "Email"},
+    {"fieldname": "catalog_section", "fieldtype": "Section Break", "label": "Catalog & Cart"},
+    {"fieldname": "domain_year_price", "fieldtype": "Currency", "label": "Domain Price / Year", "default": "15"},
+    {"fieldname": "enabled_gateways", "fieldtype": "Small Text", "label": "Enabled Gateways (one per line, in display order)", "default": "Stripe\nRazorpay\nBank Transfer"},
+    {"fieldname": "checkout_section", "fieldtype": "Section Break", "label": "Checkout"},
+    {"fieldname": "tos_required", "fieldtype": "Check", "label": "Require TOS Acceptance", "default": "1"},
+    {"fieldname": "tax_section", "fieldtype": "Section Break", "label": "Tax (WHMCS pattern)"},
+    {"fieldname": "tax_mode", "fieldtype": "Select", "label": "Tax Mode", "options": "Exclusive\nInclusive", "default": "Exclusive"},
+    {"fieldname": "tax_domains", "fieldtype": "Check", "label": "Tax Domain Items", "default": "1"},
+    {"fieldname": "invoice_due_days", "fieldtype": "Int", "label": "Invoice Due In (days)", "default": "7"},
+    {"fieldname": "fraud_section", "fieldtype": "Section Break", "label": "Fraud Screening (0 disables a rule)"},
+    {"fieldname": "fraud_free_email_score", "fieldtype": "Int", "label": "Free-Email Score", "default": "10"},
+    {"fieldname": "fraud_no_company_score", "fieldtype": "Int", "label": "No-Company Score", "default": "5"},
+    {"fieldname": "fraud_large_order_total", "fieldtype": "Currency", "label": "Large Order Above", "default": "1000"},
+    {"fieldname": "fraud_large_order_score", "fieldtype": "Int", "label": "Large-Order Score", "default": "15"},
+    {"fieldname": "payments_section", "fieldtype": "Section Break", "label": "Payments"},
+    {"fieldname": "razorpay_auto_capture", "fieldtype": "Check", "label": "Razorpay Auto-Capture", "default": "1"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

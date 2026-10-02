@@ -9,6 +9,11 @@ const list = ref<Inv[]>([])
 onMounted(async () => {
   list.value = await call('lube_station.lube_station.portal.apis.my_invoices', {}, 'GET')
 })
+
+function pdfUrl(name: string): string {
+  const q = new URLSearchParams({ doctype: 'Hosting Invoice', name, format: 'Hosting Invoice' })
+  return `/api/method/frappe.utils.print_format.download_pdf?${q.toString()}`
+}
 </script>
 
 <template>
@@ -16,7 +21,10 @@ onMounted(async () => {
     <h1 class="text-xl font-semibold">Invoices</h1>
     <div v-for="i in list" :key="i.name" class="flex items-center justify-between rounded border p-3 text-sm">
       <div><div class="font-medium">{{ i.name }}</div><div>{{ i.status }} · due {{ i.due_date }} · {{ i.total_due }}</div></div>
-      <RouterLink v-if="i.status !== 'Paid'" :to="`/pay/${i.name}`"><Button label="Pay" variant="solid" size="sm" /></RouterLink>
+      <div class="flex gap-2">
+        <a :href="pdfUrl(i.name)" target="_blank" rel="noopener"><Button label="PDF" size="sm" /></a>
+        <RouterLink v-if="i.status !== 'Paid'" :to="`/pay/${i.name}`"><Button label="Pay" variant="solid" size="sm" /></RouterLink>
+      </div>
     </div>
   </div>
 </template>

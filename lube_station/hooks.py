@@ -86,7 +86,8 @@ app_license = "mit"
 # ------------
 
 # before_install = "lube_station.install.before_install"
-after_install = "lube_station.lube_station.security.roles.ensure_roles"
+after_install = "lube_station.lube_station.setup.ensure_all"
+after_migrate = "lube_station.lube_station.setup.ensure_all"
 
 # Uninstallation
 # ------------
@@ -134,11 +135,12 @@ after_install = "lube_station.lube_station.security.roles.ensure_roles"
 
 permission_query_conditions = {
 	"Hosting Customer": "lube_station.lube_station.permissions.hosting_customer_query",
+	"Hosting Invoice": "lube_station.lube_station.permissions.hosting_invoice_query",
 }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+
+has_permission = {
+	"Hosting Invoice": "lube_station.lube_station.permissions.has_customer_document_permission",
+}
 
 # Document Events
 # ---------------

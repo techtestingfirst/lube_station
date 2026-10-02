@@ -11,12 +11,17 @@ export function bootUser(): string | null {
 }
 
 let _session: string | null | undefined
+function loggedUserOf(payload: unknown): string | null {
+  const d = (payload ?? {}) as Record<string, unknown>
+  const user = (d.data as string) || (d.message as string) || null
+  return user && user !== 'Guest' ? user : null
+}
+
 export async function sessionUser(): Promise<string | null> {
   if (_session !== undefined) return _session
   try {
     const res = await fetch('/api/v2/method/frappe.auth.get_logged_user', { credentials: 'include' })
-    const data = await res.json()
-    _session = data.message && data.message !== 'Guest' ? data.message : null
+    _session = loggedUserOf(await res.json())
   } catch {
     _session = null
   }
@@ -25,7 +30,6 @@ export async function sessionUser(): Promise<string | null> {
 
 export async function login(usr: string, pwd: string): Promise<void> {
   usr = usr.trim()
-  pwd = pwd.trim()
   const res = await fetch('/api/method/login', {
     method: 'POST',
     credentials: 'include',
@@ -33,13 +37,13 @@ export async function login(usr: string, pwd: string): Promise<void> {
     body: JSON.stringify({ usr, pwd }),
   })
   const data = await res.json().catch(() => ({}))
-  const ok = res.ok && (data.message === 'Logged In' || data.full_name || data.home_page)
+  const ok = res.ok && (data.message === 'Logged In' || data.message === 'No App' || data.full_name || data.home_page)
   if (!ok) throw new Error(data.message || 'Invalid credentials')
   // Confirm session cookie landed before leaving login page.
   const me = await fetch('/api/v2/method/frappe.auth.get_logged_user', { credentials: 'include' })
     .then((r) => r.json())
     .catch(() => ({}))
-  if (!me.message || me.message === 'Guest') throw new Error('Session not established, try again')
+  if (!loggedUserOf(me)) throw new Error('Session not established, try again')
   window.location.href = '/lube_station/'
 }
 
@@ -50,18 +54,30 @@ export async function logout(): Promise<void> {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function call<T = any>(dotted: string, args: Record<string, unknown> = {}, method = 'POST'): Promise<T> {
-  const res = await fetch(`/api/v2/method/${dotted}`, {
+  let url = `/api/v2/method/${dotted}`
+  let body: string | undefined = JSON.stringify(args)
+  if (method === 'GET') {
+    // fetch() drops GET bodies: serialize args into the query string instead.
+    const qs = new URLSearchParams()
+    for (const [k, v] of Object.entries(args)) {
+      if (v !== undefined && v !== null) qs.append(k, String(v))
+    }
+    const q = qs.toString()
+    if (q) url += `?${q}`
+    body = undefined
+  }
+  const res = await fetch(url, {
     method,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       'X-Frappe-CSRF-Token': csrf(),
     },
-    body: method === 'GET' ? undefined : JSON.stringify(args),
+    body,
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.message || data.exc || `Call ${dotted} failed`)
-  return (data.message ?? data) as T
+  return (data.data ?? data.message ?? data) as T
 }
 
 export async function getDoc<T>(doctype: string, name: string): Promise<T> {

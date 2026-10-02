@@ -6,7 +6,131 @@ from frappe.utils import add_days, today
 class HostingInvoice(Document):
     def validate(self):
         items_total = sum(i.amount or 0 for i in self.invoice_items)
-        self.total_due = max(items_total + (self.tax_amount or 0) - (self.credit_applied or 0), 0)
+        subtotal = self.subtotal_amount if self.subtotal_amount else items_total
+        self.total_due = max(subtotal + (self.tax_amount or 0) - (self.credit_applied or 0), 0)
+
+    def on_payment_authorized(self, payment_status):
+        """Called by Payments app (Razorpay/Stripe) after checkout completes.
+
+        Marks invoice Paid, records the gateway payment, activates services.
+        Idempotent: repeat callbacks reuse existing transaction.
+        """
+        if payment_status not in ("Authorized", "Verified", "Completed"):
+            return
+        if self.status == "Paid":
+            return "/lube_station/invoices"
+        data = (frappe.flags.data or {}) if hasattr(frappe.flags, "data") else {}
+        gateway_txn = str(data.get("razorpay_payment_id") or data.get("stripe_token_id") or data.get("transaction_id") or "")
+        if data.get("stripe_token_id"):
+            gateway = "Stripe"
+        elif data.get("razorpay_payment_id"):
+            gateway = "Razorpay"
+        else:
+            gateway = "PayPal"
+            if not gateway_txn:
+                gateway_txn = _paypal_txn_for(self.name) or ""
+        if gateway_txn and frappe.db.exists("Payment Transaction", {"gateway_txn_id": gateway_txn}):
+            if self.status != "Paid":
+                self.status = "Paid"
+                self.save(ignore_permissions=True)
+            return "/lube_station/invoices"
+        frappe.get_doc(
+            {
+                "doctype": "Payment Transaction",
+                "invoice": self.name,
+                "gateway": gateway,
+                "gateway_txn_id": gateway_txn,
+                "amount": self.total_due,
+                "status": "Success",
+                "raw_response": "{}",
+            }
+        ).insert(ignore_permissions=True)
+        self.status = "Paid"
+        self.save(ignore_permissions=True)
+        _fulfill_order(self)
+        return "/lube_station/invoices"
+
+
+def _fulfill_order(inv):
+    """WHMCS steps 9-10: services, domains, provisioning, welcome emails.
+
+    Idempotent: create_from_order only adds missing hosting services,
+    domain calls reuse existing Domain rows, notifications dedupe by key.
+    """
+    from lube_station.lube_station.notifications.events import fire
+
+    order_name = inv.order_ref
+    email = None
+    try:
+        user = frappe.db.get_value("Hosting Customer", inv.customer, "user")
+        email = frappe.db.get_value("User", user, "email") if user else None
+    except Exception:
+        pass
+    if order_name and frappe.db.exists("Order", order_name):
+        frappe.db.set_value("Order", order_name, "status", "Accepted")
+        try:
+            from lube_station.lube_station.doctype.service.service import create_from_order, on_invoice_paid
+
+            create_from_order(order_name)
+            on_invoice_paid(inv.name)
+        except Exception:
+            pass
+        _fulfill_domains(order_name, inv.customer)
+    for svc in frappe.get_all("Service", {"order_ref": order_name} if order_name else {"customer": inv.customer}, ["name", "hosting_plan"]):
+        try:
+            module = frappe.db.get_value("Hosting Plan", svc.hosting_plan, "provisioning_module")
+            if module:
+                frappe.get_doc("Provisioning Module", module).create_account(svc.name)
+        except Exception:
+            pass
+    for event_type in ("payment", "credentials"):
+        try:
+            fire(event_type, inv.name, email)
+        except Exception:
+            pass
+
+
+def _fulfill_domains(order_name: str, customer: str):
+    """Register/transfer ordered domains, link owned ones to the customer."""
+    import json
+
+    from lube_station.lube_station.doctype.domain.domain import register_domain, transfer_domain
+
+    order = frappe.get_doc("Order", order_name)
+    for item in order.items:
+        if item.item_type == "Domain":
+            try:
+                config = json.loads(item.configuration_snapshot or "{}")
+            except Exception:
+                config = {}
+            action = config.get("domain_action", "register")
+            years = config.get("domain_years") or item.quantity or 1
+            try:
+                if action == "transfer":
+                    transfer_domain(item.reference, config.get("epp") or "", None)
+                elif action == "register":
+                    register_domain(item.reference, customer, None, years)
+            except Exception:
+                pass
+        elif item.item_type == "Hosting Plan" and item.reference:
+            try:
+                config = json.loads(item.configuration_snapshot or "{}")
+            except Exception:
+                config = {}
+            action = config.get("domain_action")
+            if action in ("register", "transfer") and config.get("_domain"):
+                try:
+                    if action == "transfer":
+                        transfer_domain(config["_domain"], config.get("epp") or "", None)
+                    else:
+                        register_domain(config["_domain"], customer, None, config.get("domain_years") or 1)
+                except Exception:
+                    pass
+            elif action == "own" and config.get("_domain") and not frappe.db.exists("Domain", config["_domain"]):
+                try:
+                    frappe.get_doc({"doctype": "Domain", "domain_name": config["_domain"], "customer": customer, "status": "Active"}).insert(ignore_permissions=True)
+                except Exception:
+                    pass
 
 
 def _from_order(order_name: str, key: str, gateway: str | None = None):
@@ -16,16 +140,40 @@ def _from_order(order_name: str, key: str, gateway: str | None = None):
         frappe.throw("Order has no customer")
     items = [{"description": f"{i.item_type}: {i.reference} x{i.quantity}", "service_ref": i.reference, "amount": (i.unit_price or 0) * (i.quantity or 1)} for i in order.items]
     items_total = sum(i["amount"] for i in items)
-    tax = 0
-    if frappe.db.exists("DocType", "Tax Rule"):
-        from lube_station.lube_station.doctype.tax_rule.tax_rule import tax_for
+    # WHMCS per-product Apply Tax: hosting plans carry their own flag,
+    # domain lines follow Settings; untaxed lines still bill, just tax-free.
+    from lube_station.lube_station.settings import get_setting
 
-        tax = tax_for(customer, items_total)
+    taxable_lines = []
+    for i, entry in zip(order.items, items):
+        if i.item_type == "Domain":
+            taxable = bool(get_setting("tax_domains"))
+        elif i.item_type == "Hosting Plan" and frappe.db.exists("Hosting Plan", i.reference):
+            taxable = frappe.db.get_value("Hosting Plan", i.reference, "taxable")
+            taxable = True if taxable is None else bool(taxable)
+        else:
+            taxable = True
+        taxable_lines.append({"amount": entry["amount"], "taxable": taxable})
+    tax = 0
+    subtotal = items_total
+    label = "No tax"
+    breakup = {"cgst": 0, "sgst": 0, "ugst": 0, "igst": 0}
+    if frappe.db.exists("DocType", "Tax Rule"):
+        from lube_station.lube_station.doctype.tax_rule.tax_rule import tax_breakup
+
+        out = tax_breakup(customer, taxable_lines)
+        tax = out["total"]
+        label = out["label"]
+        breakup = out
+        if (out["mode"] == "inclusive"):
+            subtotal = round(items_total - tax, 2)
     credit = 0
     if frappe.db.exists("DocType", "Credit Note"):
         from lube_station.lube_station.doctype.credit_note.credit_note import apply_credit
 
         credit = apply_credit(customer, items_total + tax)
+    from lube_station.lube_station.settings import get_setting
+
     doc = frappe.get_doc(
         {
             "doctype": "Hosting Invoice",
@@ -33,18 +181,54 @@ def _from_order(order_name: str, key: str, gateway: str | None = None):
             "order_ref": order_name,
             "invoice_items": items,
             "tax_amount": tax,
+            "subtotal_amount": subtotal,
+            "tax_label": label,
+            "cgst_amount": breakup["cgst"],
+            "sgst_amount": breakup["sgst"],
+            "ugst_amount": breakup["ugst"],
+            "igst_amount": breakup["igst"],
             "credit_applied": credit,
-            "due_date": add_days(today(), 7),
+            "due_date": add_days(today(), get_setting("invoice_due_days") or 7),
             "status": "Unpaid",
             "gateway": gateway,
             "idempotency_key": key,
         }
-    ).insert()
+    ).insert(ignore_permissions=True)
     return doc
+
+
+def _paypal_txn_for(invoice_name: str) -> str | None:
+    """Latest completed PayPal Integration Request txn for this invoice.
+
+    PayPal's confirm_payment calls on_payment_authorized without flags data,
+    so recover the transaction id from the request log.
+    """
+    import json
+
+    rows = frappe.get_all(
+        "Integration Request",
+        {"integration_request_service": "PayPal", "status": "Completed"},
+        ["data"],
+        order_by="modified desc",
+        limit=10,
+    )
+    for row in rows:
+        try:
+            logged = json.loads(row.data or "{}")
+        except Exception:
+            continue
+        if logged.get("reference_docname") == invoice_name and logged.get("transaction_id"):
+            return str(logged["transaction_id"])
+    return None
 
 
 @frappe.whitelist(methods=["POST"])
 def generate_invoice(order: str, gateway: str | None = None) -> dict:
+    order_doc = frappe.get_doc("Order", order)
+    if "System Manager" not in frappe.get_roles() and frappe.session.user != "Administrator":
+        from lube_station.lube_station.portal.guards import assert_owns
+
+        assert_owns(order_doc.customer)
     key = f"init:{order}"
     if frappe.db.exists("Hosting Invoice", {"idempotency_key": key}):
         doc = frappe.get_doc("Hosting Invoice", {"idempotency_key": key})

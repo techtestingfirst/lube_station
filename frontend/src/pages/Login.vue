@@ -16,8 +16,8 @@ async function submit() {
   error.value = ''
   try {
     await login(usr.value, pwd.value)
-  } catch {
-    error.value = 'Invalid credentials'
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Invalid credentials'
     loading.value = false
   }
 }
