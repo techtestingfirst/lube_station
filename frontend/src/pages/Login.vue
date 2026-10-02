@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { Button, ErrorMessage, TextInput } from 'frappe-ui'
 import { login } from '../api'
 
@@ -27,5 +28,9 @@ async function submit() {
     <TextInput v-model="pwd" label="Password" type="password" @keydown.enter="submit" />
     <ErrorMessage v-if="error" :message="error" />
     <Button label="Sign in" variant="solid" :loading="loading" @click="submit" />
+    <p class="flex justify-between text-sm">
+      <RouterLink to="/signup" class="text-blue-600">Create account</RouterLink>
+      <RouterLink to="/forgot" class="text-blue-600">Forgot password?</RouterLink>
+    </p>
   </div>
 </template>

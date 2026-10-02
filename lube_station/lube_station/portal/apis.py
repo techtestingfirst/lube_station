@@ -115,3 +115,33 @@ def downloads():
 def my_account():
     customer = my_customer()
     return frappe.get_doc("Hosting Customer", customer).as_dict()
+
+
+@frappe.whitelist(methods=["POST"], allow_guest=True)
+def signup_customer(full_name: str, email: str, password: str, company: str | None = None) -> dict:
+    import re
+
+    email = (email or "").strip().lower()
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        frappe.throw("Invalid email")
+    if len(password or "") < 8:
+        frappe.throw("Password needs 8+ characters")
+    if frappe.db.exists("User", email):
+        frappe.throw("Account already exists, sign in instead")
+    user = frappe.get_doc({"doctype": "User", "email": email, "first_name": full_name, "enabled": 1, "new_password": password, "roles": [{"role": "Customer"}]}).insert(ignore_permissions=True)
+    customer = frappe.get_doc({"doctype": "Hosting Customer", "user": user.name, "company": company, "status": "Active"}).insert(ignore_permissions=True)
+    try:
+        from lube_station.lube_station.notifications.events import fire
+
+        fire("signup", customer.name, email)
+    except Exception:
+        pass
+    return {"customer": customer.name}
+
+
+@frappe.whitelist(methods=["POST"], allow_guest=True)
+def forgot_password(email: str) -> dict:
+    from frappe.core.doctype.user.user import reset_password
+
+    reset_password(email.strip().lower())
+    return {"sent": True}

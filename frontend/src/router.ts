@@ -3,6 +3,9 @@ import { bootUser } from './api'
 
 const routes = [
   { path: '/login', component: () => import('./pages/Login.vue') },
+  { path: '/signup', component: () => import('./pages/Signup.vue') },
+  { path: '/forgot', component: () => import('./pages/Forgot.vue') },
+  { path: '/reset', component: () => import('./pages/Reset.vue') },
   { path: '/', component: () => import('./pages/Dashboard.vue') },
   { path: '/store', component: () => import('./pages/Store.vue') },
   { path: '/checkout/:plan', component: () => import('./pages/Checkout.vue') },
@@ -25,7 +28,7 @@ export const router = createRouter({
   routes,
 })
 
-const PUBLIC = ['/login', '/store']
+const PUBLIC = ['/login', '/signup', '/forgot', '/reset', '/store']
 
 router.beforeEach((to) => {
   if (PUBLIC.includes(to.path)) return true
