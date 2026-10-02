@@ -11,6 +11,8 @@ export function bootUser(): string | null {
 }
 
 export async function login(usr: string, pwd: string): Promise<void> {
+  usr = usr.trim()
+  pwd = pwd.trim()
   const res = await fetch('/api/method/login', {
     method: 'POST',
     credentials: 'include',

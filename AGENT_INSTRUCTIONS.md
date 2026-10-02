@@ -5,3 +5,8 @@
 - Commit code + tasks_spec.json together.
 - Blockers: vendor names pending for P6-F1 multi-API, P7 multi-registrar, P5 all-gateways matrix. Do not build live adapters until names land.
 - Manual gates: live creds, live pay, domain reg, destructive server ops need comment+status approval.
+- for development my back end is running on port 8000
+- for development my front end is running on port 8080
+- for admin username Administrator/admin
+- for customer username thestockdot@gmail.com/HR&THAT0
+- before generating any code go and check for referance how the erpnext and helpdesk and lms is handling that task which you want to handle take referance from erpnext and helpdesk and lms.
