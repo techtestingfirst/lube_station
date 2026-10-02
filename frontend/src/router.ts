@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { bootUser } from './api'
+import { bootUser, sessionUser } from './api'
 
 const routes = [
   { path: '/login', component: () => import('./pages/Login.vue') },
@@ -30,10 +30,14 @@ export const router = createRouter({
 
 const PUBLIC = ['/login', '/signup', '/forgot', '/reset', '/store']
 
-router.beforeEach((to) => {
-  if (PUBLIC.includes(to.path)) return true
-  const user = bootUser()
-  if (!user || user === 'Guest') {
+router.beforeEach(async (to) => {
+  if (PUBLIC.includes(to.path)) {
+    // Logged-in users don't need auth pages (dev server has no boot data).
+    if (['/login', '/signup'].includes(to.path) && !bootUser() && (await sessionUser())) return '/'
+    return true
+  }
+  const user = bootUser() || (await sessionUser())
+  if (!user) {
     if (to.path !== '/login') return '/login'
   }
   return true

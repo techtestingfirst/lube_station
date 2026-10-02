@@ -10,6 +10,19 @@ export function bootUser(): string | null {
   return (boot.user as string) || (w.user as string) || null
 }
 
+let _session: string | null | undefined
+export async function sessionUser(): Promise<string | null> {
+  if (_session !== undefined) return _session
+  try {
+    const res = await fetch('/api/v2/method/frappe.auth.get_logged_user', { credentials: 'include' })
+    const data = await res.json()
+    _session = data.message && data.message !== 'Guest' ? data.message : null
+  } catch {
+    _session = null
+  }
+  return _session
+}
+
 export async function login(usr: string, pwd: string): Promise<void> {
   usr = usr.trim()
   pwd = pwd.trim()
