@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { Button, ErrorMessage, TextInput } from 'frappe-ui'
 import { login } from '../api'
 
-const usr = ref('')
+const route = useRoute()
+const usr = ref((route.query.email as string) || '')
+const notice = ref(route.query.created ? 'Account created. Sign in below.' : '')
 const pwd = ref('')
 const error = ref('')
 const loading = ref(false)
@@ -24,6 +26,7 @@ async function submit() {
 <template>
   <div class="mx-auto max-w-sm space-y-4">
     <h1 class="text-xl font-semibold">Sign in</h1>
+    <p v-if="notice" class="text-sm text-green-700">{{ notice }}</p>
     <TextInput v-model="usr" label="Email" placeholder="you@example.com" />
     <TextInput v-model="pwd" label="Password" type="password" @keydown.enter="submit" />
     <ErrorMessage v-if="error" :message="error" />

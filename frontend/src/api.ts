@@ -13,15 +13,23 @@ export function bootUser(): string | null {
 export async function login(usr: string, pwd: string): Promise<void> {
   const res = await fetch('/api/method/login', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ usr, pwd }),
   })
-  if (!res.ok) throw new Error('Login failed')
+  const data = await res.json().catch(() => ({}))
+  const ok = res.ok && (data.message === 'Logged In' || data.full_name || data.home_page)
+  if (!ok) throw new Error(data.message || 'Invalid credentials')
+  // Confirm session cookie landed before leaving login page.
+  const me = await fetch('/api/v2/method/frappe.auth.get_logged_user', { credentials: 'include' })
+    .then((r) => r.json())
+    .catch(() => ({}))
+  if (!me.message || me.message === 'Guest') throw new Error('Session not established, try again')
   window.location.href = '/lube_station/'
 }
 
 export async function logout(): Promise<void> {
-  await fetch('/api/method/logout', { method: 'POST' })
+  await fetch('/api/method/logout', { method: 'POST', credentials: 'include' })
   window.location.href = '/lube_station/login'
 }
 
@@ -29,6 +37,7 @@ export async function logout(): Promise<void> {
 export async function call<T = any>(dotted: string, args: Record<string, unknown> = {}, method = 'POST'): Promise<T> {
   const res = await fetch(`/api/v2/method/${dotted}`, {
     method,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       'X-Frappe-CSRF-Token': csrf(),

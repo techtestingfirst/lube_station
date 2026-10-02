@@ -20,11 +20,16 @@ async function submit() {
     await call('lube_station.lube_station.portal.apis.signup_customer', {
       full_name: name.value, email: email.value, password: password.value, company: company.value || undefined,
     })
-    await login(email.value, password.value)
-    router.push('/')
   } catch (e) {
     error.value = String(e).replace('ValidationError: ', '')
     loading.value = false
+    return
+  }
+  try {
+    await login(email.value, password.value)
+    return
+  } catch (e) {
+    router.push({ path: '/login', query: { email: email.value, created: '1' } })
   }
 }
 </script>
