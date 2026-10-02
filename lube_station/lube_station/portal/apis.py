@@ -65,7 +65,42 @@ def dns_list(domain: str):
 def vps_control(instance: str, action: str, arg: str | None = None):
     from lube_station.lube_station.doctype.vps_instance.vps_instance import vps_action
 
+    inst = frappe.get_doc("VPS Instance", instance)
+    if inst.order_ref:
+        order = frappe.get_doc("Order", inst.order_ref)
+        if order.customer:
+            assert_owns(order.customer)
     return vps_action(instance, action, arg)
+
+
+@frappe.whitelist(methods=["GET"])
+def my_methods():
+    customer = my_customer()
+    return frappe.get_all("Saved Payment Method", {"customer": customer}, ["name", "gateway", "last_four", "expiry", "default_method"])
+
+
+@frappe.whitelist(methods=["POST"])
+def save_method(gateway: str, token: str, last_four: str | None = None, expiry: str | None = None, make_default: bool = False):
+    customer = my_customer()
+    doc = frappe.get_doc({"doctype": "Saved Payment Method", "customer": customer, "gateway": gateway, "token": token, "last_four": last_four, "expiry": expiry, "default_method": 1 if make_default else 0}).insert()
+    return {"method": doc.name}
+
+
+@frappe.whitelist(methods=["GET"])
+def my_dedicated():
+    customer = my_customer()
+    services = frappe.get_all("Service", {"customer": customer}, pluck="name")
+    if not services:
+        return []
+    return frappe.get_all("Dedicated Server Inventory", {"assigned_service": ["in", services]}, ["name", "asset_id", "location", "status", "assigned_service"])
+
+
+@frappe.whitelist(methods=["POST"])
+def dns_add(domain: str, record_type: str, hostname: str, value: str, ttl: int = 3600):
+    dom = frappe.get_doc("Domain", domain)
+    assert_owns(dom.customer)
+    rec = frappe.get_doc({"doctype": "DNS Record", "domain": domain, "record_type": record_type, "hostname": hostname, "record_value": value, "ttl": ttl}).insert()
+    return {"record": rec.name}
 
 
 @frappe.whitelist(methods=["GET"])
