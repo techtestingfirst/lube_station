@@ -33,7 +33,7 @@ REGISTRAR_PATHS = {
     "ResellerClub / LogicBoxes": "lube_station.lube_station.adapters.registrar.logicboxes.LogicBoxesAdapter",
     "eNom": "lube_station.lube_station.adapters.registrar.enom.EnomAdapter",
     "CentralNic Reseller": "lube_station.lube_station.adapters.registrar.centralnic.CentralNicAdapter",
-    "HEXONET": "lube_station.lube_station.adapters.registrar.stubs.HexonetAdapter",
+    "HEXONET": "lube_station.lube_station.adapters.registrar.hexonet.HexonetAdapter",
     "Porkbun": "lube_station.lube_station.adapters.registrar.stubs.PorkbunAdapter",
     "Internet.bs": "lube_station.lube_station.adapters.registrar.stubs.InternetBsAdapter",
     "Nominet": "lube_station.lube_station.adapters.registrar.stubs.NominetAdapter",
