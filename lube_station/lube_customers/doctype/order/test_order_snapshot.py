@@ -1,7 +1,7 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from lube_station.lube_station.doctype.order.order import place_order
+from lube_station.lube_customers.doctype.order.order import place_order
 
 
 class TestOrderSnapshot(IntegrationTestCase):

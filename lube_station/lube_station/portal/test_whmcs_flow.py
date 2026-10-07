@@ -42,7 +42,7 @@ class TestWhmcsFlow(IntegrationTestCase):
         self.assertEqual(cart["items"][-1]["domain"], "flowexample.com")
 
     def test_checkout_notes_and_fulfillment(self):
-        from lube_station.lube_station.doctype.order.order import place_order
+        from lube_station.lube_customers.doctype.order.order import place_order
 
         cust_name, plan = self._setup()
         cart = apis.cart_add(hosting_plan=plan, billing_cycle="Monthly", quantity=1)

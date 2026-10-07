@@ -11,3 +11,14 @@ class TestCoupon(IntegrationTestCase):
         self.assertEqual(coupon.discount_amount(200), 0)
         fixed = frappe.get_doc({"doctype": "Coupon", "code": "FLAT50", "discount_type": "Fixed Amount", "value": 50, "active": 1}).insert()
         self.assertEqual(fixed.discount_amount(30), 30)
+
+    def test_invalid_coupon_message(self):
+        from lube_station.lube_station.portal.apis import cart_apply_coupon
+
+        cart = frappe.get_doc({"doctype": "Cart", "session_id": "coupon-msg-test"}).insert()
+        try:
+            cart_apply_coupon(cart.name, "  NOPE  ")
+        except frappe.ValidationError as e:
+            self.assertEqual(str(e), "This coupon code is not valid.")
+        else:
+            self.fail("expected ValidationError")

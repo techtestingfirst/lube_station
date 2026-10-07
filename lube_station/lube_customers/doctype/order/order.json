@@ -1,6 +1,6 @@
 {
   "name": "Order",
-  "module": "Lube Station",
+  "module": "Lube Customers",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "format:ORD-{####}",

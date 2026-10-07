@@ -1,6 +1,6 @@
 {
   "name": "Client Group",
-  "module": "Lube Station",
+  "module": "Lube Customers",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "field:group_name",

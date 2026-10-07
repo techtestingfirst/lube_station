@@ -302,7 +302,7 @@ def cart_remove(cart: str, row: str):
 
 @frappe.whitelist(methods=["POST"])
 def cart_apply_coupon(cart: str, coupon_code: str):
-    from lube_station.lube_station.doctype.cart.cart import discount_for  # noqa: F401
+    from lube_station.lube_customers.doctype.cart.cart import discount_for  # noqa: F401
 
     cart_doc = frappe.get_doc("Cart", cart)
     _assert_cart_access(cart_doc)
@@ -339,7 +339,7 @@ def checkout(cart: str | None = None, gateway: str | None = None, notes: str | N
     place_order, order/invoice notifications fired, idempotent on retry.
     """
     from lube_station.lube_station.doctype.hosting_invoice.hosting_invoice import generate_invoice
-    from lube_station.lube_station.doctype.order.order import place_order
+    from lube_station.lube_customers.doctype.order.order import place_order
     from lube_station.lube_station.notifications.events import fire
     from lube_station.lube_station.payments.links import payment_link, pick_gateway
 

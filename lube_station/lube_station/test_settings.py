@@ -38,7 +38,7 @@ class TestSettings(IntegrationTestCase):
     def test_fraud_rule_zero_disables(self):
         from types import SimpleNamespace
 
-        from lube_station.lube_station.doctype.order.order import _fraud_score
+        from lube_station.lube_customers.doctype.order.order import _fraud_score
 
         frappe.db.set_single_value("Lube Station Settings", "fraud_free_email_score", 0)
         try:

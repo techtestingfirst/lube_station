@@ -1,6 +1,6 @@
 {
   "name": "Hosting Customer",
-  "module": "Lube Station",
+  "module": "Lube Customers",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "format:CUST-{####}",
@@ -18,7 +18,7 @@
     {"fieldname": "city", "fieldtype": "Data", "label": "City"},
     {"fieldname": "state", "fieldtype": "Data", "label": "State / County"},
     {"fieldname": "postcode", "fieldtype": "Data", "label": "Postcode"},
-    {"fieldname": "country", "fieldtype": "Data", "label": "Country"},
+    {"fieldname": "country", "fieldtype": "Link", "label": "Country", "options": "Country"},
     {"fieldname": "tos_accepted", "fieldtype": "Check", "label": "TOS Accepted", "default": "0"},
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nSuspended\nClosed", "default": "Active", "reqd": 1},
     {"fieldname": "marketing_opt_in", "fieldtype": "Check", "label": "Marketing Opt-In", "default": "0"}

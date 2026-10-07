@@ -1,6 +1,6 @@
 {
   "name": "Coupon Eligible Group",
-  "module": "Lube Station",
+  "module": "Lube Customers",
   "doctype": "DocType",
   "engine": "InnoDB",
   "istable": 1,

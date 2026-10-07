@@ -1,7 +1,7 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from lube_station.lube_station.doctype.credit_note.credit_note import apply_credit
+from lube_station.lube_customers.doctype.credit_note.credit_note import apply_credit
 
 
 class TestCreditApply(IntegrationTestCase):

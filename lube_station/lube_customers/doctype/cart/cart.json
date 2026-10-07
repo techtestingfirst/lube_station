@@ -1,6 +1,6 @@
 {
   "name": "Cart",
-  "module": "Lube Station",
+  "module": "Lube Customers",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "hash",
