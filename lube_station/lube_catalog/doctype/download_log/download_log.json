@@ -1,6 +1,6 @@
 {
   "name": "Download Log",
-  "module": "Lube Station",
+  "module": "Lube Catalog",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "hash",

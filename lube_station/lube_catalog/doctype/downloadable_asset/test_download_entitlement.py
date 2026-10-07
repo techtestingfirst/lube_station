@@ -1,7 +1,7 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from lube_station.lube_station.doctype.downloadable_asset.downloadable_asset import check_entitlement
+from lube_station.lube_catalog.doctype.downloadable_asset.downloadable_asset import check_entitlement
 
 
 class TestDownloadEntitlement(IntegrationTestCase):

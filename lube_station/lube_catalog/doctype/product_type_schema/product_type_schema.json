@@ -1,6 +1,6 @@
 {
   "name": "Product Type Schema",
-  "module": "Lube Station",
+  "module": "Lube Catalog",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "field:schema_name",

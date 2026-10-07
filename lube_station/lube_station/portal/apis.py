@@ -75,7 +75,7 @@ def checkout_info(plan: str):
     prices = frappe.get_all("Plan Pricing", {"hosting_plan": plan}, ["billing_cycle", "recurring_amount", "setup_fee"])
     requirements = None
     if schema:
-        from lube_station.lube_station.doctype.product_type_schema.product_type_schema import get_product_requirements
+        from lube_station.lube_catalog.doctype.product_type_schema.product_type_schema import get_product_requirements
 
         requirements = get_product_requirements(plan=plan)
     return {"prices": prices, "requirements": requirements}
@@ -150,7 +150,7 @@ def dns_add(domain: str, record_type: str, hostname: str, value: str, ttl: int =
 
 @frappe.whitelist(methods=["GET"])
 def downloads():
-    from lube_station.lube_station.doctype.downloadable_asset.downloadable_asset import check_entitlement
+    from lube_station.lube_catalog.doctype.downloadable_asset.downloadable_asset import check_entitlement
 
     assets = frappe.get_all("Downloadable Asset", {"active": 1}, ["name", "title", "access_policy"])
     return [a for a in assets if check_entitlement(a.name)["allowed"]]

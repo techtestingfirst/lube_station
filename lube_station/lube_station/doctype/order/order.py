@@ -44,7 +44,7 @@ def place_order(cart: str, customer: str | None = None, notes: str | None = None
         if item.item_type == "Hosting Plan" and item.hosting_plan:
             schema = frappe.db.get_value("Hosting Plan", item.hosting_plan, "product_type_schema")
             if schema:
-                from lube_station.lube_station.doctype.product_type_schema.product_type_schema import validate_config
+                from lube_station.lube_catalog.doctype.product_type_schema.product_type_schema import validate_config
 
                 try:
                     config = json.loads(item.configuration_json or "{}")

@@ -1,7 +1,7 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from lube_station.lube_station.doctype.product_type_schema.product_type_schema import (
+from lube_station.lube_catalog.doctype.product_type_schema.product_type_schema import (
     get_product_requirements,
     validate_config,
 )

@@ -1,6 +1,6 @@
 {
   "name": "Product Group",
-  "module": "Lube Station",
+  "module": "Lube Catalog",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "field:group_name",

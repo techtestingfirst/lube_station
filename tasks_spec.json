@@ -60,7 +60,7 @@
           "Product Requirement Field"
         ],
         "api_exists": [
-          "lube_station.lube_station.doctype.product_type_schema.product_type_schema.get_product_requirements"
+          "lube_station.lube_catalog.doctype.product_type_schema.product_type_schema.get_product_requirements"
         ],
         "integration_test": "test_product_requirements"
       }

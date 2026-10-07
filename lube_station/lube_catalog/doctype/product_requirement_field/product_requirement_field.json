@@ -1,6 +1,6 @@
 {
   "name": "Product Requirement Field",
-  "module": "Lube Station",
+  "module": "Lube Catalog",
   "doctype": "DocType",
   "engine": "InnoDB",
   "istable": 1,

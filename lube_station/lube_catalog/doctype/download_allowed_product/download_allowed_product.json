@@ -1,6 +1,6 @@
 {
   "name": "Download Allowed Product",
-  "module": "Lube Station",
+  "module": "Lube Catalog",
   "doctype": "DocType",
   "engine": "InnoDB",
   "istable": 1,

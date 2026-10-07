@@ -10,7 +10,7 @@ class HostingPlan(Document):
 
     if TYPE_CHECKING:
         from frappe.types import DF
-        from lube_station.lube_station.doctype.plan_config_field.plan_config_field import PlanConfigField
+        from lube_station.lube_catalog.doctype.plan_config_field.plan_config_field import PlanConfigField
 
         config_fields: DF.Table[PlanConfigField]
         is_active: DF.Check

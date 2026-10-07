@@ -1,6 +1,6 @@
 {
   "name": "Downloadable Asset",
-  "module": "Lube Station",
+  "module": "Lube Catalog",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "format:DL-{####}",

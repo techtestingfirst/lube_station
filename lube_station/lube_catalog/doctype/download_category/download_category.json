@@ -1,6 +1,6 @@
 {
   "name": "Download Category",
-  "module": "Lube Station",
+  "module": "Lube Catalog",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "field:category_name",
