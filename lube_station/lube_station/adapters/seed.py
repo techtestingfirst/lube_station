@@ -92,7 +92,7 @@ def seed():
         "HEXONET": "lube_station.lube_station.adapters.registrar.hexonet.HexonetAdapter",
         "Porkbun": "lube_station.lube_station.adapters.registrar.porkbun.PorkbunAdapter",
         "Internet.bs": "lube_station.lube_station.adapters.registrar.internetbs.InternetBsAdapter",
-        "Nominet": "lube_station.lube_station.adapters.registrar.stubs.NominetAdapter",
+        "Nominet": "lube_station.lube_station.adapters.registrar.nominet.NominetAdapter",
     }
     for name, vendor, mode, active in REGISTRARS:
         if not frappe.db.exists("Registrar Adapter", name):
@@ -148,6 +148,10 @@ def seed():
             (
                 "Porkbun",
                 "lube_station.lube_station.adapters.registrar.stubs.PorkbunAdapter",
+            ),
+            (
+                "Nominet",
+                "lube_station.lube_station.adapters.registrar.stubs.NominetAdapter",
             ),
             (
                 "Internet.bs",

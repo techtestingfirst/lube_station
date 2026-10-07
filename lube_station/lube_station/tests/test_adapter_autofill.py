@@ -79,12 +79,17 @@ class TestAdapterAutofill(IntegrationTestCase):
 
     def test_registrar_autofill(self):
         doc = frappe.get_doc("Registrar Adapter", "Nominet")
+        original = doc.class_path
         doc.class_path = ""
-        doc.save(ignore_permissions=True)
-        self.assertEqual(
-            doc.class_path,
-            "lube_station.lube_station.adapters.registrar.stubs.NominetAdapter",
-        )
+        try:
+            doc.save(ignore_permissions=True)
+            self.assertEqual(
+                doc.class_path,
+                "lube_station.lube_station.adapters.registrar.nominet.NominetAdapter",
+            )
+        finally:
+            doc.class_path = original
+            doc.save(ignore_permissions=True)
 
     def test_registrar_operations_from_code(self):
         live = frappe.get_doc("Registrar Adapter", "OpenSRS")
@@ -99,9 +104,15 @@ class TestAdapterAutofill(IntegrationTestCase):
             "toggle_privacy",
         ):
             self.assertIn(operation, live.supported_operations or "")
-        stub = frappe.get_doc("Registrar Adapter", "Nominet")
-        stub.save(ignore_permissions=True)
-        self.assertFalse(stub.supported_operations)
+        stub = frappe.get_doc("Registrar Adapter", "HEXONET")
+        original_stub = stub.class_path
+        stub.class_path = "lube_station.lube_station.adapters.registrar.stubs.HexonetAdapter"
+        try:
+            stub.save(ignore_permissions=True)
+            self.assertFalse(stub.supported_operations)
+        finally:
+            stub.class_path = original_stub
+            stub.save(ignore_permissions=True)
 
     def test_module_fills_from_adapter(self):
         module = frappe.get_doc(

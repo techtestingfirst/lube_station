@@ -36,7 +36,7 @@ REGISTRAR_PATHS = {
     "HEXONET": "lube_station.lube_station.adapters.registrar.hexonet.HexonetAdapter",
     "Porkbun": "lube_station.lube_station.adapters.registrar.porkbun.PorkbunAdapter",
     "Internet.bs": "lube_station.lube_station.adapters.registrar.internetbs.InternetBsAdapter",
-    "Nominet": "lube_station.lube_station.adapters.registrar.stubs.NominetAdapter",
+    "Nominet": "lube_station.lube_station.adapters.registrar.nominet.NominetAdapter",
 }
 
 
