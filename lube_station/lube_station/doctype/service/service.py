@@ -74,7 +74,7 @@ def on_invoice_paid(invoice: str) -> dict:
 
 @frappe.whitelist(methods=["POST"])
 def apply_dunning(invoice: str) -> dict:
-    from lube_station.lube_station.doctype.dunning_rule.dunning_rule import evaluate_invoice
+    from lube_station.lube_billing.doctype.dunning_rule.dunning_rule import evaluate_invoice
 
     result = evaluate_invoice(invoice)
     inv = frappe.get_doc("Hosting Invoice", invoice)

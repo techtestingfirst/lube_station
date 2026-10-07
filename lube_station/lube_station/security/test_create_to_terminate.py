@@ -3,7 +3,7 @@ from datetime import date, timedelta
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from lube_station.lube_station.doctype.dunning_rule.dunning_rule import evaluate_invoice
+from lube_station.lube_billing.doctype.dunning_rule.dunning_rule import evaluate_invoice
 from lube_station.lube_customers.doctype.order.order import place_order
 from lube_station.lube_station.payments.webhooks import handle_webhook
 from lube_station.lube_station.security.roles import ensure_roles

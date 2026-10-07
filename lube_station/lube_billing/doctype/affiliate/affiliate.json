@@ -1,0 +1,15 @@
+{
+  "name": "Affiliate",
+  "module": "Lube Billing",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:AFF-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer", "reqd": 1, "unique": 1},
+    {"fieldname": "referral_code", "fieldtype": "Data", "label": "Referral Code", "reqd": 1, "unique": 1},
+    {"fieldname": "commission_percentage", "fieldtype": "Float", "label": "Commission Percentage", "default": "10"},
+    {"fieldname": "total_earned", "fieldtype": "Currency", "label": "Total Earned", "default": "0"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

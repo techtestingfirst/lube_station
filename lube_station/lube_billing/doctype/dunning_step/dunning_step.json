@@ -1,0 +1,14 @@
+{
+  "name": "Dunning Step",
+  "module": "Lube Billing",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "istable": 1,
+  "fields": [
+    {"fieldname": "step_type", "fieldtype": "Select", "label": "Step Type", "options": "Pre-due\nDue\nOverdue\nSuspend\nTerminate Queue", "default": "Overdue", "reqd": 1},
+    {"fieldname": "days_offset", "fieldtype": "Int", "label": "Days Offset", "default": "0"},
+    {"fieldname": "template", "fieldtype": "Link", "label": "Template", "options": "Email Template"},
+    {"fieldname": "action", "fieldtype": "Select", "label": "Action", "options": "Notify\nSuspend\nQueue Termination", "default": "Notify", "reqd": 1}
+  ],
+  "permissions": []
+}

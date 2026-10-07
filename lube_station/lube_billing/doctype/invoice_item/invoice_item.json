@@ -1,0 +1,13 @@
+{
+  "name": "Invoice Item",
+  "module": "Lube Billing",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "istable": 1,
+  "fields": [
+    {"fieldname": "description", "fieldtype": "Data", "label": "Description", "reqd": 1},
+    {"fieldname": "service_ref", "fieldtype": "Data", "label": "Service"},
+    {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "reqd": 1}
+  ],
+  "permissions": []
+}

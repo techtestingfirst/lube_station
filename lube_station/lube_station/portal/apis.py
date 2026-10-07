@@ -338,7 +338,7 @@ def checkout(cart: str | None = None, gateway: str | None = None, notes: str | N
     WHMCS Complete Order: ownership + TOS enforced, fraud scored in
     place_order, order/invoice notifications fired, idempotent on retry.
     """
-    from lube_station.lube_station.doctype.hosting_invoice.hosting_invoice import generate_invoice
+    from lube_station.lube_billing.doctype.hosting_invoice.hosting_invoice import generate_invoice
     from lube_station.lube_customers.doctype.order.order import place_order
     from lube_station.lube_station.notifications.events import fire
     from lube_station.lube_station.payments.links import payment_link, pick_gateway
@@ -444,7 +444,7 @@ def signup_customer(
         frappe.throw("Accept the Terms of Service to register")
     if frappe.db.exists("User", email):
         frappe.throw("Account already exists, sign in instead")
-    from lube_station.lube_station.doctype.tax_rule.tax_rule import normalize_country
+    from lube_station.lube_billing.doctype.tax_rule.tax_rule import normalize_country
 
     country = normalize_country(country) or None
     if country and not frappe.db.exists("Country", country):
