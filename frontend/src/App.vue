@@ -1,43 +1,90 @@
 <script setup lang="ts">
-import { FrappeUIProvider } from 'frappe-ui'
-import { RouterLink } from 'vue-router'
-import { bootUser } from './api'
+import { onMounted, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import {
+  FrappeUIProvider,
+  Sidebar,
+  SidebarCollapseToggle,
+  SidebarHeader,
+  SidebarItem,
+  SidebarLabel,
+  SidebarSection,
+  useColorScheme,
+} from 'frappe-ui'
+import { bootUser, logout, sessionUser } from './api'
+import ThemeToggle from './components/ThemeToggle.vue'
 
-const user = bootUser()
-const links = [
-  ['/', 'Dashboard'],
-  ['/store', 'Store'],
-  ['/cart', 'Cart'],
-  ['/invoices', 'Invoices'],
-  ['/services', 'Services'],
-  ['/vps', 'VPS'],
-  ['/dedicated', 'Dedicated'],
-  ['/domains', 'Domains'],
-  ['/downloads', 'Downloads'],
-  ['/support', 'Support'],
-  ['/account', 'Account'],
-] as const
+useColorScheme()
+
+const router = useRouter()
+const user = ref<string | null>(bootUser())
+
+onMounted(async () => {
+  if (!user.value) user.value = await sessionUser()
+})
+
+async function signOut() {
+  await logout()
+  user.value = null
+  router.push('/login')
+}
 </script>
 
 <template>
   <FrappeUIProvider>
-    <div class="min-h-screen bg-surface-base text-ink-gray-8">
-      <nav class="flex flex-wrap items-center gap-1 border-b border-outline-gray-1 px-3 py-2">
-        <span class="mr-2 text-base font-semibold">Lube Station</span>
-        <RouterLink
-          v-for="[to, label] in links"
-          :key="to"
-          :to="to"
-          class="rounded px-2 py-1 text-sm hover:bg-surface-gray-2"
-          active-class="bg-surface-gray-2 font-medium"
-        >
-          {{ label }}
-        </RouterLink>
-        <span class="ml-auto text-xs text-ink-gray-5">{{ user || 'Guest' }}</span>
-      </nav>
-      <main class="mx-auto max-w-5xl px-3 py-6">
-        <RouterView />
-      </main>
+    <div class="flex h-screen overflow-hidden bg-surface-base text-ink-gray-8">
+      <Sidebar v-if="user">
+        <SidebarHeader title="Lube Station" subtitle="Client portal" />
+        <div class="flex-1 overflow-y-auto">
+          <SidebarSection>
+            <SidebarItem label="Dashboard" route="/" />
+            <SidebarItem label="Store" route="/store" />
+          </SidebarSection>
+          <SidebarSection>
+            <SidebarLabel>Manage</SidebarLabel>
+            <SidebarItem label="Services" route="/services" />
+            <SidebarItem label="VPS" route="/vps" />
+            <SidebarItem label="Dedicated" route="/dedicated" />
+            <SidebarItem label="Domains" route="/domains" />
+            <SidebarItem label="Downloads" route="/downloads" />
+            <SidebarItem label="Support" route="/support" />
+          </SidebarSection>
+          <SidebarSection>
+            <SidebarLabel>Billing</SidebarLabel>
+            <SidebarItem label="Cart" route="/cart" />
+            <SidebarItem label="Invoices" route="/invoices" />
+          </SidebarSection>
+          <SidebarSection>
+            <SidebarItem label="Account" route="/account" />
+          </SidebarSection>
+        </div>
+      </Sidebar>
+
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header class="flex h-12 flex-shrink-0 items-center gap-2 border-b border-outline-gray-1 px-3">
+          <SidebarCollapseToggle v-if="user" />
+          <RouterLink v-if="!user" to="/store" class="text-sm font-semibold">Lube Station</RouterLink>
+          <div class="ml-auto flex items-center gap-2">
+            <template v-if="!user">
+              <RouterLink to="/store" class="rounded px-2 py-1 text-sm hover:bg-surface-gray-2">Store</RouterLink>
+              <RouterLink to="/login" class="rounded px-2 py-1 text-sm hover:bg-surface-gray-2">Sign in</RouterLink>
+              <RouterLink to="/signup" class="rounded px-2 py-1 text-sm hover:bg-surface-gray-2">Sign up</RouterLink>
+            </template>
+            <span v-else class="hidden text-xs text-ink-gray-5 sm:inline">{{ user }}</span>
+            <button
+              v-if="user"
+              class="rounded px-2 py-1 text-sm text-ink-gray-6 hover:bg-surface-gray-2"
+              @click="signOut"
+            >
+              Sign out
+            </button>
+            <ThemeToggle />
+          </div>
+        </header>
+        <main class="mx-auto w-full max-w-5xl flex-1 overflow-y-auto px-4 py-6">
+          <RouterView />
+        </main>
+      </div>
     </div>
   </FrappeUIProvider>
 </template>

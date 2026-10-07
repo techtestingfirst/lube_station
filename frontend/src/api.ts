@@ -83,3 +83,19 @@ export async function call<T = any>(dotted: string, args: Record<string, unknown
 export async function getDoc<T>(doctype: string, name: string): Promise<T> {
   return call<T>(`frappe.client.get`, { doctype, name }, 'POST')
 }
+
+/** Customer-safe error text. Strips framework prefixes and technical dumps. */
+export function friendlyError(e: unknown): string {
+  let msg = e instanceof Error ? e.message : String(e ?? '')
+  msg = msg.replace(/^Error:\s*/, '')
+  msg = msg.replace(
+    /^(ValidationError|PermissionError|MandatoryError|LinkValidationError|DoesNotExistError|DuplicateEntryError|DataError|IntegrityError):\s*/,
+    '',
+  )
+  if (/^Call \S+ failed/.test(msg) || /Traceback|frappe\/exceptions|\.py", line/i.test(msg)) {
+    return 'Something went wrong. Please try again.'
+  }
+  msg = msg.split('\n')[0].trim()
+  if (msg.length > 180) msg = `${msg.slice(0, 177).trimEnd()}…`
+  return msg || 'Something went wrong. Please try again.'
+}
