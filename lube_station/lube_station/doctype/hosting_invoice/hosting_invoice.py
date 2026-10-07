@@ -94,7 +94,7 @@ def _fulfill_domains(order_name: str, customer: str):
     """Register/transfer ordered domains, link owned ones to the customer."""
     import json
 
-    from lube_station.lube_station.doctype.domain.domain import register_domain, transfer_domain
+    from lube_station.lube_domains.doctype.domain.domain import register_domain, transfer_domain
 
     order = frappe.get_doc("Order", order_name)
     for item in order.items:

@@ -4,7 +4,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from lube_station.lube_station.adapters.seed import seed
-from lube_station.lube_station.doctype.domain.domain import check_availability
+from lube_station.lube_domains.doctype.domain.domain import check_availability
 
 
 class TestDomainAvailability(IntegrationTestCase):

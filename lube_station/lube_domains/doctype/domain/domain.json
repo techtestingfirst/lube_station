@@ -1,6 +1,6 @@
 {
   "name": "Domain",
-  "module": "Lube Station",
+  "module": "Lube Domains",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "field:domain_name",

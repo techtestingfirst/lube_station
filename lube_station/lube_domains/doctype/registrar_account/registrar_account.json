@@ -1,6 +1,6 @@
 {
   "name": "Registrar Account",
-  "module": "Lube Station",
+  "module": "Lube Domains",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "format:RACC-{####}",

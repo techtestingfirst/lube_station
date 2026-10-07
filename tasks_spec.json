@@ -201,7 +201,7 @@
       ],
       "auto_check": {
         "api_exists": [
-          "lube_station.lube_station.doctype.domain.domain.check_availability"
+          "lube_station.lube_domains.doctype.domain.domain.check_availability"
         ],
         "integration_test": "test_domain_availability"
       }

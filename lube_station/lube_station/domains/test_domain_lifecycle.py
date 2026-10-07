@@ -2,7 +2,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from lube_station.lube_station.adapters.seed import seed
-from lube_station.lube_station.doctype.domain.domain import register_domain, renew_domain, update_nameservers
+from lube_station.lube_domains.doctype.domain.domain import register_domain, renew_domain, update_nameservers
 
 
 class TestDomainLifecycle(IntegrationTestCase):

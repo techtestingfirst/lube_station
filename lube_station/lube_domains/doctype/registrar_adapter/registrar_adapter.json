@@ -1,0 +1,23 @@
+{
+  "name": "Registrar Adapter",
+  "module": "Lube Domains",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "field:adapter_name",
+  "naming_rule": "By fieldname",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "adapter_name", "fieldtype": "Data", "label": "Adapter Name", "reqd": 1, "unique": 1},
+    {"fieldname": "vendor_name", "fieldtype": "Select", "label": "Vendor Name", "options": "OpenSRS\nNamecheap\nGoDaddy\nLogicBoxes\neNom\nCentralNic\nHEXONET\nPorkbun\nInternet.bs\nNominet\nCustom", "reqd": 1},
+    {"fieldname": "class_path", "fieldtype": "Data", "label": "Class Path", "description": "Leave empty for known vendors, it fills on save. Enter a path only for custom code.", "depends_on": "eval:doc.vendor_name=='Custom'||!doc.class_path"},
+    {"fieldname": "api_mode", "fieldtype": "Select", "label": "API Mode", "options": "\nREST\nXML\nEPP", "description": "Protocol the registrar API speaks."},
+    {"fieldname": "supported_operations", "fieldtype": "Small Text", "label": "Supported Operations", "description": "Auto-filled from the adapter code on save.", "read_only": 1},
+    {"fieldname": "supported_tlds", "fieldtype": "Small Text", "label": "Supported TLDs", "description": "Comma list the vendor sells, e.g. .com, .in. Not detectable from code."},
+    {"fieldname": "sandbox_supported", "fieldtype": "Check", "label": "Sandbox Supported", "default": "1"},
+    {"fieldname": "supports_dns", "fieldtype": "Check", "label": "Supports DNS", "default": "0"},
+    {"fieldname": "supports_privacy", "fieldtype": "Check", "label": "Supports Privacy", "default": "0"},
+    {"fieldname": "supports_transfer", "fieldtype": "Check", "label": "Supports Transfer", "default": "0"},
+    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "0"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

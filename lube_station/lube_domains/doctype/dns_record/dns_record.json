@@ -1,6 +1,6 @@
 {
   "name": "DNS Record",
-  "module": "Lube Station",
+  "module": "Lube Domains",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "format:DNS-{####}",

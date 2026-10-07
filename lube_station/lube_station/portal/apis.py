@@ -215,7 +215,7 @@ def cart_add(hosting_plan: str, billing_cycle: str = "Monthly", quantity: int = 
 @frappe.whitelist(methods=["GET", "POST"], allow_guest=True)
 def domain_check(domain: str) -> dict:
     """Guest-safe availability lookup (rate-limited server-side)."""
-    from lube_station.lube_station.doctype.domain.domain import check_availability
+    from lube_station.lube_domains.doctype.domain.domain import check_availability
 
     return check_availability(domain)
 
@@ -306,7 +306,11 @@ def cart_apply_coupon(cart: str, coupon_code: str):
 
     cart_doc = frappe.get_doc("Cart", cart)
     _assert_cart_access(cart_doc)
-    coupon = frappe.get_doc("Coupon", {"code": coupon_code})
+    code = (coupon_code or "").strip()
+    coupon_name = frappe.db.get_value("Coupon", {"code": code}, "name")
+    if not coupon_name:
+        frappe.throw("This coupon code is not valid.")
+    coupon = frappe.get_doc("Coupon", coupon_name)
     coupon.check_cart(cart_doc)
     cart_doc.coupon_code = coupon.code
     cart_doc.save(ignore_permissions=True)
@@ -440,6 +444,11 @@ def signup_customer(
         frappe.throw("Accept the Terms of Service to register")
     if frappe.db.exists("User", email):
         frappe.throw("Account already exists, sign in instead")
+    from lube_station.lube_station.doctype.tax_rule.tax_rule import normalize_country
+
+    country = normalize_country(country) or None
+    if country and not frappe.db.exists("Country", country):
+        frappe.throw("Select a valid country")
     user = frappe.get_doc({"doctype": "User", "email": email, "first_name": full_name, "enabled": 1, "new_password": password, "roles": [{"role": "Customer"}]}).insert(ignore_permissions=True)
     customer = frappe.get_doc(
         {
