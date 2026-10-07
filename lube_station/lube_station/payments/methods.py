@@ -79,3 +79,16 @@ def payu_return(**kwargs) -> dict:
     if inv:
         _mark_paid(inv)
     return {"status": "success", "invoice": inv, "verified": True}
+
+
+@frappe.whitelist(methods=["POST"], allow_guest=True)
+def ccavenue_return(**kwargs) -> dict:
+    """CCAvenue hosted return: decrypt, mark paid on success."""
+    from lube_station.lube_station.adapters.payments.ccavenue import CCAvenueAdapter
+    from lube_station.lube_station.payments.webhooks import _mark_paid
+
+    out = CCAvenueAdapter().handle_webhook(kwargs, {})
+    inv = frappe.db.get_value("Hosting Invoice", out.get("order_id") or kwargs.get("merchant_param1"), "name")
+    if inv:
+        _mark_paid(inv)
+    return {"status": "success", "invoice": inv, "verified": True}

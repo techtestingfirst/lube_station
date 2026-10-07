@@ -35,6 +35,9 @@ DEFAULTS = {
     "twocheckout_merchant_code": "",
     "twocheckout_secret_key": "",
     "twocheckout_sandbox": 1,
+    "ccavenue_merchant_id": "",
+    "ccavenue_access_code": "",
+    "ccavenue_working_key": "",
 }
 
 # Gateways with a real payment bridge behind them.
