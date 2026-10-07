@@ -52,6 +52,7 @@ async function signOut() {
           <SidebarSection>
             <SidebarLabel>Billing</SidebarLabel>
             <SidebarItem label="Cart" route="/cart" />
+            <SidebarItem label="Orders" route="/orders" />
             <SidebarItem label="Invoices" route="/invoices" />
           </SidebarSection>
           <SidebarSection>

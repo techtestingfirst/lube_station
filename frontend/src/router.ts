@@ -12,6 +12,7 @@ const routes = [
   { path: '/domain/:row', component: () => import('./pages/Domain.vue') },
   { path: '/cart', component: () => import('./pages/Cart.vue') },
   { path: '/order/:order', component: () => import('./pages/OrderSuccess.vue') },
+  { path: '/orders', component: () => import('./pages/Orders.vue') },
   { path: '/invoices', component: () => import('./pages/Invoices.vue') },
   { path: '/pay/:invoice', component: () => import('./pages/Payment.vue') },
   { path: '/services', component: () => import('./pages/Services.vue') },
