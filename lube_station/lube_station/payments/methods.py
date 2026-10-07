@@ -64,3 +64,18 @@ def approve_bank_transfer(invoice: str) -> dict:
 
     _mark_paid(invoice)
     return {"transaction": name, "invoice": invoice, "status": "Success"}
+
+
+@frappe.whitelist(methods=["POST"], allow_guest=True)
+def payu_return(**kwargs) -> dict:
+    """PayU hosted return: verify hash, mark paid on success."""
+    from lube_station.lube_station.adapters.payments.payu import PayUIndiaAdapter
+    from lube_station.lube_station.payments.webhooks import _mark_paid
+
+    out = PayUIndiaAdapter().handle_webhook(kwargs, {})
+    if str(out.get("type", "")).lower() != "success":
+        return {"status": out.get("type"), "verified": True}
+    inv = frappe.db.get_value("Hosting Invoice", kwargs.get("txnid"), "name")
+    if inv:
+        _mark_paid(inv)
+    return {"status": "success", "invoice": inv, "verified": True}

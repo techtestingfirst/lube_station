@@ -22,6 +22,9 @@ DEFAULTS = {
     "fraud_large_order_score": 15,
     "razorpay_auto_capture": 1,
     "bank_details": "",
+    "payu_merchant_key": "",
+    "payu_merchant_salt": "",
+    "payu_sandbox": 1,
 }
 
 # Gateways with a real payment bridge behind them.
