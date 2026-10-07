@@ -23,7 +23,8 @@
     {"fieldname": "fraud_large_order_total", "fieldtype": "Currency", "label": "Large Order Above", "default": "1000"},
     {"fieldname": "fraud_large_order_score", "fieldtype": "Int", "label": "Large-Order Score", "default": "15"},
     {"fieldname": "payments_section", "fieldtype": "Section Break", "label": "Payments"},
-    {"fieldname": "razorpay_auto_capture", "fieldtype": "Check", "label": "Razorpay Auto-Capture", "default": "1"}
+    {"fieldname": "razorpay_auto_capture", "fieldtype": "Check", "label": "Razorpay Auto-Capture", "default": "1"},
+    {"fieldname": "bank_details", "fieldtype": "Small Text", "label": "Bank Details", "description": "Shown on bank-transfer instructions"}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
 }

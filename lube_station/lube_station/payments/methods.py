@@ -44,3 +44,23 @@ def auto_charge_invoice(invoice: str) -> dict:
         return out
     except Exception as e:
         return {"action": "dunning", "reason": str(e)}
+
+
+@frappe.whitelist(methods=["POST"])
+def approve_bank_transfer(invoice: str) -> dict:
+    """Staff-only: approve a pending bank transfer and activate services."""
+    roles = set(frappe.get_roles())
+    if not (roles & {"System Manager", "Billing Admin"}) and frappe.session.user != "Administrator":
+        frappe.throw("Only billing staff can approve transfers", frappe.PermissionError)
+    name = frappe.db.get_value(
+        "Payment Transaction",
+        {"gateway": "Bank Transfer", "invoice": invoice, "status": "Pending"},
+        "name",
+    )
+    if not name:
+        frappe.throw("No pending bank transfer for this invoice")
+    frappe.db.set_value("Payment Transaction", name, "status", "Success")
+    from lube_station.lube_station.payments.webhooks import _mark_paid
+
+    _mark_paid(invoice)
+    return {"transaction": name, "invoice": invoice, "status": "Success"}

@@ -21,6 +21,7 @@ DEFAULTS = {
     "fraud_large_order_total": 1000,
     "fraud_large_order_score": 15,
     "razorpay_auto_capture": 1,
+    "bank_details": "",
 }
 
 # Gateways with a real payment bridge behind them.
