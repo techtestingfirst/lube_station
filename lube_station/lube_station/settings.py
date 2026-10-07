@@ -29,6 +29,9 @@ DEFAULTS = {
     "cashfree_secret_key": "",
     "cashfree_sandbox": 1,
     "mollie_secret_key": "",
+    "gocardless_access_token": "",
+    "gocardless_webhook_secret": "",
+    "gocardless_sandbox": 1,
 }
 
 # Gateways with a real payment bridge behind them.
