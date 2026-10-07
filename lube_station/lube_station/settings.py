@@ -25,6 +25,9 @@ DEFAULTS = {
     "payu_merchant_key": "",
     "payu_merchant_salt": "",
     "payu_sandbox": 1,
+    "cashfree_app_id": "",
+    "cashfree_secret_key": "",
+    "cashfree_sandbox": 1,
 }
 
 # Gateways with a real payment bridge behind them.

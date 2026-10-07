@@ -27,7 +27,10 @@
     {"fieldname": "bank_details", "fieldtype": "Small Text", "label": "Bank Details", "description": "Shown on bank-transfer instructions"},
     {"fieldname": "payu_merchant_key", "fieldtype": "Data", "label": "PayU Merchant Key"},
     {"fieldname": "payu_merchant_salt", "fieldtype": "Password", "label": "PayU Merchant Salt"},
-    {"fieldname": "payu_sandbox", "fieldtype": "Check", "label": "PayU Sandbox", "default": "1"}
+    {"fieldname": "payu_sandbox", "fieldtype": "Check", "label": "PayU Sandbox", "default": "1"},
+    {"fieldname": "cashfree_app_id", "fieldtype": "Data", "label": "Cashfree App ID"},
+    {"fieldname": "cashfree_secret_key", "fieldtype": "Password", "label": "Cashfree Secret Key"},
+    {"fieldname": "cashfree_sandbox", "fieldtype": "Check", "label": "Cashfree Sandbox", "default": "1"}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
 }
