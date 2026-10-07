@@ -16,14 +16,14 @@ PAYMENTS = [
 ]
 
 PROVISIONING = [
-    ("cPanel / WHM", "cPanel", "lube_station.lube_station.adapters.provisioning.cpanel.CpanelWhmAdapter", 1),
-    ("Plesk", "Plesk", "lube_station.lube_station.adapters.provisioning.plesk.PleskAdapter", 1),
-    ("DirectAdmin", "DirectAdmin", "lube_station.lube_station.adapters.provisioning.directadmin.DirectAdminAdapter", 1),
-    ("Virtualizor", "Virtualizor", "lube_station.lube_station.adapters.provisioning.stubs.VirtualizorAdapter", 0),
-    ("Proxmox VE", "Proxmox", "lube_station.lube_station.adapters.provisioning.stubs.ProxmoxAdapter", 0),
-    ("Hetzner Cloud", "Hetzner", "lube_station.lube_station.adapters.provisioning.stubs.HetznerCloudAdapter", 0),
-    ("AWS EC2", "AWS", "lube_station.lube_station.adapters.provisioning.stubs.AwsEc2Adapter", 0),
-    ("Cloudflare", "Cloudflare", "lube_station.lube_station.adapters.provisioning.stubs.CloudflareAdapter", 0),
+    ("cPanel / WHM", "cPanel", "lube_station.lube_station.adapters.provisioning.cpanel.CpanelWhmAdapter", "WHM API", 1),
+    ("Plesk", "Plesk", "lube_station.lube_station.adapters.provisioning.plesk.PleskAdapter", "XML API", 1),
+    ("DirectAdmin", "DirectAdmin", "lube_station.lube_station.adapters.provisioning.directadmin.DirectAdminAdapter", "HTTP API", 1),
+    ("Virtualizor", "Virtualizor", "lube_station.lube_station.adapters.provisioning.stubs.VirtualizorAdapter", "", 0),
+    ("Proxmox VE", "Proxmox", "lube_station.lube_station.adapters.provisioning.stubs.ProxmoxAdapter", "", 0),
+    ("Hetzner Cloud", "Hetzner", "lube_station.lube_station.adapters.provisioning.stubs.HetznerCloudAdapter", "", 0),
+    ("AWS EC2", "AWS", "lube_station.lube_station.adapters.provisioning.stubs.AwsEc2Adapter", "", 0),
+    ("Cloudflare", "Cloudflare", "lube_station.lube_station.adapters.provisioning.stubs.CloudflareAdapter", "", 0),
 ]
 
 REGISTRARS = [
@@ -58,7 +58,7 @@ def seed():
                     "active": active,
                 }
             ).insert(ignore_permissions=True)
-    for name, vendor, path, active in PROVISIONING:
+    for name, vendor, path, mode, active in PROVISIONING:
         if not frappe.db.exists("Provisioning Adapter", name):
             frappe.get_doc(
                 {
@@ -66,13 +66,24 @@ def seed():
                     "adapter_name": name,
                     "vendor_name": vendor,
                     "class_path": path,
+                    "api_mode": mode,
                     "supports_usage": 1,
                     "supports_change_plan": 1,
                     "active": active,
                 }
             ).insert(ignore_permissions=True)
+            continue
+        doc = frappe.get_doc("Provisioning Adapter", name)
+        dirty = False
+        if mode and not doc.api_mode:
+            doc.api_mode = mode
+            dirty = True
+        if doc.class_path and not doc.lifecycle_methods:
+            dirty = True
+        if dirty:
+            doc.save(ignore_permissions=True)
     registrar_paths = {
-        "OpenSRS": "lube_station.lube_station.adapters.registrar.mvp.OpenSrsAdapter",
+        "OpenSRS": "lube_station.lube_station.adapters.registrar.opensrs.OpenSrsAdapter",
         "Namecheap": "lube_station.lube_station.adapters.registrar.mvp.NamecheapAdapter",
         "GoDaddy": "lube_station.lube_station.adapters.registrar.mvp.GodaddyAdapter",
         "ResellerClub / LogicBoxes": "lube_station.lube_station.adapters.registrar.mvp.LogicBoxesAdapter",
@@ -99,3 +110,15 @@ def seed():
                     "active": active,
                 }
             ).insert(ignore_permissions=True)
+            continue
+        doc = frappe.get_doc("Registrar Adapter", name)
+        if doc.class_path and not doc.supported_operations:
+            doc.save(ignore_permissions=True)
+        # One-way upgrade: mock OpenSRS -> live adapter. Guarded by exact
+        # legacy path so seller-switched classes are never overwritten.
+        if (
+            name == "OpenSRS"
+            and doc.class_path == "lube_station.lube_station.adapters.registrar.mvp.OpenSrsAdapter"
+        ):
+            doc.class_path = registrar_paths[name]
+            doc.save(ignore_permissions=True)
