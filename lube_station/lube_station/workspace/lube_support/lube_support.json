@@ -1,0 +1,87 @@
+{
+ "app": "lube_station",
+ "charts": [],
+ "content": "[{\"id\": \"lube_support_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lube Support</b></span><br><span class=\\\"text-muted\\\">Helpdesk links, notifications and settings.</span>\", \"col\": 12}}, {\"id\": \"lube_support_sc_ticket_hosti\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Ticket Hosting Reference\", \"col\": 3}}, {\"id\": \"lube_support_sc_lube_station\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Lube Station Settings\", \"col\": 3}}, {\"id\": \"lube_support_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"lube_support_card_support\", \"type\": \"card\", \"data\": {\"card_name\": \"Support\", \"col\": 4}}]",
+ "creation": "2026-10-07 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "support",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Lube Support",
+ "links": [
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Support",
+   "link_count": 3,
+   "link_to": "",
+   "link_type": "",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Ticket Hosting Reference",
+   "link_count": 0,
+   "link_to": "Ticket Hosting Reference",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Notification Event",
+   "link_count": 0,
+   "link_to": "Notification Event",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Lube Station Settings",
+   "link_count": 0,
+   "link_to": "Lube Station Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-07 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lube Station",
+ "name": "Lube Support",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 6.0,
+ "shortcuts": [
+  {
+   "label": "Ticket Hosting Reference",
+   "link_to": "Ticket Hosting Reference",
+   "type": "DocType"
+  },
+  {
+   "label": "Lube Station Settings",
+   "link_to": "Lube Station Settings",
+   "type": "DocType"
+  }
+ ],
+ "title": "Lube Support",
+ "type": "Workspace"
+}

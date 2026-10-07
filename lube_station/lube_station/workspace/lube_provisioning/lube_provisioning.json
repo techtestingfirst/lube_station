@@ -1,0 +1,219 @@
+{
+ "app": "lube_station",
+ "charts": [],
+ "content": "[{\"id\": \"lube_provisioning_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lube Provisioning</b></span><br><span class=\\\"text-muted\\\">Servers, providers, VPS, dedicated, services and usage.</span>\", \"col\": 12}}, {\"id\": \"lube_provisioning_sc_server\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Server\", \"col\": 3}}, {\"id\": \"lube_provisioning_sc_service\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Service\", \"col\": 3}}, {\"id\": \"lube_provisioning_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"lube_provisioning_card_servers\", \"type\": \"card\", \"data\": {\"card_name\": \"Servers\", \"col\": 4}}, {\"id\": \"lube_provisioning_card_provisioning\", \"type\": \"card\", \"data\": {\"card_name\": \"Provisioning\", \"col\": 4}}]",
+ "creation": "2026-10-07 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "server",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Lube Provisioning",
+ "links": [
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Servers",
+   "link_count": 5,
+   "link_to": "",
+   "link_type": "",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Server",
+   "link_count": 0,
+   "link_to": "Server",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Server Group",
+   "link_count": 0,
+   "link_to": "Server Group",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Infrastructure Provider",
+   "link_count": 0,
+   "link_to": "Infrastructure Provider",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Provider Product",
+   "link_count": 0,
+   "link_to": "Provider Product",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reseller Agreement",
+   "link_count": 0,
+   "link_to": "Reseller Agreement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Provisioning",
+   "link_count": 9,
+   "link_to": "",
+   "link_type": "",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Provisioning Module",
+   "link_count": 0,
+   "link_to": "Provisioning Module",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Provisioning Adapter",
+   "link_count": 0,
+   "link_to": "Provisioning Adapter",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "VPS Configuration",
+   "link_count": 0,
+   "link_to": "VPS Configuration",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "VPS Instance",
+   "link_count": 0,
+   "link_to": "VPS Instance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Dedicated Server Inventory",
+   "link_count": 0,
+   "link_to": "Dedicated Server Inventory",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Dedicated Server Configuration",
+   "link_count": 0,
+   "link_to": "Dedicated Server Configuration",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Service",
+   "link_count": 0,
+   "link_to": "Service",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Usage Snapshot",
+   "link_count": 0,
+   "link_to": "Usage Snapshot",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Provider API Log",
+   "link_count": 0,
+   "link_to": "Provider API Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-07 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lube Station",
+ "name": "Lube Provisioning",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 4.0,
+ "shortcuts": [
+  {
+   "label": "Server",
+   "link_to": "Server",
+   "type": "DocType"
+  },
+  {
+   "label": "Service",
+   "link_to": "Service",
+   "type": "DocType"
+  }
+ ],
+ "title": "Lube Provisioning",
+ "type": "Workspace"
+}

@@ -1,0 +1,142 @@
+{
+ "app": "lube_station",
+ "charts": [],
+ "content": "[{\"id\": \"lube_catalog_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lube Catalog</b></span><br><span class=\\\"text-muted\\\">Catalog, plans, pricing and downloads.</span>\", \"col\": 12}}, {\"id\": \"lube_catalog_sc_hosting_plan\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hosting Plan\", \"col\": 3}}, {\"id\": \"lube_catalog_sc_plan_pricing\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Plan Pricing\", \"col\": 3}}, {\"id\": \"lube_catalog_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"lube_catalog_card_catalog\", \"type\": \"card\", \"data\": {\"card_name\": \"Catalog\", \"col\": 4}}, {\"id\": \"lube_catalog_card_downloads\", \"type\": \"card\", \"data\": {\"card_name\": \"Downloads\", \"col\": 4}}]",
+ "creation": "2026-10-07 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "grid",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Lube Catalog",
+ "links": [
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Catalog",
+   "link_count": 4,
+   "link_to": "",
+   "link_type": "",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Product Group",
+   "link_count": 0,
+   "link_to": "Product Group",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Product Type Schema",
+   "link_count": 0,
+   "link_to": "Product Type Schema",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Hosting Plan",
+   "link_count": 0,
+   "link_to": "Hosting Plan",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Plan Pricing",
+   "link_count": 0,
+   "link_to": "Plan Pricing",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Downloads",
+   "link_count": 3,
+   "link_to": "",
+   "link_type": "",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Download Category",
+   "link_count": 0,
+   "link_to": "Download Category",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Downloadable Asset",
+   "link_count": 0,
+   "link_to": "Downloadable Asset",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Download Log",
+   "link_count": 0,
+   "link_to": "Download Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-07 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lube Station",
+ "name": "Lube Catalog",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "label": "Hosting Plan",
+   "link_to": "Hosting Plan",
+   "type": "DocType"
+  },
+  {
+   "label": "Plan Pricing",
+   "link_to": "Plan Pricing",
+   "type": "DocType"
+  }
+ ],
+ "title": "Lube Catalog",
+ "type": "Workspace"
+}

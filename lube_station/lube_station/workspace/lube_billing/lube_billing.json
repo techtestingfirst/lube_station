@@ -1,0 +1,153 @@
+{
+ "app": "lube_station",
+ "charts": [],
+ "content": "[{\"id\": \"lube_billing_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lube Billing</b></span><br><span class=\\\"text-muted\\\">Invoices, taxes, dunning, payments and affiliates.</span>\", \"col\": 12}}, {\"id\": \"lube_billing_sc_hosting_invo\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hosting Invoice\", \"col\": 3}}, {\"id\": \"lube_billing_sc_payment_tran\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Transaction\", \"col\": 3}}, {\"id\": \"lube_billing_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"lube_billing_card_invoicing\", \"type\": \"card\", \"data\": {\"card_name\": \"Invoicing\", \"col\": 4}}, {\"id\": \"lube_billing_card_payments\", \"type\": \"card\", \"data\": {\"card_name\": \"Payments\", \"col\": 4}}]",
+ "creation": "2026-10-07 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "accounting",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Lube Billing",
+ "links": [
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Invoicing",
+   "link_count": 4,
+   "link_to": "",
+   "link_type": "",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Hosting Invoice",
+   "link_count": 0,
+   "link_to": "Hosting Invoice",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tax Rule",
+   "link_count": 0,
+   "link_to": "Tax Rule",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Dunning Rule",
+   "link_count": 0,
+   "link_to": "Dunning Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "GST Settings",
+   "link_count": 0,
+   "link_to": "GST Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payments",
+   "link_count": 4,
+   "link_to": "",
+   "link_type": "",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Gateway Adapter",
+   "link_count": 0,
+   "link_to": "Payment Gateway Adapter",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Transaction",
+   "link_count": 0,
+   "link_to": "Payment Transaction",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Saved Payment Method",
+   "link_count": 0,
+   "link_to": "Saved Payment Method",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Affiliate",
+   "link_count": 0,
+   "link_to": "Affiliate",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-07 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lube Station",
+ "name": "Lube Billing",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 3.0,
+ "shortcuts": [
+  {
+   "label": "Hosting Invoice",
+   "link_to": "Hosting Invoice",
+   "type": "DocType"
+  },
+  {
+   "label": "Payment Transaction",
+   "link_to": "Payment Transaction",
+   "type": "DocType"
+  }
+ ],
+ "title": "Lube Billing",
+ "type": "Workspace"
+}

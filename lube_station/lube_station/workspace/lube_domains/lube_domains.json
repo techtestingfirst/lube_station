@@ -1,0 +1,98 @@
+{
+ "app": "lube_station",
+ "charts": [],
+ "content": "[{\"id\": \"lube_domains_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lube Domains</b></span><br><span class=\\\"text-muted\\\">Registrar accounts, domains and DNS.</span>\", \"col\": 12}}, {\"id\": \"lube_domains_sc_domain\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Domain\", \"col\": 3}}, {\"id\": \"lube_domains_sc_registrar_ac\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Registrar Account\", \"col\": 3}}, {\"id\": \"lube_domains_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"lube_domains_card_domains\", \"type\": \"card\", \"data\": {\"card_name\": \"Domains\", \"col\": 4}}]",
+ "creation": "2026-10-07 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "globe",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Lube Domains",
+ "links": [
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Domains",
+   "link_count": 4,
+   "link_to": "",
+   "link_type": "",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Registrar Account",
+   "link_count": 0,
+   "link_to": "Registrar Account",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Registrar Adapter",
+   "link_count": 0,
+   "link_to": "Registrar Adapter",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Domain",
+   "link_count": 0,
+   "link_to": "Domain",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "DNS Record",
+   "link_count": 0,
+   "link_to": "DNS Record",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-07 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lube Station",
+ "name": "Lube Domains",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 5.0,
+ "shortcuts": [
+  {
+   "label": "Domain",
+   "link_to": "Domain",
+   "type": "DocType"
+  },
+  {
+   "label": "Registrar Account",
+   "link_to": "Registrar Account",
+   "type": "DocType"
+  }
+ ],
+ "title": "Lube Domains",
+ "type": "Workspace"
+}
