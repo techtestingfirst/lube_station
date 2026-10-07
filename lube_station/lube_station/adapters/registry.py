@@ -28,7 +28,7 @@ PROVISIONING_PATHS = {
 
 REGISTRAR_PATHS = {
     "OpenSRS": "lube_station.lube_station.adapters.registrar.opensrs.OpenSrsAdapter",
-    "Namecheap": "lube_station.lube_station.adapters.registrar.mvp.NamecheapAdapter",
+    "Namecheap": "lube_station.lube_station.adapters.registrar.namecheap.NamecheapAdapter",
     "GoDaddy": "lube_station.lube_station.adapters.registrar.mvp.GodaddyAdapter",
     "ResellerClub / LogicBoxes": "lube_station.lube_station.adapters.registrar.mvp.LogicBoxesAdapter",
     "eNom": "lube_station.lube_station.adapters.registrar.stubs.EnomAdapter",

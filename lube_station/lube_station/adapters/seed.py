@@ -84,7 +84,7 @@ def seed():
             doc.save(ignore_permissions=True)
     registrar_paths = {
         "OpenSRS": "lube_station.lube_station.adapters.registrar.opensrs.OpenSrsAdapter",
-        "Namecheap": "lube_station.lube_station.adapters.registrar.mvp.NamecheapAdapter",
+        "Namecheap": "lube_station.lube_station.adapters.registrar.namecheap.NamecheapAdapter",
         "GoDaddy": "lube_station.lube_station.adapters.registrar.mvp.GodaddyAdapter",
         "ResellerClub / LogicBoxes": "lube_station.lube_station.adapters.registrar.mvp.LogicBoxesAdapter",
         "eNom": "lube_station.lube_station.adapters.registrar.stubs.EnomAdapter",
@@ -114,11 +114,18 @@ def seed():
         doc = frappe.get_doc("Registrar Adapter", name)
         if doc.class_path and not doc.supported_operations:
             doc.save(ignore_permissions=True)
-        # One-way upgrade: mock OpenSRS -> live adapter. Guarded by exact
-        # legacy path so seller-switched classes are never overwritten.
-        if (
-            name == "OpenSRS"
-            and doc.class_path == "lube_station.lube_station.adapters.registrar.mvp.OpenSrsAdapter"
+        # One-way upgrades: mock adapters -> live ones. Guarded by exact
+        # legacy paths so seller-switched classes are never overwritten.
+        for legacy, new in (
+            (
+                "OpenSRS",
+                "lube_station.lube_station.adapters.registrar.mvp.OpenSrsAdapter",
+            ),
+            (
+                "Namecheap",
+                "lube_station.lube_station.adapters.registrar.mvp.NamecheapAdapter",
+            ),
         ):
-            doc.class_path = registrar_paths[name]
-            doc.save(ignore_permissions=True)
+            if name == legacy and doc.class_path == new:
+                doc.class_path = registrar_paths[name]
+                doc.save(ignore_permissions=True)

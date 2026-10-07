@@ -9,7 +9,8 @@
     {"fieldname": "registrar", "fieldtype": "Link", "label": "Registrar", "options": "Registrar Adapter", "reqd": 1},
     {"fieldname": "api_key", "fieldtype": "Password", "label": "API Key"},
     {"fieldname": "api_secret", "fieldtype": "Password", "label": "API Secret"},
-    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1"}
+    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1"},
+    {"fieldname": "client_ip", "fieldtype": "Data", "label": "Client IP", "description": "Egress IP Namecheap sees; blank attempts auto-detect"}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
 }
