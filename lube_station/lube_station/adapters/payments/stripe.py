@@ -102,7 +102,7 @@ class StripeAdapter(PaymentGatewayAdapter):
         params = {
             "amount": _paise(inv.total_due),
             "currency": "inr",
-            "payment_method": method.token,
+            "payment_method": method.get_password("token"),
             "off_session": True,
             "confirm": True,
             "description": f"Invoice {inv.name}",

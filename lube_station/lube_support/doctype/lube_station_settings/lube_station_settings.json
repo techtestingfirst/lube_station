@@ -30,7 +30,8 @@
     {"fieldname": "payu_sandbox", "fieldtype": "Check", "label": "PayU Sandbox", "default": "1"},
     {"fieldname": "cashfree_app_id", "fieldtype": "Data", "label": "Cashfree App ID"},
     {"fieldname": "cashfree_secret_key", "fieldtype": "Password", "label": "Cashfree Secret Key"},
-    {"fieldname": "cashfree_sandbox", "fieldtype": "Check", "label": "Cashfree Sandbox", "default": "1"}
+    {"fieldname": "cashfree_sandbox", "fieldtype": "Check", "label": "Cashfree Sandbox", "default": "1"},
+    {"fieldname": "mollie_secret_key", "fieldtype": "Password", "label": "Mollie Secret Key", "description": "test_ key for sandbox, live_ key for production"}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
 }

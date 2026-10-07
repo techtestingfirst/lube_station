@@ -111,7 +111,7 @@ class RazorpayAdapter(PaymentGatewayAdapter):
                 "currency": "INR",
                 "order_id": order.get("id"),
                 "customer_id": "",
-                "token": method.token,
+                "token": method.get_password("token"),
                 "recurring": "1",
                 "description": f"Invoice {inv.name}",
             }

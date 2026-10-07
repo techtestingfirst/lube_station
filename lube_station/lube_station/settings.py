@@ -28,6 +28,7 @@ DEFAULTS = {
     "cashfree_app_id": "",
     "cashfree_secret_key": "",
     "cashfree_sandbox": 1,
+    "mollie_secret_key": "",
 }
 
 # Gateways with a real payment bridge behind them.
