@@ -174,14 +174,6 @@ def cart_current():
     return _cart_view(cart_doc)
 
 
-@frappe.whitelist(methods=["GET", "POST"])
-def cart_view(cart: str | None = None):
-    customer = my_customer()
-    cart_doc = frappe.get_doc("Cart", cart) if cart else _open_cart(customer)
-    _assert_cart_access(cart_doc)
-    return _cart_view(cart_doc)
-
-
 @frappe.whitelist(methods=["POST"])
 def cart_add(hosting_plan: str, billing_cycle: str = "Monthly", quantity: int = 1, domain: str | None = None, configuration: dict | str | None = None, cart: str | None = None):
     import json

@@ -107,7 +107,7 @@ def _fulfill_domains(order_name: str, customer: str):
             years = config.get("domain_years") or item.quantity or 1
             try:
                 if action == "transfer":
-                    transfer_domain(item.reference, config.get("epp") or "", None)
+                    transfer_domain(item.reference, config.get("epp") or "", None, customer)
                 elif action == "register":
                     register_domain(item.reference, customer, None, years)
             except Exception:
@@ -121,7 +121,7 @@ def _fulfill_domains(order_name: str, customer: str):
             if action in ("register", "transfer") and config.get("_domain"):
                 try:
                     if action == "transfer":
-                        transfer_domain(config["_domain"], config.get("epp") or "", None)
+                        transfer_domain(config["_domain"], config.get("epp") or "", None, customer)
                     else:
                         register_domain(config["_domain"], customer, None, config.get("domain_years") or 1)
                 except Exception:

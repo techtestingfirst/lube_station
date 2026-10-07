@@ -104,7 +104,9 @@ def renew_domain(domain: str, years: int = 1) -> dict:
 
 
 @frappe.whitelist(methods=["POST"])
-def transfer_domain(domain: str, auth_code: str, registrar: str | None = None) -> dict:
+def transfer_domain(domain: str, auth_code: str, registrar: str | None = None, customer: str | None = None) -> dict:
+    if not customer or not frappe.db.exists("Hosting Customer", customer):
+        frappe.throw("Customer is required: order the domain through the cart so it is invoiced")
     adapter, name = _adapter_for(domain, registrar)
     out = adapter.transfer_domain(domain, auth_code)
     if frappe.db.exists("Domain", domain):
