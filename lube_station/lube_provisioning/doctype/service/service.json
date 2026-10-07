@@ -15,6 +15,7 @@
     {"fieldname": "primary_domain", "fieldtype": "Data", "label": "Primary Domain"},
     {"fieldname": "svc_username", "fieldtype": "Data", "label": "Username"},
     {"fieldname": "vendor_ref", "fieldtype": "Data", "label": "Vendor Reference", "description": "Vendor-side id (VPS id, external handle)"},
+    {"fieldname": "node", "fieldtype": "Data", "label": "Node", "description": "Hypervisor node (Proxmox)"},
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending\nActive\nSuspended\nTerminated\nCancelled", "default": "Pending", "reqd": 1},
     {"fieldname": "next_due_date", "fieldtype": "Date", "label": "Next Due Date"},
     {"fieldname": "recurring_amount", "fieldtype": "Currency", "label": "Recurring Amount", "default": "0"},
