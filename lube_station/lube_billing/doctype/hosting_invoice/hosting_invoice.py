@@ -69,7 +69,7 @@ def _fulfill_order(inv):
     if order_name and frappe.db.exists("Order", order_name):
         frappe.db.set_value("Order", order_name, "status", "Accepted")
         try:
-            from lube_station.lube_station.doctype.service.service import create_from_order, on_invoice_paid
+            from lube_station.lube_provisioning.doctype.service.service import create_from_order, on_invoice_paid
 
             create_from_order(order_name)
             on_invoice_paid(inv.name)
