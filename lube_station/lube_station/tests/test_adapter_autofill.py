@@ -42,13 +42,18 @@ class TestAdapterAutofill(IntegrationTestCase):
         self.assertFalse(doc.class_path)
 
     def test_provisioning_autofill(self):
-        doc = frappe.get_doc("Provisioning Adapter", "Virtualizor")
+        doc = frappe.get_doc("Provisioning Adapter", "Proxmox VE")
+        original = doc.class_path
         doc.class_path = ""
-        doc.save(ignore_permissions=True)
-        self.assertEqual(
-            doc.class_path,
-            "lube_station.lube_station.adapters.provisioning.stubs.VirtualizorAdapter",
-        )
+        try:
+            doc.save(ignore_permissions=True)
+            self.assertEqual(
+                doc.class_path,
+                "lube_station.lube_station.adapters.provisioning.stubs.ProxmoxAdapter",
+            )
+        finally:
+            doc.class_path = original
+            doc.save(ignore_permissions=True)
 
     def test_provisioning_lifecycle_from_code(self):
         live = frappe.get_doc("Provisioning Adapter", "cPanel / WHM")
@@ -64,9 +69,15 @@ class TestAdapterAutofill(IntegrationTestCase):
             "test_connection",
         ):
             self.assertIn(method, live.lifecycle_methods or "")
-        stub = frappe.get_doc("Provisioning Adapter", "Virtualizor")
-        stub.save(ignore_permissions=True)
-        self.assertFalse(stub.lifecycle_methods)
+        stub = frappe.get_doc("Provisioning Adapter", "Proxmox VE")
+        original_stub = stub.class_path
+        stub.class_path = "lube_station.lube_station.adapters.provisioning.stubs.ProxmoxAdapter"
+        try:
+            stub.save(ignore_permissions=True)
+            self.assertFalse(stub.lifecycle_methods)
+        finally:
+            stub.class_path = original_stub
+            stub.save(ignore_permissions=True)
 
     def test_provisioning_api_mode_select(self):
         field = frappe.get_meta("Provisioning Adapter").get_field("api_mode")

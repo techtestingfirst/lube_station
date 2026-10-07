@@ -19,7 +19,7 @@ PROVISIONING_PATHS = {
     "cPanel / WHM": "lube_station.lube_station.adapters.provisioning.cpanel.CpanelWhmAdapter",
     "Plesk": "lube_station.lube_station.adapters.provisioning.plesk.PleskAdapter",
     "DirectAdmin": "lube_station.lube_station.adapters.provisioning.directadmin.DirectAdminAdapter",
-    "Virtualizor": "lube_station.lube_station.adapters.provisioning.stubs.VirtualizorAdapter",
+    "Virtualizor": "lube_station.lube_station.adapters.provisioning.virtualizor.VirtualizorAdapter",
     "Proxmox VE": "lube_station.lube_station.adapters.provisioning.stubs.ProxmoxAdapter",
     "Hetzner Cloud": "lube_station.lube_station.adapters.provisioning.stubs.HetznerCloudAdapter",
     "AWS EC2": "lube_station.lube_station.adapters.provisioning.stubs.AwsEc2Adapter",

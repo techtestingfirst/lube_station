@@ -19,7 +19,7 @@ PROVISIONING = [
     ("cPanel / WHM", "cPanel", "lube_station.lube_station.adapters.provisioning.cpanel.CpanelWhmAdapter", "WHM API", 1),
     ("Plesk", "Plesk", "lube_station.lube_station.adapters.provisioning.plesk.PleskAdapter", "XML API", 1),
     ("DirectAdmin", "DirectAdmin", "lube_station.lube_station.adapters.provisioning.directadmin.DirectAdminAdapter", "HTTP API", 1),
-    ("Virtualizor", "Virtualizor", "lube_station.lube_station.adapters.provisioning.stubs.VirtualizorAdapter", "", 0),
+    ("Virtualizor", "Virtualizor", "lube_station.lube_station.adapters.provisioning.virtualizor.VirtualizorAdapter", "HTTP API", 0),
     ("Proxmox VE", "Proxmox", "lube_station.lube_station.adapters.provisioning.stubs.ProxmoxAdapter", "", 0),
     ("Hetzner Cloud", "Hetzner", "lube_station.lube_station.adapters.provisioning.stubs.HetznerCloudAdapter", "", 0),
     ("AWS EC2", "AWS", "lube_station.lube_station.adapters.provisioning.stubs.AwsEc2Adapter", "", 0),
@@ -80,6 +80,18 @@ def seed():
             dirty = True
         if doc.class_path and not doc.lifecycle_methods:
             dirty = True
+        # One-way upgrades: mock adapters -> live ones. Guarded by exact
+        # legacy paths so seller-switched classes are never overwritten.
+        for legacy_name, legacy_path, live_path in (
+            (
+                "Virtualizor",
+                "lube_station.lube_station.adapters.provisioning.stubs.VirtualizorAdapter",
+                "lube_station.lube_station.adapters.provisioning.virtualizor.VirtualizorAdapter",
+            ),
+        ):
+            if name == legacy_name and doc.class_path == legacy_path:
+                doc.class_path = live_path
+                dirty = True
         if dirty:
             doc.save(ignore_permissions=True)
     registrar_paths = {
