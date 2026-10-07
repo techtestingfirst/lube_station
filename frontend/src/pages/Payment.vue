@@ -16,6 +16,8 @@ const error = ref('')
 const fetching = ref(true)
 const paying = ref(false)
 const methods = ref<{ name: string; gateway: string; last_four: string }[]>([])
+const savedMethod = ref('')
+const payingSaved = ref(false)
 
 async function load() {
   fetching.value = true
@@ -27,6 +29,7 @@ async function load() {
       call<{ name: string; gateway: string }[]>('lube_station.lube_station.portal.apis.my_invoices', {}, 'GET'),
     ])
     methods.value = m as typeof methods.value
+    savedMethod.value = methods.value[0]?.name || ''
     gateways.value = g.map((x) => ({ label: x.name, value: x.name }))
     // Preselect the gateway chosen at checkout, if any.
     const current = (invs as { name: string; gateway: string }[]).find((i) => i.name === invoice)
@@ -56,6 +59,21 @@ async function pay() {
     error.value = friendlyError(e)
   } finally {
     paying.value = false
+  }
+}
+
+async function paySaved() {
+  if (!savedMethod.value) return
+  payingSaved.value = true
+  error.value = ''
+  try {
+    await call('lube_station.lube_station.portal.apis.invoice_pay_saved', { invoice, payment_method: savedMethod.value })
+    result.value = 'Payment confirmed. Services activating.'
+    router.push('/services')
+  } catch (e) {
+    error.value = friendlyError(e)
+  } finally {
+    payingSaved.value = false
   }
 }
 
@@ -108,6 +126,14 @@ async function verify() {
       <div class="grid gap-4 sm:grid-cols-5">
         <div class="space-y-3 rounded-lg border border-outline-gray-1 bg-surface-white p-4 sm:col-span-3">
           <Select v-if="gateways.length" v-model="gateway" label="Payment method" :options="gateways" />
+          <div v-if="methods.length" class="space-y-2 rounded-lg border border-outline-gray-1 p-3">
+            <Select
+              v-model="savedMethod"
+              label="Saved card"
+              :options="methods.map((m) => ({ label: `${m.gateway} ••${m.last_four}`, value: m.name }))"
+            />
+            <Button label="Pay with saved card" variant="solid" size="sm" :disabled="!savedMethod" :loading="payingSaved" @click="paySaved" />
+          </div>
           <div class="flex flex-wrap gap-2">
             <Button label="Use saved card" variant="subtle" @click="auto" />
             <Button label="I've paid — verify" variant="subtle" @click="verify" />
