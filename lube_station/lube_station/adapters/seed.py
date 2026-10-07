@@ -91,7 +91,7 @@ def seed():
         "CentralNic Reseller": "lube_station.lube_station.adapters.registrar.centralnic.CentralNicAdapter",
         "HEXONET": "lube_station.lube_station.adapters.registrar.hexonet.HexonetAdapter",
         "Porkbun": "lube_station.lube_station.adapters.registrar.porkbun.PorkbunAdapter",
-        "Internet.bs": "lube_station.lube_station.adapters.registrar.stubs.InternetBsAdapter",
+        "Internet.bs": "lube_station.lube_station.adapters.registrar.internetbs.InternetBsAdapter",
         "Nominet": "lube_station.lube_station.adapters.registrar.stubs.NominetAdapter",
     }
     for name, vendor, mode, active in REGISTRARS:
@@ -148,6 +148,10 @@ def seed():
             (
                 "Porkbun",
                 "lube_station.lube_station.adapters.registrar.stubs.PorkbunAdapter",
+            ),
+            (
+                "Internet.bs",
+                "lube_station.lube_station.adapters.registrar.stubs.InternetBsAdapter",
             ),
         ):
             if name == legacy and doc.class_path == new:
