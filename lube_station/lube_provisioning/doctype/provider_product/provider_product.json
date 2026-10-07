@@ -1,0 +1,18 @@
+{
+  "name": "Provider Product",
+  "module": "Lube Provisioning",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:PP-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "provider", "fieldtype": "Link", "label": "Provider", "options": "Infrastructure Provider", "reqd": 1},
+    {"fieldname": "external_product_id", "fieldtype": "Data", "label": "External Product ID", "description": "Vendor product code, e.g. cx22. Blank for local inventory."},
+    {"fieldname": "product_type", "fieldtype": "Select", "label": "Product Type", "options": "Shared Hosting\nReseller\nVPS\nDedicated Server\nCloud\nEmail Hosting\nWebsite Builder\nSSL\nBackup Addon\nMigration Service\nDownloadable Product", "reqd": 1},
+    {"fieldname": "regions_json", "fieldtype": "Code", "label": "Regions JSON", "description": "Region code list, e.g. [\"fsn1\", \"nbg1\"]. Feeds the provider Capabilities summary."},
+    {"fieldname": "plans_json", "fieldtype": "Code", "label": "Plans JSON", "description": "Plan specs list, e.g. [{\"name\": \"cx22\", \"cpu\": 2, \"ram_gb\": 4}]."},
+    {"fieldname": "available_quantity", "fieldtype": "Int", "label": "Available Quantity", "default": "0"},
+    {"fieldname": "sync_status", "fieldtype": "Select", "label": "Sync Status", "options": "Manual\nSynced\nStale\nSync Failed", "default": "Manual", "description": "Manual until a vendor catalog sync overwrites the row.", "read_only": 1}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

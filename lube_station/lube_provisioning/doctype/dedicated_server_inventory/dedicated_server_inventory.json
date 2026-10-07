@@ -1,0 +1,24 @@
+{
+  "name": "Dedicated Server Inventory",
+  "module": "Lube Provisioning",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:DSRV-{####}",
+  "naming_rule": "Expression",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "provider", "fieldtype": "Link", "label": "Provider", "options": "Infrastructure Provider"},
+    {"fieldname": "asset_id", "fieldtype": "Data", "label": "Asset ID", "unique": 1},
+    {"fieldname": "cpu", "fieldtype": "Data", "label": "CPU"},
+    {"fieldname": "ram_gb", "fieldtype": "Int", "label": "RAM GB", "default": "0"},
+    {"fieldname": "storage_json", "fieldtype": "Code", "label": "Storage JSON"},
+    {"fieldname": "location", "fieldtype": "Data", "label": "Location"},
+    {"fieldname": "ip_pool", "fieldtype": "Small Text", "label": "IP Pool"},
+    {"fieldname": "bandwidth_mbps", "fieldtype": "Int", "label": "Bandwidth Mbps", "default": "0"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Available\nReserved\nAssigned\nWipe Pending\nTerminated", "default": "Available", "reqd": 1},
+    {"fieldname": "assigned_service", "fieldtype": "Data", "label": "Assigned Service"},
+    {"fieldname": "lease_key", "fieldtype": "Data", "label": "Lease Key"},
+    {"fieldname": "lease_expiry", "fieldtype": "Datetime", "label": "Lease Expiry"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

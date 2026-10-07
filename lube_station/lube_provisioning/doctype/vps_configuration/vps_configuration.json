@@ -1,0 +1,20 @@
+{
+  "name": "VPS Configuration",
+  "module": "Lube Provisioning",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:VPSCFG-{####}",
+  "naming_rule": "Expression",
+  "fields": [
+    {"fieldname": "hosting_plan", "fieldtype": "Link", "label": "Hosting Plan", "options": "Hosting Plan", "reqd": 1, "unique": 1},
+    {"fieldname": "cpu_cores", "fieldtype": "Int", "label": "CPU Cores", "default": "1"},
+    {"fieldname": "ram_mb", "fieldtype": "Int", "label": "RAM MB", "default": "1024"},
+    {"fieldname": "storage_gb", "fieldtype": "Int", "label": "Storage GB", "default": "20"},
+    {"fieldname": "bandwidth_gb", "fieldtype": "Int", "label": "Bandwidth GB", "default": "100"},
+    {"fieldname": "os_images_json", "fieldtype": "Code", "label": "OS Images JSON"},
+    {"fieldname": "locations_json", "fieldtype": "Code", "label": "Locations JSON"},
+    {"fieldname": "ipv4_count", "fieldtype": "Int", "label": "IPv4 Count", "default": "1"},
+    {"fieldname": "backup_enabled", "fieldtype": "Check", "label": "Backup Enabled", "default": "0"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

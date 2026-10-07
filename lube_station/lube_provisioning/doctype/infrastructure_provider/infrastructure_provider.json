@@ -1,0 +1,18 @@
+{
+  "name": "Infrastructure Provider",
+  "module": "Lube Provisioning",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "field:provider_name",
+  "naming_rule": "By fieldname",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "provider_name", "fieldtype": "Data", "label": "Provider Name", "reqd": 1, "unique": 1},
+    {"fieldname": "provider_type", "fieldtype": "Select", "label": "Provider Type", "options": "Cloud API\nVPS API\nDedicated Server Provider\nBare Metal API\nControl Panel\nReseller Program\nLocal Infrastructure", "reqd": 1},
+    {"fieldname": "api_base_url", "fieldtype": "Data", "label": "API Base URL", "description": "Vendor API endpoint, e.g. https://api.hetzner.cloud/v1. Leave blank for local or manual provisioning."},
+    {"fieldname": "credential_reference", "fieldtype": "Password", "label": "Credential Reference", "description": "API token or key. Stored masked. Used by live adapters."},
+    {"fieldname": "capabilities", "fieldtype": "Code", "label": "Capabilities", "description": "Auto-filled on save from linked Provider Products when empty. JSON note, e.g. {\"regions\": [\"fsn1\"], \"snapshots\": true}."},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nMaintenance\nDisabled", "default": "Active", "reqd": 1}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}

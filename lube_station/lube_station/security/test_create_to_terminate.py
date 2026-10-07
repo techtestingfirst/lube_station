@@ -27,7 +27,7 @@ class TestCreateToTerminate(IntegrationTestCase):
         handle_webhook("Stripe", payload)
         again = handle_webhook("Stripe", payload)
         self.assertTrue(again["reused"])
-        from lube_station.lube_station.doctype.service.service import apply_dunning, create_from_order
+        from lube_station.lube_provisioning.doctype.service.service import apply_dunning, create_from_order
 
         created = create_from_order(order)
         self.assertTrue(created["services"])
@@ -44,7 +44,7 @@ class TestCreateToTerminate(IntegrationTestCase):
         inv.reload()
         inv.status = "Paid"
         inv.save()
-        from lube_station.lube_station.doctype.service.service import on_invoice_paid
+        from lube_station.lube_provisioning.doctype.service.service import on_invoice_paid
 
         on_invoice_paid(inv.name)
         self.assertEqual(frappe.db.get_value("Service", svc_name, "status"), "Active")

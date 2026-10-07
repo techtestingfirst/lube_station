@@ -108,7 +108,7 @@ def dns_list(domain: str):
 
 @frappe.whitelist(methods=["POST"])
 def vps_control(instance: str, action: str, arg: str | None = None):
-    from lube_station.lube_station.doctype.vps_instance.vps_instance import vps_action
+    from lube_station.lube_provisioning.doctype.vps_instance.vps_instance import vps_action
 
     inst = frappe.get_doc("VPS Instance", instance)
     if inst.order_ref:

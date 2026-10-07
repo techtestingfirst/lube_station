@@ -1,0 +1,11 @@
+{
+  "name": "Server Group Entry",
+  "module": "Lube Provisioning",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "istable": 1,
+  "fields": [
+    {"fieldname": "server", "fieldtype": "Link", "label": "Server", "options": "Server", "reqd": 1}
+  ],
+  "permissions": []
+}

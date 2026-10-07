@@ -19,7 +19,7 @@ def _mark_paid(invoice: str):
 
 def _unsuspend_services(inv):
     try:
-        from lube_station.lube_station.doctype.service.service import on_invoice_paid
+        from lube_station.lube_provisioning.doctype.service.service import on_invoice_paid
 
         on_invoice_paid(inv.name)
     except Exception:

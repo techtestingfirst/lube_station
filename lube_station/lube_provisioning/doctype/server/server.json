@@ -1,0 +1,20 @@
+{
+  "name": "Server",
+  "module": "Lube Provisioning",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "field:hostname",
+  "naming_rule": "By fieldname",
+  "fields": [
+    {"fieldname": "hostname", "fieldtype": "Data", "label": "Hostname", "reqd": 1, "unique": 1},
+    {"fieldname": "ip_address", "fieldtype": "Data", "label": "IP Address"},
+    {"fieldname": "control_panel", "fieldtype": "Select", "label": "Control Panel", "options": "\ncPanel / WHM\nPlesk\nDirectAdmin\nCustom"},
+    {"fieldname": "api_username", "fieldtype": "Data", "label": "API Username"},
+    {"fieldname": "api_secret", "fieldtype": "Password", "label": "API Secret"},
+    {"fieldname": "max_accounts", "fieldtype": "Int", "label": "Max Accounts", "default": "0"},
+    {"fieldname": "active_accounts", "fieldtype": "Int", "label": "Active Accounts", "default": "0"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nMaintenance\nDisabled", "default": "Active"},
+    {"fieldname": "server_group", "fieldtype": "Link", "label": "Server Group", "options": "Server Group"}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
