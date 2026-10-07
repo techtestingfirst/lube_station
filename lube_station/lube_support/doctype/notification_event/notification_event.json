@@ -1,6 +1,6 @@
 {
   "name": "Notification Event",
-  "module": "Lube Station",
+  "module": "Lube Support",
   "doctype": "DocType",
   "engine": "InnoDB",
   "autoname": "format:NEV-{####}",

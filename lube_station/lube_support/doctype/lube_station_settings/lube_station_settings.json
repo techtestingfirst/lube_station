@@ -1,7 +1,7 @@
 {
   "name": "Lube Station Settings",
   "doctype": "DocType",
-  "module": "Lube Station",
+  "module": "Lube Support",
   "issingle": 1,
   "fields": [
     {"fieldname": "company_section", "fieldtype": "Section Break", "label": "Business"},
