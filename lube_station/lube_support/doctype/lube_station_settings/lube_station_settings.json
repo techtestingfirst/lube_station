@@ -34,7 +34,10 @@
     {"fieldname": "mollie_secret_key", "fieldtype": "Password", "label": "Mollie Secret Key", "description": "test_ key for sandbox, live_ key for production"},
     {"fieldname": "gocardless_access_token", "fieldtype": "Password", "label": "GoCardless Access Token"},
     {"fieldname": "gocardless_webhook_secret", "fieldtype": "Password", "label": "GoCardless Webhook Secret"},
-    {"fieldname": "gocardless_sandbox", "fieldtype": "Check", "label": "GoCardless Sandbox", "default": "1"}
+    {"fieldname": "gocardless_sandbox", "fieldtype": "Check", "label": "GoCardless Sandbox", "default": "1"},
+    {"fieldname": "twocheckout_merchant_code", "fieldtype": "Data", "label": "2Checkout Merchant Code"},
+    {"fieldname": "twocheckout_secret_key", "fieldtype": "Password", "label": "2Checkout Secret Key"},
+    {"fieldname": "twocheckout_sandbox", "fieldtype": "Check", "label": "2Checkout Sandbox", "default": "1"}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
 }

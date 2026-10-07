@@ -32,6 +32,9 @@ DEFAULTS = {
     "gocardless_access_token": "",
     "gocardless_webhook_secret": "",
     "gocardless_sandbox": 1,
+    "twocheckout_merchant_code": "",
+    "twocheckout_secret_key": "",
+    "twocheckout_sandbox": 1,
 }
 
 # Gateways with a real payment bridge behind them.
