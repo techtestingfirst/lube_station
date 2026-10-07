@@ -78,12 +78,12 @@ class TestAdapterAutofill(IntegrationTestCase):
         )
 
     def test_registrar_autofill(self):
-        doc = frappe.get_doc("Registrar Adapter", "CentralNic Reseller")
+        doc = frappe.get_doc("Registrar Adapter", "HEXONET")
         doc.class_path = ""
         doc.save(ignore_permissions=True)
         self.assertEqual(
             doc.class_path,
-            "lube_station.lube_station.adapters.registrar.stubs.CentralNicAdapter",
+            "lube_station.lube_station.adapters.registrar.stubs.HexonetAdapter",
         )
 
     def test_registrar_operations_from_code(self):
@@ -99,7 +99,7 @@ class TestAdapterAutofill(IntegrationTestCase):
             "toggle_privacy",
         ):
             self.assertIn(operation, live.supported_operations or "")
-        stub = frappe.get_doc("Registrar Adapter", "CentralNic Reseller")
+        stub = frappe.get_doc("Registrar Adapter", "HEXONET")
         stub.save(ignore_permissions=True)
         self.assertFalse(stub.supported_operations)
 

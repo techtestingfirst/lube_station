@@ -88,7 +88,7 @@ def seed():
         "GoDaddy": "lube_station.lube_station.adapters.registrar.godaddy.GodaddyAdapter",
         "ResellerClub / LogicBoxes": "lube_station.lube_station.adapters.registrar.logicboxes.LogicBoxesAdapter",
         "eNom": "lube_station.lube_station.adapters.registrar.enom.EnomAdapter",
-        "CentralNic Reseller": "lube_station.lube_station.adapters.registrar.stubs.CentralNicAdapter",
+        "CentralNic Reseller": "lube_station.lube_station.adapters.registrar.centralnic.CentralNicAdapter",
         "HEXONET": "lube_station.lube_station.adapters.registrar.stubs.HexonetAdapter",
         "Porkbun": "lube_station.lube_station.adapters.registrar.stubs.PorkbunAdapter",
         "Internet.bs": "lube_station.lube_station.adapters.registrar.stubs.InternetBsAdapter",
@@ -136,6 +136,10 @@ def seed():
             (
                 "eNom",
                 "lube_station.lube_station.adapters.registrar.stubs.EnomAdapter",
+            ),
+            (
+                "CentralNic Reseller",
+                "lube_station.lube_station.adapters.registrar.stubs.CentralNicAdapter",
             ),
         ):
             if name == legacy and doc.class_path == new:
