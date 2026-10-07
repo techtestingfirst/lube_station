@@ -14,5 +14,5 @@
     {"fieldname": "discount_total", "fieldtype": "Currency", "label": "Discount Total", "default": "0"},
     {"fieldname": "grand_total", "fieldtype": "Currency", "label": "Grand Total", "default": "0"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1, "write": 1, "create": 1}]
 }

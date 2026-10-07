@@ -15,5 +15,5 @@
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Provisioning\nActive\nSuspended\nTerminated", "default": "Provisioning", "reqd": 1},
     {"fieldname": "ipv4", "fieldtype": "Data", "label": "IPv4"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1}]
 }

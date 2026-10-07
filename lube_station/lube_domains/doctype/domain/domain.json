@@ -19,5 +19,5 @@
     {"fieldname": "last_checked", "fieldtype": "Datetime", "label": "Last Checked"},
     {"fieldname": "premium_price", "fieldtype": "Currency", "label": "Premium Price", "default": "0"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1}]
 }

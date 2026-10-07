@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { Button, ErrorMessage, TextInput } from 'frappe-ui'
+import { useRouter } from 'vue-router'
 import { call, friendlyError } from '../api'
 import { formatDate } from '../format'
 import StatusBadge from '../components/StatusBadge.vue'
@@ -16,6 +17,7 @@ const error = ref('')
 const loading = ref(true)
 const loadError = ref('')
 const registering = ref(false)
+const router = useRouter()
 
 async function refresh() {
   loading.value = true
@@ -33,9 +35,10 @@ async function register() {
   error.value = ''
   registering.value = true
   try {
-    await call('lube_station.lube_domains.doctype.domain.domain.register_domain', { domain: name.value })
+    const cart = await call<{ cart: string }>('lube_station.lube_station.portal.apis.cart_current', {}, 'GET')
+    await call('lube_station.lube_station.portal.apis.cart_add_domain', { cart: cart.cart, domain: name.value })
     name.value = ''
-    await refresh()
+    router.push('/cart')
   } catch (e) {
     error.value = friendlyError(e)
   } finally {
@@ -62,7 +65,7 @@ onMounted(refresh)
 
     <div class="rounded-lg border border-outline-gray-1 bg-surface-white p-4">
       <div class="text-sm font-medium text-ink-gray-8">Register a domain</div>
-      <p class="mt-1 text-sm text-ink-gray-5">Enter the full domain name, then use Register above or below.</p>
+      <p class="mt-1 text-sm text-ink-gray-5">Enter the full domain name. It goes to your cart — checkout completes the registration.</p>
       <div class="mt-3 flex flex-col gap-2 sm:flex-row">
         <TextInput v-model="name" placeholder="example.com" class="sm:grow" />
         <Button label="Register" variant="solid" :loading="registering" @click="register" />

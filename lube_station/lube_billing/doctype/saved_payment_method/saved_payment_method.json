@@ -13,5 +13,5 @@
     {"fieldname": "last_four", "fieldtype": "Data", "label": "Last Four"},
     {"fieldname": "expiry", "fieldtype": "Data", "label": "Expiry"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1, "create": 1}]
 }

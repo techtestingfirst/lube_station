@@ -78,6 +78,8 @@ def _adapter_for(domain_name: str, registrar: str | None = None):
 
 @frappe.whitelist(methods=["POST"])
 def register_domain(domain: str, customer: str | None = None, registrar: str | None = None, years: int = 1) -> dict:
+    if not customer or not frappe.db.exists("Hosting Customer", customer):
+        frappe.throw("Customer is required: order the domain through the cart so it is invoiced")
     adapter, name = _adapter_for(domain, registrar)
     out = adapter.register_domain(domain, {}, [])
     if not frappe.db.exists("Domain", domain):

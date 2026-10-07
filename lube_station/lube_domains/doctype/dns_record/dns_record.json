@@ -13,5 +13,5 @@
     {"fieldname": "ttl", "fieldtype": "Int", "label": "TTL", "default": "3600"},
     {"fieldname": "priority", "fieldtype": "Int", "label": "Priority", "default": "0"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1, "create": 1}]
 }
