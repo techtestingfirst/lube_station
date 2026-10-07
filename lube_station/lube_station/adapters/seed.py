@@ -85,7 +85,7 @@ def seed():
     registrar_paths = {
         "OpenSRS": "lube_station.lube_station.adapters.registrar.opensrs.OpenSrsAdapter",
         "Namecheap": "lube_station.lube_station.adapters.registrar.namecheap.NamecheapAdapter",
-        "GoDaddy": "lube_station.lube_station.adapters.registrar.mvp.GodaddyAdapter",
+        "GoDaddy": "lube_station.lube_station.adapters.registrar.godaddy.GodaddyAdapter",
         "ResellerClub / LogicBoxes": "lube_station.lube_station.adapters.registrar.mvp.LogicBoxesAdapter",
         "eNom": "lube_station.lube_station.adapters.registrar.stubs.EnomAdapter",
         "CentralNic Reseller": "lube_station.lube_station.adapters.registrar.stubs.CentralNicAdapter",
@@ -124,6 +124,10 @@ def seed():
             (
                 "Namecheap",
                 "lube_station.lube_station.adapters.registrar.mvp.NamecheapAdapter",
+            ),
+            (
+                "GoDaddy",
+                "lube_station.lube_station.adapters.registrar.mvp.GodaddyAdapter",
             ),
         ):
             if name == legacy and doc.class_path == new:
