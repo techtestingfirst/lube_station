@@ -54,7 +54,7 @@ class TestAdapterAutofill(IntegrationTestCase):
             doc.save(ignore_permissions=True)
             self.assertEqual(
                 doc.class_path,
-                "lube_station.lube_station.adapters.provisioning.stubs.CloudflareAdapter",
+                "lube_station.lube_station.adapters.provisioning.cloudflare.CloudflareAdapter",
             )
         finally:
             doc.class_path = original

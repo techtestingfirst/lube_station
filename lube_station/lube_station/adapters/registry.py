@@ -23,7 +23,7 @@ PROVISIONING_PATHS = {
     "Proxmox VE": "lube_station.lube_station.adapters.provisioning.proxmox.ProxmoxAdapter",
     "Hetzner Cloud": "lube_station.lube_station.adapters.provisioning.hetzner.HetznerCloudAdapter",
     "AWS EC2": "lube_station.lube_station.adapters.provisioning.aws.AwsEc2Adapter",
-    "Cloudflare": "lube_station.lube_station.adapters.provisioning.stubs.CloudflareAdapter",
+    "Cloudflare": "lube_station.lube_station.adapters.provisioning.cloudflare.CloudflareAdapter",
 }
 
 REGISTRAR_PATHS = {

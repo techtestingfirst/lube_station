@@ -23,7 +23,7 @@ PROVISIONING = [
     ("Proxmox VE", "Proxmox", "lube_station.lube_station.adapters.provisioning.proxmox.ProxmoxAdapter", "HTTP API", 0),
     ("Hetzner Cloud", "Hetzner", "lube_station.lube_station.adapters.provisioning.hetzner.HetznerCloudAdapter", "HTTP API", 0),
     ("AWS EC2", "AWS", "lube_station.lube_station.adapters.provisioning.aws.AwsEc2Adapter", "HTTP API", 0),
-    ("Cloudflare", "Cloudflare", "lube_station.lube_station.adapters.provisioning.stubs.CloudflareAdapter", "", 0),
+    ("Cloudflare", "Cloudflare", "lube_station.lube_station.adapters.provisioning.cloudflare.CloudflareAdapter", "HTTP API", 0),
 ]
 
 REGISTRARS = [
@@ -154,6 +154,11 @@ def seed():
                 "AWS EC2",
                 "lube_station.lube_station.adapters.provisioning.stubs.AwsEc2Adapter",
                 "lube_station.lube_station.adapters.provisioning.aws.AwsEc2Adapter",
+            ),
+            (
+                "Cloudflare",
+                "lube_station.lube_station.adapters.provisioning.stubs.CloudflareAdapter",
+                "lube_station.lube_station.adapters.provisioning.cloudflare.CloudflareAdapter",
             ),
         ):
             if name == legacy_name and doc.class_path == legacy_path:
