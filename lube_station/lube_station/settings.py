@@ -38,6 +38,9 @@ DEFAULTS = {
     "ccavenue_merchant_id": "",
     "ccavenue_access_code": "",
     "ccavenue_working_key": "",
+    "aws_access_key_id": "",
+    "aws_secret_access_key": "",
+    "aws_region": "us-east-1",
 }
 
 # Gateways with a real payment bridge behind them.
