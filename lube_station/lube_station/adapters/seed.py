@@ -21,7 +21,7 @@ PROVISIONING = [
     ("DirectAdmin", "DirectAdmin", "lube_station.lube_station.adapters.provisioning.directadmin.DirectAdminAdapter", "HTTP API", 1),
     ("Virtualizor", "Virtualizor", "lube_station.lube_station.adapters.provisioning.virtualizor.VirtualizorAdapter", "HTTP API", 0),
     ("Proxmox VE", "Proxmox", "lube_station.lube_station.adapters.provisioning.proxmox.ProxmoxAdapter", "HTTP API", 0),
-    ("Hetzner Cloud", "Hetzner", "lube_station.lube_station.adapters.provisioning.stubs.HetznerCloudAdapter", "", 0),
+    ("Hetzner Cloud", "Hetzner", "lube_station.lube_station.adapters.provisioning.hetzner.HetznerCloudAdapter", "HTTP API", 0),
     ("AWS EC2", "AWS", "lube_station.lube_station.adapters.provisioning.stubs.AwsEc2Adapter", "", 0),
     ("Cloudflare", "Cloudflare", "lube_station.lube_station.adapters.provisioning.stubs.CloudflareAdapter", "", 0),
 ]
@@ -92,6 +92,11 @@ def seed():
                 "Proxmox VE",
                 "lube_station.lube_station.adapters.provisioning.stubs.ProxmoxAdapter",
                 "lube_station.lube_station.adapters.provisioning.proxmox.ProxmoxAdapter",
+            ),
+            (
+                "Hetzner Cloud",
+                "lube_station.lube_station.adapters.provisioning.stubs.HetznerCloudAdapter",
+                "lube_station.lube_station.adapters.provisioning.hetzner.HetznerCloudAdapter",
             ),
         ):
             if name == legacy_name and doc.class_path == legacy_path:

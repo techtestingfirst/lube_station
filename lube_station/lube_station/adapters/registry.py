@@ -21,7 +21,7 @@ PROVISIONING_PATHS = {
     "DirectAdmin": "lube_station.lube_station.adapters.provisioning.directadmin.DirectAdminAdapter",
     "Virtualizor": "lube_station.lube_station.adapters.provisioning.virtualizor.VirtualizorAdapter",
     "Proxmox VE": "lube_station.lube_station.adapters.provisioning.proxmox.ProxmoxAdapter",
-    "Hetzner Cloud": "lube_station.lube_station.adapters.provisioning.stubs.HetznerCloudAdapter",
+    "Hetzner Cloud": "lube_station.lube_station.adapters.provisioning.hetzner.HetznerCloudAdapter",
     "AWS EC2": "lube_station.lube_station.adapters.provisioning.stubs.AwsEc2Adapter",
     "Cloudflare": "lube_station.lube_station.adapters.provisioning.stubs.CloudflareAdapter",
 }

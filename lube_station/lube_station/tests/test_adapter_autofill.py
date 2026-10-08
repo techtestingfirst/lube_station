@@ -42,14 +42,14 @@ class TestAdapterAutofill(IntegrationTestCase):
         self.assertFalse(doc.class_path)
 
     def test_provisioning_autofill(self):
-        doc = frappe.get_doc("Provisioning Adapter", "Hetzner Cloud")
+        doc = frappe.get_doc("Provisioning Adapter", "AWS EC2")
         original = doc.class_path
         doc.class_path = ""
         try:
             doc.save(ignore_permissions=True)
             self.assertEqual(
                 doc.class_path,
-                "lube_station.lube_station.adapters.provisioning.stubs.HetznerCloudAdapter",
+                "lube_station.lube_station.adapters.provisioning.stubs.AwsEc2Adapter",
             )
         finally:
             doc.class_path = original
@@ -69,9 +69,9 @@ class TestAdapterAutofill(IntegrationTestCase):
             "test_connection",
         ):
             self.assertIn(method, live.lifecycle_methods or "")
-        stub = frappe.get_doc("Provisioning Adapter", "Hetzner Cloud")
+        stub = frappe.get_doc("Provisioning Adapter", "AWS EC2")
         original_stub = stub.class_path
-        stub.class_path = "lube_station.lube_station.adapters.provisioning.stubs.HetznerCloudAdapter"
+        stub.class_path = "lube_station.lube_station.adapters.provisioning.stubs.AwsEc2Adapter"
         try:
             stub.save(ignore_permissions=True)
             self.assertFalse(stub.lifecycle_methods)
