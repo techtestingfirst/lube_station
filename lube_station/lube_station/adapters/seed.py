@@ -7,12 +7,12 @@ PAYMENTS = [
     ("Razorpay", "Razorpay", "lube_station.lube_station.adapters.payments.razorpay.RazorpayAdapter", 1, 1, 1, 1, 0, 1),
     ("PayPal Checkout", "PayPal", "lube_station.lube_station.adapters.payments.paypal.PayPalCheckoutAdapter", 1, 1, 0, 1, 0, 1),
     ("Bank Transfer", "Manual", "lube_station.lube_station.adapters.payments.bank_transfer.BankTransferAdapter", 1, 0, 0, 0, 0, 1),
-    ("CCAvenue", "CCAvenue", "lube_station.lube_station.adapters.payments.stubs.CCAvenueAdapter", 0, 0, 0, 0, 0, 0),
-    ("PayU India", "PayU", "lube_station.lube_station.adapters.payments.stubs.PayUIndiaAdapter", 0, 0, 0, 0, 0, 0),
-    ("Cashfree Payments", "Cashfree", "lube_station.lube_station.adapters.payments.stubs.CashfreeAdapter", 0, 0, 0, 0, 0, 0),
-    ("Mollie", "Mollie", "lube_station.lube_station.adapters.payments.stubs.MollieAdapter", 0, 0, 0, 0, 0, 0),
-    ("GoCardless", "GoCardless", "lube_station.lube_station.adapters.payments.stubs.GoCardlessAdapter", 0, 0, 0, 0, 0, 0),
-    ("2Checkout / Verifone", "2Checkout", "lube_station.lube_station.adapters.payments.stubs.TwoCheckoutAdapter", 0, 0, 0, 0, 0, 0),
+    ("CCAvenue", "CCAvenue", "lube_station.lube_station.adapters.payments.ccavenue.CCAvenueAdapter", 1, 0, 0, 0, 0, 0),
+    ("PayU India", "PayU", "lube_station.lube_station.adapters.payments.payu.PayUIndiaAdapter", 1, 0, 0, 1, 1, 0),
+    ("Cashfree Payments", "Cashfree", "lube_station.lube_station.adapters.payments.cashfree.CashfreeAdapter", 1, 0, 0, 1, 1, 0),
+    ("Mollie", "Mollie", "lube_station.lube_station.adapters.payments.mollie.MollieAdapter", 1, 1, 1, 1, 1, 0),
+    ("GoCardless", "GoCardless", "lube_station.lube_station.adapters.payments.gocardless.GoCardlessAdapter", 0, 1, 1, 1, 1, 0),
+    ("2Checkout / Verifone", "2Checkout", "lube_station.lube_station.adapters.payments.twocheckout.TwoCheckoutAdapter", 0, 0, 0, 1, 0, 0),
 ]
 
 PROVISIONING = [
@@ -58,6 +58,58 @@ def seed():
                     "active": active,
                 }
             ).insert(ignore_permissions=True)
+    # One-way upgrades: mock adapters -> live ones. Guarded by exact
+    # legacy paths so seller-switched classes are never overwritten.
+    # Capability flags follow the class; `active` is never touched.
+    for legacy_name, legacy_path, live_path, ot, rec, tok, ref, pref in (
+        (
+            "CCAvenue",
+            "lube_station.lube_station.adapters.payments.stubs.CCAvenueAdapter",
+            "lube_station.lube_station.adapters.payments.ccavenue.CCAvenueAdapter",
+            1, 0, 0, 0, 0,
+        ),
+        (
+            "PayU India",
+            "lube_station.lube_station.adapters.payments.stubs.PayUIndiaAdapter",
+            "lube_station.lube_station.adapters.payments.payu.PayUIndiaAdapter",
+            1, 0, 0, 1, 1,
+        ),
+        (
+            "Cashfree Payments",
+            "lube_station.lube_station.adapters.payments.stubs.CashfreeAdapter",
+            "lube_station.lube_station.adapters.payments.cashfree.CashfreeAdapter",
+            1, 0, 0, 1, 1,
+        ),
+        (
+            "Mollie",
+            "lube_station.lube_station.adapters.payments.stubs.MollieAdapter",
+            "lube_station.lube_station.adapters.payments.mollie.MollieAdapter",
+            1, 1, 1, 1, 1,
+        ),
+        (
+            "GoCardless",
+            "lube_station.lube_station.adapters.payments.stubs.GoCardlessAdapter",
+            "lube_station.lube_station.adapters.payments.gocardless.GoCardlessAdapter",
+            0, 1, 1, 1, 1,
+        ),
+        (
+            "2Checkout / Verifone",
+            "lube_station.lube_station.adapters.payments.stubs.TwoCheckoutAdapter",
+            "lube_station.lube_station.adapters.payments.twocheckout.TwoCheckoutAdapter",
+            0, 0, 0, 1, 0,
+        ),
+    ):
+        if not frappe.db.exists("Payment Gateway Adapter", legacy_name):
+            continue
+        doc = frappe.get_doc("Payment Gateway Adapter", legacy_name)
+        if doc.class_path == legacy_path:
+            doc.class_path = live_path
+            doc.supports_one_time = ot
+            doc.supports_recurring = rec
+            doc.supports_tokenization = tok
+            doc.supports_refunds = ref
+            doc.supports_partial_refunds = pref
+            doc.save(ignore_permissions=True)
     for name, vendor, path, mode, active in PROVISIONING:
         if not frappe.db.exists("Provisioning Adapter", name):
             frappe.get_doc(

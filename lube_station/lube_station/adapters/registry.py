@@ -7,12 +7,12 @@ PAYMENT_PATHS = {
     "Razorpay": "lube_station.lube_station.adapters.payments.razorpay.RazorpayAdapter",
     "PayPal Checkout": "lube_station.lube_station.adapters.payments.paypal.PayPalCheckoutAdapter",
     "Bank Transfer": "lube_station.lube_station.adapters.payments.bank_transfer.BankTransferAdapter",
-    "CCAvenue": "lube_station.lube_station.adapters.payments.stubs.CCAvenueAdapter",
-    "PayU India": "lube_station.lube_station.adapters.payments.stubs.PayUIndiaAdapter",
-    "Cashfree Payments": "lube_station.lube_station.adapters.payments.stubs.CashfreeAdapter",
-    "Mollie": "lube_station.lube_station.adapters.payments.stubs.MollieAdapter",
-    "GoCardless": "lube_station.lube_station.adapters.payments.stubs.GoCardlessAdapter",
-    "2Checkout / Verifone": "lube_station.lube_station.adapters.payments.stubs.TwoCheckoutAdapter",
+    "CCAvenue": "lube_station.lube_station.adapters.payments.ccavenue.CCAvenueAdapter",
+    "PayU India": "lube_station.lube_station.adapters.payments.payu.PayUIndiaAdapter",
+    "Cashfree Payments": "lube_station.lube_station.adapters.payments.cashfree.CashfreeAdapter",
+    "Mollie": "lube_station.lube_station.adapters.payments.mollie.MollieAdapter",
+    "GoCardless": "lube_station.lube_station.adapters.payments.gocardless.GoCardlessAdapter",
+    "2Checkout / Verifone": "lube_station.lube_station.adapters.payments.twocheckout.TwoCheckoutAdapter",
 }
 
 PROVISIONING_PATHS = {

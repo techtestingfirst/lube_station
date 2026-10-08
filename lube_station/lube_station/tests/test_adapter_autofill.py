@@ -5,12 +5,17 @@ from frappe.tests import IntegrationTestCase
 class TestAdapterAutofill(IntegrationTestCase):
     def test_payment_autofill(self):
         doc = frappe.get_doc("Payment Gateway Adapter", "Mollie")
+        original = doc.class_path
         doc.class_path = ""
-        doc.save(ignore_permissions=True)
-        self.assertEqual(
-            doc.class_path,
-            "lube_station.lube_station.adapters.payments.stubs.MollieAdapter",
-        )
+        try:
+            doc.save(ignore_permissions=True)
+            self.assertEqual(
+                doc.class_path,
+                "lube_station.lube_station.adapters.payments.mollie.MollieAdapter",
+            )
+        finally:
+            doc.class_path = original
+            doc.save(ignore_permissions=True)
 
     def test_payment_bad_path_rejected_when_active(self):
         doc = frappe.get_doc("Payment Gateway Adapter", "Mollie")
