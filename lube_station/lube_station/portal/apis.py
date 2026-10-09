@@ -820,6 +820,15 @@ def cart_add(hosting_plan: str, billing_cycle: str = "Monthly", quantity: int = 
         frappe.throw(f"Plan {hosting_plan} is not active")
     if isinstance(configuration, dict):
         configuration = json.dumps(configuration)
+    try:
+        parsed_config = json.loads(configuration or "{}") if isinstance(configuration, str) else dict(configuration or {})
+    except Exception:
+        parsed_config = {}
+    schema = frappe.db.get_value("Hosting Plan", hosting_plan, "product_type_schema")
+    if schema:
+        from lube_station.lube_catalog.doctype.product_type_schema.product_type_schema import validate_config
+
+        validate_config(schema, parsed_config, domain=domain)
     cart_doc.append(
         "items",
         {

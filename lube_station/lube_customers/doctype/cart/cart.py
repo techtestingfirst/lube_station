@@ -11,13 +11,27 @@ def server_price(hosting_plan: str, billing_cycle: str) -> float:
     return price
 
 
+def option_delta_for(hosting_plan: str, configuration_json) -> float:
+    """Configurable-option delta for a cart line (0 when no schema/options)."""
+    schema = frappe.db.get_value("Hosting Plan", hosting_plan, "product_type_schema")
+    if not schema:
+        return 0
+    try:
+        config = json.loads(configuration_json or "{}") if isinstance(configuration_json, str) else dict(configuration_json or {})
+    except Exception:
+        return 0
+    from lube_station.lube_catalog.doctype.product_type_schema.product_type_schema import option_price_delta
+
+    return option_price_delta(schema, config)
+
+
 def recalc(doc):
     subtotal = 0
     for item in doc.items:
         if item.item_type == "Hosting Plan":
             if not item.hosting_plan:
                 frappe.throw("Hosting Plan required")
-            item.unit_price = server_price(item.hosting_plan, item.billing_cycle)
+            item.unit_price = server_price(item.hosting_plan, item.billing_cycle) + option_delta_for(item.hosting_plan, item.configuration_json)
         elif item.item_type == "Domain":
             if not item.domain:
                 frappe.throw("Domain required")

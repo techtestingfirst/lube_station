@@ -133,26 +133,45 @@ def _fulfill_domains(order_name: str, customer: str):
                     pass
 
 
-def _from_order(order_name: str, key: str, gateway: str | None = None):
+def _from_order(order_name: str, key: str, gateway: str | None = None, include_setup: bool = True):
     order = frappe.get_doc("Order", order_name)
     customer = order.customer
     if not customer:
         frappe.throw("Order has no customer")
     items = [{"description": f"{i.item_type}: {i.reference} x{i.quantity}", "service_ref": i.reference, "amount": (i.unit_price or 0) * (i.quantity or 1)} for i in order.items]
+    if include_setup:
+        # WHMCS setup fee: first invoice only, never on renewals.
+        for i in order.items:
+            if i.item_type != "Hosting Plan" or not i.reference or not frappe.db.exists("Hosting Plan", i.reference):
+                continue
+            setup = frappe.db.get_value("Plan Pricing", {"hosting_plan": i.reference, "billing_cycle": i.billing_cycle}, "setup_fee") or 0
+            if setup:
+                items.append({"description": f"Setup fee: {i.reference} x{i.quantity}", "service_ref": i.reference, "amount": setup * (i.quantity or 1)})
     items_total = sum(i["amount"] for i in items)
     # WHMCS per-product Apply Tax: hosting plans carry their own flag,
     # domain lines follow Settings; untaxed lines still bill, just tax-free.
     from lube_station.lube_station.settings import get_setting
 
     taxable_lines = []
-    for i, entry in zip(order.items, items):
-        if i.item_type == "Domain":
-            taxable = bool(get_setting("tax_domains"))
-        elif i.item_type == "Hosting Plan" and frappe.db.exists("Hosting Plan", i.reference):
-            taxable = frappe.db.get_value("Hosting Plan", i.reference, "taxable")
-            taxable = True if taxable is None else bool(taxable)
+    order_rows = list(order.items)
+    for idx, entry in enumerate(items):
+        if idx < len(order_rows):
+            i = order_rows[idx]
+            if i.item_type == "Domain":
+                taxable = bool(get_setting("tax_domains"))
+            elif i.item_type == "Hosting Plan" and frappe.db.exists("Hosting Plan", i.reference):
+                taxable = frappe.db.get_value("Hosting Plan", i.reference, "taxable")
+                taxable = True if taxable is None else bool(taxable)
+            else:
+                taxable = True
         else:
-            taxable = True
+            # Setup-fee lines inherit the parent plan's tax flag.
+            parent = next((o for o in order_rows if o.item_type == "Hosting Plan" and o.reference == entry.get("service_ref")), None)
+            if parent is not None and frappe.db.exists("Hosting Plan", parent.reference):
+                taxable = frappe.db.get_value("Hosting Plan", parent.reference, "taxable")
+                taxable = True if taxable is None else bool(taxable)
+            else:
+                taxable = True
         taxable_lines.append({"amount": entry["amount"], "taxable": taxable})
     tax = 0
     subtotal = items_total
@@ -243,5 +262,5 @@ def generate_renewal(order: str, period: str, gateway: str | None = None) -> dic
     if frappe.db.exists("Hosting Invoice", {"idempotency_key": key}):
         doc = frappe.get_doc("Hosting Invoice", {"idempotency_key": key})
         return {"invoice": doc.name, "total_due": doc.total_due, "reused": True}
-    doc = _from_order(order, key, gateway)
+    doc = _from_order(order, key, gateway, include_setup=False)
     return {"invoice": doc.name, "total_due": doc.total_due, "reused": False}

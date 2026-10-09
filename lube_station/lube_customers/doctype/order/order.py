@@ -50,7 +50,7 @@ def place_order(cart: str, customer: str | None = None, notes: str | None = None
                     config = json.loads(item.configuration_json or "{}")
                 except Exception:
                     config = {}
-                validate_config(schema, config)
+                validate_config(schema, config, domain=item.domain)
     fraud_score = _fraud_score(customer or cart_doc.customer, cart_doc)
     order = frappe.get_doc(
         {
