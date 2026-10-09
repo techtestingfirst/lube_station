@@ -36,14 +36,22 @@ def recalc(doc):
             if not item.domain:
                 frappe.throw("Domain required")
             # WHMCS per-TLD pricing: action (register/transfer) from the line
-            # config, years from quantity. Falls back to the flat setting rate.
+            # config, years from quantity. Premium registrations bill the
+            # registrar premium once (1 year); regular lines use the TLD rate.
             from lube_station.lube_domains.doctype.tld_pricing.tld_pricing import domain_price
 
             try:
-                action = (json.loads(item.configuration_json or "{}") or {}).get("domain_action", "register")
+                cfg = json.loads(item.configuration_json or "{}") or {}
             except Exception:
-                action = "register"
-            item.unit_price = domain_price(item.domain, action)
+                cfg = {}
+            action = cfg.get("domain_action", "register")
+            premium = cfg.get("premium_price") or 0
+            if premium and action == "register":
+                if (item.quantity or 1) != 1:
+                    frappe.throw("Premium domains register for 1 year; renew after at the regular rate")
+                item.unit_price = premium
+            else:
+                item.unit_price = domain_price(item.domain, action)
             item.quantity = item.quantity or 1
         item.unit_price = item.unit_price or 0
         item.quantity = item.quantity or 1

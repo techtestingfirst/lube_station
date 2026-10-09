@@ -870,6 +870,26 @@ def domain_check(domain: str) -> dict:
     return check_availability(domain)
 
 
+def _premium_for(domain: str, domain_action: str) -> float:
+    """Registrar premium price for a register action, else 0.
+
+    Money-safe: premium domains must bill the registrar price, never the
+    TLD rate. Uses the cached availability lookup (no extra registrar hit
+    in the normal Domain.vue-first flow).
+    """
+    if domain_action != "register":
+        return 0
+    from lube_station.lube_domains.doctype.domain.domain import check_availability
+
+    out = check_availability((domain or "").strip().lower())
+    if out.get("status") == "Premium":
+        premium = out.get("premium_price") or 0
+        if not premium:
+            frappe.throw("Premium price unavailable right now, try again later")
+        return premium
+    return 0
+
+
 @frappe.whitelist(methods=["POST"])
 def cart_add_domain(cart: str, domain: str, domain_action: str = "register", years: int = 1, auth_code: str | None = None):
     """Domain-only line (register/transfer). WHMCS domain step without hosting."""
@@ -878,6 +898,9 @@ def cart_add_domain(cart: str, domain: str, domain_action: str = "register", yea
     cart_doc = frappe.get_doc("Cart", cart)
     _assert_cart_access(cart_doc)
     _validate_domain_choice(domain, domain_action, auth_code)
+    premium = _premium_for(domain, domain_action)
+    if premium and (years or 1) != 1:
+        frappe.throw("Premium domains register for 1 year; renew after at the regular rate")
     cart_doc.append(
         "items",
         {
@@ -885,7 +908,7 @@ def cart_add_domain(cart: str, domain: str, domain_action: str = "register", yea
             "domain": domain.strip().lower(),
             "billing_cycle": "One Time",
             "quantity": years or 1,
-            "configuration_json": json.dumps({"domain_action": domain_action, "domain_years": years or 1, "epp": auth_code or ""}),
+            "configuration_json": json.dumps({"domain_action": domain_action, "domain_years": years or 1, "epp": auth_code or "", "premium_price": premium or None}),
         },
     )
     cart_doc.save(ignore_permissions=True)
@@ -904,6 +927,8 @@ def cart_set_domain(cart: str, row: str, domain: str | None = None, domain_actio
     _assert_cart_access(cart_doc)
     if domain_action != "none":
         _validate_domain_choice(domain, domain_action, auth_code)
+        if _premium_for(domain, domain_action):
+            frappe.throw("That is a premium domain: order it as a separate domain item")
     for item in cart_doc.items:
         if item.name == row:
             item.domain = (domain or "").strip().lower() or None

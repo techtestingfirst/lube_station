@@ -14,6 +14,7 @@ const domain = ref('')
 const years = ref(1)
 const authCode = ref('')
 const status = ref('')
+const premium = ref(0)
 const pricing = ref<{ register: number; renew: number; transfer: number } | null>(null)
 const checking = ref(false)
 const error = ref('')
@@ -29,6 +30,8 @@ async function check() {
       'lube_station.lube_station.portal.apis.domain_check', { domain: domain.value }, 'GET')
     status.value = out.status
     pricing.value = out.pricing ?? null
+    premium.value = out.status === 'Premium' ? (out.premium_price || 0) : 0
+    if (premium.value) years.value = 1
   } catch (e) {
     error.value = friendlyError(e)
   } finally {
@@ -87,7 +90,10 @@ async function cont() {
         <div v-if="pricing" class="text-sm text-ink-gray-5">
           Register {{ formatMoney(pricing.register) }}/yr · Renew {{ formatMoney(pricing.renew) }}/yr · Transfer {{ formatMoney(pricing.transfer) }}
         </div>
-        <Select v-if="option === 'register'" v-model="years" label="Registration years" :options="[1, 2, 3, 5, 10].map((y) => ({ label: `${y} year${y > 1 ? 's' : ''}`, value: y }))" />
+        <div v-if="premium" class="rounded-md bg-surface-gray-1 p-2 text-sm text-ink-gray-8">
+          Premium domain: {{ formatMoney(premium) }} one-time for year 1, then renews at the regular rate.
+        </div>
+        <Select v-if="option === 'register' && !premium" v-model="years" label="Registration years" :options="[1, 2, 3, 5, 10].map((y) => ({ label: `${y} year${y > 1 ? 's' : ''}`, value: y }))" />
         <TextInput v-if="option === 'transfer'" v-model="authCode" label="EPP / transfer code *" />
       </div>
     </div>

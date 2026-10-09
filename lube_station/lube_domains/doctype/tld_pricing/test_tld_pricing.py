@@ -89,3 +89,61 @@ class TestTLDPricing(IntegrationTestCase):
             renew_domain(name, years=2)
         inv = frappe.get_doc("Hosting Invoice", {"customer": cust.name})
         self.assertEqual(sum(i.amount for i in inv.invoice_items), 26)
+
+
+def _premium_availability(premium_price: float = 999):
+    mock = MagicMock()
+    mock.return_value = {"domain": "vip.test", "status": "Premium", "premium_price": premium_price}
+    return patch("lube_station.lube_domains.doctype.domain.domain.check_availability", mock)
+
+
+def _portal_customer():
+    from lube_station.lube_station.portal import apis
+
+    email = f"premium-{uuid.uuid4().hex[:8]}@test.com"
+    user = frappe.get_doc({"doctype": "User", "email": email, "first_name": "Premium", "enabled": 1}).insert(ignore_permissions=True)
+    cust = frappe.get_doc({"doctype": "Hosting Customer", "user": user.name, "status": "Active"}).insert()
+    frappe.set_user(user.name)
+    return apis, cust
+
+
+class TestPremiumDomain(IntegrationTestCase):
+    def tearDown(self):
+        frappe.set_user("Administrator")
+        super().tearDown()
+
+    def test_premium_bills_registrar_price(self):
+        import json
+
+        apis, cust = _portal_customer()
+        cart = frappe.get_doc({"doctype": "Cart", "customer": cust.name}).insert(ignore_permissions=True)
+        with _premium_availability(999):
+            view = apis.cart_add_domain(cart.name, "vip.test", "register", years=1)
+        line = [i for i in view["items"] if i["domain"] == "vip.test"][0]
+        self.assertEqual(line["unit_price"], 999)
+        self.assertEqual(json.loads(line["configuration_json"])["premium_price"], 999)
+        self.assertEqual(view["grand_total"], 999)
+
+    def test_premium_multiyear_rejected(self):
+        apis, cust = _portal_customer()
+        cart = frappe.get_doc({"doctype": "Cart", "customer": cust.name}).insert(ignore_permissions=True)
+        with _premium_availability(999):
+            self.assertRaises(frappe.ValidationError, apis.cart_add_domain, cart.name, "vip.test", "register", 2)
+
+    def test_premium_no_price_rejected(self):
+        apis, cust = _portal_customer()
+        cart = frappe.get_doc({"doctype": "Cart", "customer": cust.name}).insert(ignore_permissions=True)
+        with _premium_availability(0):
+            self.assertRaises(frappe.ValidationError, apis.cart_add_domain, cart.name, "vip.test", "register", 1)
+
+    def test_premium_blocked_on_hosting_row(self):
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": f"Premium Group {uuid.uuid4().hex[:6]}"}).insert()
+        plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"Premium Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
+        frappe.get_doc({"doctype": "Plan Pricing", "hosting_plan": plan.name, "billing_cycle": "Monthly", "recurring_amount": 10}).insert()
+        apis, cust = _portal_customer()
+        cart = frappe.get_doc({"doctype": "Cart", "customer": cust.name}).insert(ignore_permissions=True)
+        cart.append("items", {"item_type": "Hosting Plan", "hosting_plan": plan.name, "billing_cycle": "Monthly", "quantity": 1})
+        cart.save(ignore_permissions=True)
+        row = frappe.get_doc("Cart", cart.name).items[0].name
+        with _premium_availability(999):
+            self.assertRaises(frappe.ValidationError, apis.cart_set_domain, cart.name, row, "vip.test", "register", 1)
