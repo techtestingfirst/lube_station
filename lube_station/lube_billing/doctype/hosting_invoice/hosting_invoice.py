@@ -131,6 +131,8 @@ def _fulfill_domains(order_name: str, customer: str):
                     frappe.get_doc({"doctype": "Domain", "domain_name": config["_domain"], "customer": customer, "status": "Active"}).insert(ignore_permissions=True)
                 except Exception:
                     pass
+            # subdomain: seller-zone name, no registrar call and no Domain row
+            # (renewal flow must never touch it); lives as Service.primary_domain.
 
 
 def _from_order(order_name: str, key: str, gateway: str | None = None, include_setup: bool = True):

@@ -11,6 +11,7 @@ DEFAULTS = {
     "company_address": "",
     "support_email": "",
     "domain_year_price": 15,
+    "free_subdomain_suffixes": "",
     "enabled_gateways": "Stripe\nRazorpay\nBank Transfer",
     "tos_required": 1,
     "show_cancellation_link": 1,

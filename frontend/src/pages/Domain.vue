@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, ErrorMessage, Select, TextInput } from 'frappe-ui'
 import { call, friendlyError } from '../api'
@@ -9,8 +9,11 @@ import StatusBadge from '../components/StatusBadge.vue'
 const route = useRoute()
 const router = useRouter()
 const row = route.params.row as string
-const option = ref<'register' | 'transfer' | 'own' | 'none'>('register')
+const option = ref<'register' | 'transfer' | 'own' | 'subdomain' | 'none'>('register')
 const domain = ref('')
+const subPrefix = ref('')
+const subSuffix = ref('')
+const suffixes = ref<{ label: string; value: string }[]>([])
 const years = ref(1)
 const authCode = ref('')
 const status = ref('')
@@ -43,8 +46,9 @@ async function cont() {
   error.value = ''
   try {
     const cart = await call<{ cart: string }>('lube_station.lube_station.portal.apis.cart_current', {}, 'GET')
+    const full = option.value === 'subdomain' ? `${subPrefix.value.trim().toLowerCase()}.${subSuffix.value}` : (domain.value || undefined)
     await call('lube_station.lube_station.portal.apis.cart_set_domain', {
-      cart: cart.cart, row, domain: domain.value || undefined,
+      cart: cart.cart, row, domain: full,
       domain_action: option.value, years: years.value, auth_code: authCode.value || undefined,
     })
     router.push('/cart')
@@ -52,6 +56,16 @@ async function cont() {
     error.value = friendlyError(e)
   }
 }
+
+onMounted(async () => {
+  try {
+    const list = await call<string[]>('lube_station.lube_station.portal.apis.subdomain_suffixes', {}, 'GET')
+    suffixes.value = list.map((s) => ({ label: `.${s}`, value: s }))
+    if (suffixes.value.length && !subSuffix.value) subSuffix.value = suffixes.value[0].value
+  } catch {
+    suffixes.value = []
+  }
+})
 </script>
 
 <template>
@@ -72,11 +86,23 @@ async function cont() {
         { label: 'Register a new domain', value: 'register' },
         { label: 'Transfer my domain', value: 'transfer' },
         { label: 'I will use my own domain', value: 'own' },
+        ...(suffixes.length ? [{ label: 'Use a free subdomain', value: 'subdomain' }] : []),
         { label: 'No domain needed', value: 'none' },
       ]" class="mt-2" />
     </div>
 
-    <div v-if="option !== 'none'" class="rounded-lg border border-outline-gray-1 bg-surface-white p-4">
+    <div v-if="option === 'subdomain'" class="rounded-lg border border-outline-gray-1 bg-surface-white p-4">
+      <div class="text-sm font-medium text-ink-gray-8">Free subdomain</div>
+      <div class="mt-2 space-y-3">
+        <TextInput v-model="subPrefix" label="Your name" placeholder="mywebsite" />
+        <Select v-model="subSuffix" label="Ending" :options="suffixes" />
+        <div v-if="subPrefix" class="text-sm text-ink-gray-5">
+          Your address: <span class="font-medium text-ink-gray-8">{{ subPrefix.trim().toLowerCase() }}.{{ subSuffix }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="option !== 'none' && option !== 'subdomain'" class="rounded-lg border border-outline-gray-1 bg-surface-white p-4">
       <div class="text-sm font-medium text-ink-gray-8">Domain details</div>
       <div class="mt-2 space-y-3">
         <TextInput v-model="domain" label="Domain name" placeholder="example.com" />

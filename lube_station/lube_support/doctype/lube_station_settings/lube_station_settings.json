@@ -10,6 +10,7 @@
     {"fieldname": "support_email", "fieldtype": "Data", "label": "Support Email", "options": "Email"},
     {"fieldname": "catalog_section", "fieldtype": "Section Break", "label": "Catalog & Cart"},
     {"fieldname": "domain_year_price", "fieldtype": "Currency", "label": "Domain Price / Year", "default": "15"},
+    {"fieldname": "free_subdomain_suffixes", "fieldtype": "Small Text", "label": "Free Subdomain Suffixes (one per line)", "description": "WHMCS free-subdomain parity: hosting orders may use prefix + suffix instead of a domain. Empty disables."},
     {"fieldname": "enabled_gateways", "fieldtype": "Small Text", "label": "Enabled Gateways (one per line, in display order)", "default": "Stripe\nRazorpay\nBank Transfer"},
     {"fieldname": "checkout_section", "fieldtype": "Section Break", "label": "Checkout"},
     {"fieldname": "tos_required", "fieldtype": "Check", "label": "Require TOS Acceptance", "default": "1"},

@@ -137,3 +137,29 @@ def update_nameservers(domain: str, nameservers: list | str) -> dict:
     if frappe.db.exists("Domain", domain):
         frappe.db.set_value("Domain", domain, "nameservers", ",".join(nameservers))
     return {"domain": domain, "vendor": out}
+
+
+def subdomain_suffixes() -> list:
+    """Seller-configured free-subdomain suffixes (one per line in Settings)."""
+    from lube_station.lube_station.settings import get_setting
+
+    raw = get_setting("free_subdomain_suffixes") or ""
+    return [line.strip().lower().lstrip(".") for line in str(raw).splitlines() if line.strip()]
+
+
+def validate_subdomain(name: str) -> str:
+    """WHMCS free-subdomain parity: prefix + seller suffix, unique across
+    Domain rows and Service primary domains. Returns the normalized name."""
+    import re
+
+    name = (name or "").strip().lower()
+    suffixes = subdomain_suffixes()
+    if not suffixes:
+        frappe.throw("Free subdomains are not offered")
+    if not re.fullmatch(r"[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+", name or ""):
+        frappe.throw("Enter a valid subdomain")
+    if not any(name.endswith(f".{s}") for s in suffixes):
+        frappe.throw("Subdomain must use an offered suffix")
+    if frappe.db.exists("Domain", name) or frappe.db.exists("Service", {"primary_domain": name}):
+        frappe.throw("That subdomain is already taken")
+    return name

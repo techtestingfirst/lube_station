@@ -1,4 +1,5 @@
 import frappe
+import json
 from frappe.model.document import Document
 from frappe.utils import add_to_date, today
 
@@ -75,6 +76,14 @@ def create_from_order(order: str) -> dict:
             if parent.customer != order_doc.customer:
                 frappe.throw("Add-on parent belongs to another customer")
             kwargs["parent_service"] = parent.name
+        try:
+            attached = (json.loads(item.configuration_snapshot or "{}") or {}).get("_domain")
+        except Exception:
+            attached = None
+        if attached:
+            # WHMCS parity: the ordered domain (or free subdomain) names the
+            # service for provisioning (cPanel account, hostname, zone).
+            kwargs["primary_domain"] = attached
         svc = frappe.get_doc(kwargs).insert(ignore_permissions=True)
         made.append(svc.name)
     return {"services": made}

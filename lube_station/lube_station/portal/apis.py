@@ -890,6 +890,14 @@ def _premium_for(domain: str, domain_action: str) -> float:
     return 0
 
 
+@frappe.whitelist(methods=["GET", "POST"], allow_guest=True)
+def subdomain_suffixes() -> list:
+    """Offered free-subdomain suffixes (guest-safe: seller-published config)."""
+    from lube_station.lube_domains.doctype.domain.domain import subdomain_suffixes as _suffixes
+
+    return _suffixes()
+
+
 @frappe.whitelist(methods=["POST"])
 def cart_add_domain(cart: str, domain: str, domain_action: str = "register", years: int = 1, auth_code: str | None = None):
     """Domain-only line (register/transfer). WHMCS domain step without hosting."""
@@ -897,6 +905,8 @@ def cart_add_domain(cart: str, domain: str, domain_action: str = "register", yea
 
     cart_doc = frappe.get_doc("Cart", cart)
     _assert_cart_access(cart_doc)
+    if domain_action == "subdomain":
+        frappe.throw("Free subdomains attach to a hosting plan, pick one first")
     _validate_domain_choice(domain, domain_action, auth_code)
     premium = _premium_for(domain, domain_action)
     if premium and (years or 1) != 1:
@@ -919,13 +929,17 @@ def cart_add_domain(cart: str, domain: str, domain_action: str = "register", yea
 def cart_set_domain(cart: str, row: str, domain: str | None = None, domain_action: str = "none", years: int = 1, auth_code: str | None = None):
     """Attach WHMCS domain choice to a hosting-plan cart row.
 
-    domain_action: register | transfer | own | none.
+    domain_action: register | transfer | own | subdomain | none.
     """
     import json
 
+    from lube_station.lube_domains.doctype.domain.domain import validate_subdomain
+
     cart_doc = frappe.get_doc("Cart", cart)
     _assert_cart_access(cart_doc)
-    if domain_action != "none":
+    if domain_action == "subdomain":
+        domain = validate_subdomain(domain)
+    elif domain_action != "none":
         _validate_domain_choice(domain, domain_action, auth_code)
         if _premium_for(domain, domain_action):
             frappe.throw("That is a premium domain: order it as a separate domain item")
