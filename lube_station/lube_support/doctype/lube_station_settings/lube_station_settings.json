@@ -13,6 +13,7 @@
     {"fieldname": "enabled_gateways", "fieldtype": "Small Text", "label": "Enabled Gateways (one per line, in display order)", "default": "Stripe\nRazorpay\nBank Transfer"},
     {"fieldname": "checkout_section", "fieldtype": "Section Break", "label": "Checkout"},
     {"fieldname": "tos_required", "fieldtype": "Check", "label": "Require TOS Acceptance", "default": "1"},
+    {"fieldname": "show_cancellation_link", "fieldtype": "Check", "label": "Show Cancellation Link", "default": "1", "description": "WHMCS General Settings parity: when off, customers cannot request cancellation from the portal"},
     {"fieldname": "tax_section", "fieldtype": "Section Break", "label": "Tax (WHMCS pattern)"},
     {"fieldname": "tax_mode", "fieldtype": "Select", "label": "Tax Mode", "options": "Exclusive\nInclusive", "default": "Exclusive"},
     {"fieldname": "tax_domains", "fieldtype": "Check", "label": "Tax Domain Items", "default": "1"},

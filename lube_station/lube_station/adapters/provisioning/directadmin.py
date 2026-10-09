@@ -194,6 +194,27 @@ class DirectAdminAdapter(ProvisioningAdapter):
         return {"ok": True, "server": doc.name}
 
     # -- helpers ----------------------------------------------------------
+    def _panel_host(self, svc):
+        try:
+            if not svc.server or not frappe.db.exists("Server", svc.server):
+                return ""
+            doc = frappe.get_doc("Server", svc.server)
+            return (doc.ip_address or doc.hostname or "").strip()
+        except Exception:
+            return ""
+
+    def get_client_area(self, service):
+        svc = self._service(service)
+        host = self._panel_host(svc)
+        if not host:
+            return {"panels": [], "buttons": []}
+        return {
+            "panels": [],
+            "buttons": [
+                {"key": "panel", "label": "Open DirectAdmin", "kind": "link", "url": f"https://{host}:2222"},
+            ],
+        }
+
     def _plan(self, svc):
         try:
             plan = frappe.get_doc("Hosting Plan", svc.hosting_plan) if svc.hosting_plan else None

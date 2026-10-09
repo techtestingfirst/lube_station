@@ -13,6 +13,7 @@ DEFAULTS = {
     "domain_year_price": 15,
     "enabled_gateways": "Stripe\nRazorpay\nBank Transfer",
     "tos_required": 1,
+    "show_cancellation_link": 1,
     "tax_mode": "Exclusive",
     "tax_domains": 1,
     "invoice_due_days": 7,

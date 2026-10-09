@@ -19,6 +19,9 @@
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending\nActive\nSuspended\nTerminated\nCancelled", "default": "Pending", "reqd": 1},
     {"fieldname": "next_due_date", "fieldtype": "Date", "label": "Next Due Date"},
     {"fieldname": "recurring_amount", "fieldtype": "Currency", "label": "Recurring Amount", "default": "0"},
+    {"fieldname": "cancellation_requested", "fieldtype": "Check", "label": "Cancellation Requested", "default": "0", "description": "Customer asked to cancel via portal (reason + mode below). Staff terminates."},
+    {"fieldname": "cancellation_mode", "fieldtype": "Select", "label": "Cancellation Mode", "options": "\nImmediate\nEnd of Billing Cycle"},
+    {"fieldname": "cancellation_reason", "fieldtype": "Small Text", "label": "Cancellation Reason"},
     {"fieldname": "provisioning_log", "fieldtype": "Small Text", "label": "Provisioning Log"}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]

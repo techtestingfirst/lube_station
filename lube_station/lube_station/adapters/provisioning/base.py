@@ -24,3 +24,13 @@ class ProvisioningAdapter:
 
     def test_connection(self, server):
         raise NotImplementedError
+
+    def get_client_area(self, service):
+        """Customer-portal controls supplied by the module (WHMCS parity).
+
+        Returns {"panels": [...], "buttons": [...]} with link-only buttons
+        (no secrets, no live calls). Each button: {"key", "label", "kind",
+        "url" | "action"}. kind "link" opens url; kind "vps" calls the
+        existing vps_control API with action. Base default: nothing.
+        """
+        return {"panels": [], "buttons": []}

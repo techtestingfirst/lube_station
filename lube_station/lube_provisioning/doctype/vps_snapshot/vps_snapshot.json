@@ -1,0 +1,16 @@
+{
+  "name": "VPS Snapshot",
+  "module": "Lube Provisioning",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "format:SNAP-{####}",
+  "naming_rule": "Expression",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "instance", "fieldtype": "Link", "label": "VPS Instance", "options": "VPS Instance", "reqd": 1},
+    {"fieldname": "snapshot_ref", "fieldtype": "Data", "label": "Provider Snapshot ID", "description": "Provider-side id when live; local key in sandbox", "unique": 1},
+    {"fieldname": "label", "fieldtype": "Data", "label": "Label"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Available\nRestoring\nDeleted", "default": "Available", "reqd": 1}
+  ],
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+}
