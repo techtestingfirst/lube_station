@@ -396,6 +396,8 @@ def my_service_detail(service: str):
                 "bandwidth_gb": cfg.get("bandwidth_gb"),
                 "ipv4_count": cfg.get("ipv4_count"),
                 "backup_enabled": cfg.get("backup_enabled"),
+                "disk_overage_rate": cfg.get("disk_overage_rate") or 0,
+                "bandwidth_overage_rate": cfg.get("bandwidth_overage_rate") or 0,
             }
 
     # Server-driven capability flags (ERPNext show_*_button pattern).

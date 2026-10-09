@@ -14,7 +14,9 @@
     {"fieldname": "os_images_json", "fieldtype": "Code", "label": "OS Images JSON"},
     {"fieldname": "locations_json", "fieldtype": "Code", "label": "Locations JSON"},
     {"fieldname": "ipv4_count", "fieldtype": "Int", "label": "IPv4 Count", "default": "1"},
-    {"fieldname": "backup_enabled", "fieldtype": "Check", "label": "Backup Enabled", "default": "0"}
+    {"fieldname": "backup_enabled", "fieldtype": "Check", "label": "Backup Enabled", "default": "0"},
+    {"fieldname": "disk_overage_rate", "fieldtype": "Currency", "label": "Disk Overage Rate / GB", "default": "0", "description": "WHMCS metric billing: 0 means disk overuse is not billed."},
+    {"fieldname": "bandwidth_overage_rate", "fieldtype": "Currency", "label": "Bandwidth Overage Rate / GB", "default": "0", "description": "WHMCS metric billing: 0 means bandwidth overuse is not billed."}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
 }

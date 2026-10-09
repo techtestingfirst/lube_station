@@ -1,13 +1,13 @@
 import frappe
-from frappe.utils import today
+from frappe.utils import add_days, today
 
 
 def _limits(service: str) -> dict:
     svc = frappe.get_doc("Service", service)
-    cfg = frappe.db.get_value("VPS Configuration", {"hosting_plan": svc.hosting_plan}, ["storage_gb", "bandwidth_gb"])
+    cfg = frappe.db.get_value("VPS Configuration", {"hosting_plan": svc.hosting_plan}, ["storage_gb", "bandwidth_gb", "disk_overage_rate", "bandwidth_overage_rate"])
     if cfg:
-        return {"disk": cfg[0] or 0, "bandwidth": cfg[1] or 0}
-    return {"disk": 0, "bandwidth": 0}
+        return {"disk": cfg[0] or 0, "bandwidth": cfg[1] or 0, "disk_rate": cfg[2] or 0, "bandwidth_rate": cfg[3] or 0}
+    return {"disk": 0, "bandwidth": 0, "disk_rate": 0, "bandwidth_rate": 0}
 
 
 def _pull(service: str) -> dict:
@@ -46,8 +46,14 @@ def create_overage_invoice(service: str, snapshot: str) -> dict:
         doc = frappe.get_doc("Hosting Invoice", {"idempotency_key": key})
         return {"invoice": doc.name, "reused": True}
     svc = frappe.get_doc("Service", service)
-    amount = round(overage["disk_over"] * 1 + overage["bw_over"] * 1, 2)
-    doc = frappe.get_doc({"doctype": "Hosting Invoice", "customer": svc.customer, "order_ref": svc.order_ref, "invoice_items": [{"description": f"Overage {snap.snap_date} disk {overage['disk_over']} bw {overage['bw_over']}", "service_ref": service, "amount": amount}], "status": "Unpaid", "idempotency_key": key}).insert(ignore_permissions=True)
+    limits = _limits(service)
+    amount = round(overage["disk_over"] * (limits["disk_rate"] or 0) + overage["bw_over"] * (limits["bandwidth_rate"] or 0), 2)
+    if amount <= 0:
+        # Metric unbilled by seller choice (rate 0): detect, don't invoice.
+        return {"invoice": None}
+    from lube_station.lube_station.settings import get_setting
+
+    doc = frappe.get_doc({"doctype": "Hosting Invoice", "customer": svc.customer, "order_ref": svc.order_ref, "invoice_items": [{"description": f"Overage {snap.snap_date} disk {overage['disk_over']} bw {overage['bw_over']}", "service_ref": service, "amount": amount}], "status": "Unpaid", "due_date": add_days(today(), get_setting("invoice_due_days") or 7), "idempotency_key": key}).insert(ignore_permissions=True)
     return {"invoice": doc.name, "reused": False}
 
 
