@@ -41,7 +41,7 @@ def assign_manual(inventory: str, service_ref: str) -> dict:
 
 @frappe.whitelist(methods=["POST"])
 def provision_step(inventory: str, step: str) -> dict:
-    allowed = {"install_os", "network", "rdns", "panel", "monitoring", "credentials"}
+    allowed = {"install_os", "rescue", "network", "rdns", "panel", "monitoring", "credentials"}
     if step not in allowed:
         frappe.throw("Unknown step")
     inv = frappe.get_doc("Dedicated Server Inventory", inventory)

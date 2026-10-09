@@ -156,13 +156,18 @@ class CpanelWhmAdapter(ProvisioningAdapter):
         host = self._panel_host(svc)
         if not host:
             return {"panels": [], "buttons": []}
-        return {
-            "panels": [],
-            "buttons": [
-                {"key": "panel", "label": "Open cPanel", "kind": "link", "url": f"https://{host}:2083"},
-                {"key": "webmail", "label": "Webmail", "kind": "link", "url": f"https://{host}:2096"},
-            ],
-        }
+        buttons = [
+            {"key": "panel", "label": "Open cPanel", "kind": "link", "url": f"https://{host}:2083"},
+            {"key": "webmail", "label": "Webmail", "kind": "link", "url": f"https://{host}:2096"},
+        ]
+        # Reseller plans manage downstream accounts: WHM access (WHMCS parity).
+        try:
+            product_type = frappe.db.get_value("Hosting Plan", svc.hosting_plan, "product_type")
+            if product_type == "Reseller":
+                buttons.append({"key": "whm", "label": "Open WHM", "kind": "link", "url": f"https://{host}:2087"})
+        except Exception:
+            pass
+        return {"panels": [], "buttons": buttons}
 
     def _panel_host(self, svc):
         try:

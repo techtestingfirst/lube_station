@@ -415,6 +415,7 @@ def my_service_detail(service: str):
     capabilities = {
         "can_vps_control": can_vps,
         "can_vps_rebuild": can_vps,
+        "can_vps_rescue": can_vps,
         "can_vps_snapshot": bool(can_vps and (vps_spec or {}).get("backup_enabled")),
         "can_dedicated_control": bool(dedicated) and is_active,
         "can_change_password": can_password,
@@ -716,7 +717,7 @@ def _owns_dedicated(inventory: str):
 
 
 # Portal-safe dedicated steps. "credentials" stays Admin Only (portal-vault).
-_PORTAL_DEDICATED_STEPS = ("install_os", "network", "rdns", "panel", "monitoring")
+_PORTAL_DEDICATED_STEPS = ("install_os", "rescue", "network", "rdns", "panel", "monitoring")
 
 
 @frappe.whitelist(methods=["POST"])

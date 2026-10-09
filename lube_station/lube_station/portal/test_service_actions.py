@@ -50,7 +50,7 @@ class TestServiceActions(IntegrationTestCase):
         frappe.set_user("Administrator")
         super().tearDown()
 
-    def _cpanel_service(self, cust_name, with_user=True):
+    def _cpanel_service(self, cust_name, with_user=True, product_type="Shared Hosting"):
         server = frappe.get_doc(
             {
                 "doctype": "Server",
@@ -68,7 +68,7 @@ class TestServiceActions(IntegrationTestCase):
                 "class_path": "lube_station.lube_station.adapters.provisioning.cpanel.CpanelWhmAdapter",
             }
         ).insert()
-        plan = _plan(provisioning_module=module.name)
+        plan = _plan(product_type=product_type, provisioning_module=module.name)
         _price(plan.name)
         svc = frappe.get_doc(
             {
@@ -307,3 +307,48 @@ class TestServiceActions(IntegrationTestCase):
         frappe.set_user(other_user)
         self.assertRaises(frappe.PermissionError, apis.vps_snapshots, inst.name)
         self.assertRaises(frappe.PermissionError, apis.vps_restore, inst.name, snaps[0]["name"])
+
+    def test_rescue_mode_vps_and_dedicated(self):
+        cust_name, user_name = _make_customer()
+        plan = _plan(product_type="VPS")
+        _price(plan.name)
+        order = frappe.get_doc({"doctype": "Order", "customer": cust_name, "status": "Accepted"}).insert(ignore_permissions=True)
+        cfg = frappe.get_doc({"doctype": "VPS Configuration", "hosting_plan": plan.name}).insert()
+        inst = frappe.get_doc({"doctype": "VPS Instance", "configuration": cfg.name, "order_ref": order.name, "image": "ubuntu-24.04", "location": "fsn1", "status": "Active"}).insert()
+        frappe.get_doc(
+            {"doctype": "Service", "customer": cust_name, "hosting_plan": plan.name, "order_ref": order.name, "status": "Active", "recurring_amount": 20}
+        ).insert()
+        frappe.set_user(user_name)
+        detail = apis.my_service_detail(frappe.db.get_value("Service", {"order_ref": order.name}, "name"))
+        self.assertTrue(detail["capabilities"]["can_vps_rescue"])
+        out = apis.vps_control(inst.name, "rescue")
+        self.assertEqual(out["action"], "rescue")
+        # Terminated instances stay out of rescue.
+        frappe.set_user("Administrator")
+        inst.status = "Terminated"
+        inst.save(ignore_permissions=True)
+        frappe.set_user(user_name)
+        self.assertRaises(frappe.ValidationError, apis.vps_control, inst.name, "rescue")
+
+    def test_rescue_mode_dedicated_queued(self):
+        cust_name, user_name = _make_customer()
+        inv, _svc = self._dedicated_service(cust_name)
+        frappe.set_user(user_name)
+        out = apis.dedicated_control(inv.name, "rescue")
+        self.assertTrue(out["queued"])
+
+    def test_reseller_gets_whm_button_shared_does_not(self):
+        cust_name, user_name = _make_customer()
+        svc, _plan_doc, _server = self._cpanel_service(cust_name, product_type="Reseller")
+        frappe.set_user(user_name)
+        detail = apis.my_service_detail(svc.name)
+        keys = [b["key"] for b in detail["management"]["buttons"]]
+        self.assertIn("whm", keys)
+        self.assertIn("panel", keys)
+        self.assertIn("webmail", keys)
+        frappe.set_user("Administrator")
+        cust2, user2 = _make_customer()
+        svc2, _p2, _s2 = self._cpanel_service(cust2)
+        frappe.set_user(user2)
+        detail2 = apis.my_service_detail(svc2.name)
+        self.assertNotIn("whm", [b["key"] for b in detail2["management"]["buttons"]])

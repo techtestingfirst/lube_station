@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { Button, ErrorMessage, TextInput, Textarea } from 'frappe-ui'
 import { call, friendlyError } from '../api'
 import StatusBadge from '../components/StatusBadge.vue'
 import EmptyState from '../components/EmptyState.vue'
 
+const route = useRoute()
 const subject = ref('')
 const description = ref('')
 const service = ref('')
@@ -13,6 +15,11 @@ const ticket = ref('')
 const priority = ref('')
 const error = ref('')
 const opening = ref(false)
+
+onMounted(() => {
+  const q = route.query.service
+  if (typeof q === 'string' && q.trim()) service.value = q.trim()
+})
 
 async function open() {
   error.value = ''

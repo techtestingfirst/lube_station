@@ -36,7 +36,7 @@ interface Inv { name: string; status: string; total_due: number; due_date: strin
 interface Row { key: string; label: string; value: unknown }
 interface Dedicated { name: string; asset_id: string; location: string; status: string; cpu?: string | null; ram_gb?: number | null; ip_pool?: string | null; bandwidth_mbps?: number | null }
 interface Vps { name: string; status: string; ipv4: string | null; location: string; image?: string | null }
-interface Capabilities { can_vps_control: boolean; can_vps_rebuild: boolean; can_vps_snapshot: boolean; can_dedicated_control: boolean; can_change_password: boolean; can_sso: boolean; can_panel: boolean; can_upgrade: boolean; can_cancel: boolean }
+interface Capabilities { can_vps_control: boolean; can_vps_rebuild: boolean; can_vps_rescue: boolean; can_vps_snapshot: boolean; can_dedicated_control: boolean; can_change_password: boolean; can_sso: boolean; can_panel: boolean; can_upgrade: boolean; can_cancel: boolean }
 interface MgmtButton { key: string; label: string; kind: string; url?: string; action?: string }
 interface UpgradeOption { plan: string; plan_name: string; recurring_amount: number; setup_fee: number }
 interface UsageSnap { name: string; snap_date: string; disk_used: number; bandwidth_used: number }
@@ -85,6 +85,9 @@ const rdnsTarget = ref('')
 const rdnsHost = ref('')
 const showRebuild = ref(false)
 const rebuildTarget = ref('')
+const showRescue = ref(false)
+const rescueTarget = ref('')
+const rescueKind = ref<'vps' | 'dedicated'>('vps')
 const showRestore = ref(false)
 const restoreInstance = ref('')
 const restoreSnap = ref('')
@@ -222,6 +225,19 @@ async function confirmRebuild() {
   if (rebuildTarget.value) await vpsAction(rebuildTarget.value, 'rebuild')
 }
 
+function askRescue(target: string, kind: 'vps' | 'dedicated') {
+  rescueTarget.value = target
+  rescueKind.value = kind
+  showRescue.value = true
+}
+
+async function confirmRescue() {
+  showRescue.value = false
+  if (!rescueTarget.value) return
+  if (rescueKind.value === 'vps') await vpsAction(rescueTarget.value, 'rescue')
+  else await dedicatedStep(rescueTarget.value, 'rescue')
+}
+
 function usagePct(used: number, limit: number): number {
   if (!limit || limit <= 0) return 0
   return Math.min(100, Math.round((used / limit) * 100))
@@ -269,7 +285,7 @@ onMounted(load)
         <h1 class="mt-1 text-xl font-semibold tracking-tight text-ink-gray-8">{{ id }}</h1>
         <p class="mt-1 text-sm text-ink-gray-5">Service details, billing and linked resources.</p>
       </div>
-      <RouterLink to="/support"><Button label="Get support" variant="subtle" size="sm" /></RouterLink>
+      <RouterLink :to="`/support?service=${encodeURIComponent(id)}`"><Button label="Get support" variant="subtle" size="sm" /></RouterLink>
     </div>
     <ErrorState v-if="error && !loading" :message="error" @retry="load" />
     <LoadingBlock v-if="loading" :lines="4" />
@@ -396,6 +412,7 @@ onMounted(load)
           <div class="mt-1 text-xs text-ink-gray-5">{{ d.location || '—' }}<span v-if="d.cpu"> · {{ d.cpu }}</span><span v-if="d.ram_gb"> · {{ d.ram_gb }} GB</span><span v-if="d.ip_pool"> · {{ d.ip_pool }}</span></div>
           <div v-if="detail.capabilities.can_dedicated_control" class="mt-2 flex flex-wrap gap-2">
             <Button label="Reinstall OS" size="sm" :loading="actionBusy === `${d.name}:install_os`" @click="dedicatedStep(d.name, 'install_os')" />
+            <Button label="Rescue" size="sm" variant="subtle" @click="askRescue(d.name, 'dedicated')" />
             <Button label="Network" size="sm" variant="subtle" :loading="actionBusy === `${d.name}:network`" @click="dedicatedStep(d.name, 'network')" />
             <Button label="rDNS" size="sm" variant="subtle" :loading="actionBusy === `${d.name}:rdns`" @click="askRdns(d.name)" />
             <Button label="Panel" size="sm" variant="subtle" :loading="actionBusy === `${d.name}:panel`" @click="dedicatedStep(d.name, 'panel')" />
@@ -418,6 +435,7 @@ onMounted(load)
             <Button label="Console" size="sm" variant="subtle" :loading="actionBusy === `${v.name}:console`" @click="vpsAction(v.name, 'console')" />
             <Button v-if="detail.capabilities.can_vps_snapshot" label="Snapshot" size="sm" variant="subtle" :loading="actionBusy === `${v.name}:snapshot`" @click="vpsAction(v.name, 'snapshot')" />
             <Button v-if="detail.capabilities.can_vps_snapshot && snapsFor(v.name).length" label="Restore" size="sm" variant="subtle" @click="askRestore(v.name)" />
+            <Button v-if="detail.capabilities.can_vps_rescue" label="Rescue" size="sm" variant="subtle" @click="askRescue(v.name, 'vps')" />
             <Button v-if="detail.capabilities.can_vps_rebuild" label="Reinstall" size="sm" variant="subtle" @click="askRebuild(v.name)" />
           </div>
         </div>
@@ -482,6 +500,16 @@ onMounted(load)
         <template #actions>
           <Button label="Back" variant="subtle" @click="showUpgrade = false" />
           <Button label="Request" variant="solid" :loading="actionBusy === 'upgrade'" @click="submitUpgrade" />
+        </template>
+      </Dialog>
+
+      <Dialog v-model="showRescue" :options="{ title: 'Boot into rescue mode?' }">
+        <template #body-content>
+          <p class="text-sm text-ink-gray-6">Rescue mode reboots <span class="font-medium">{{ rescueTarget }}</span> into a recovery environment for repair. Running services will go down until you exit rescue mode.</p>
+        </template>
+        <template #actions>
+          <Button label="Back" variant="subtle" @click="showRescue = false" />
+          <Button label="Enter rescue" variant="solid" @click="confirmRescue" />
         </template>
       </Dialog>
 

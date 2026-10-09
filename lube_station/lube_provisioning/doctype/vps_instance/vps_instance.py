@@ -43,7 +43,7 @@ def create_vps_instance(order: str, configuration: str, image: str, location: st
 
 @frappe.whitelist(methods=["POST"])
 def vps_action(instance: str, action: str, arg: str | None = None) -> dict:
-    allowed = {"rebuild", "start", "stop", "reboot", "snapshot", "restore", "console", "usage", "set_ip"}
+    allowed = {"rebuild", "start", "stop", "reboot", "rescue", "snapshot", "restore", "console", "usage", "set_ip"}
     if action not in allowed:
         frappe.throw("Unknown VPS action")
     inst = frappe.get_doc("VPS Instance", instance)
