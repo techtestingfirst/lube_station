@@ -847,7 +847,8 @@ def cart_add(hosting_plan: str, billing_cycle: str = "Monthly", quantity: int = 
     if schema:
         from lube_station.lube_catalog.doctype.product_type_schema.product_type_schema import validate_config
 
-        validate_config(schema, parsed_config, domain=domain)
+        # Domain is picked in step 2 (Domain.vue); enforced at place_order.
+        validate_config(schema, parsed_config, domain=domain, enforce_domain=False)
     cart_doc.append(
         "items",
         {

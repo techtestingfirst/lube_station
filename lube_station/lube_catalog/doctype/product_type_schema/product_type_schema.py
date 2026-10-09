@@ -145,7 +145,7 @@ _NS1_ALIASES = ["ns1", "nameserver1", "ns_prefix_1"]
 _NS2_ALIASES = ["ns2", "nameserver2", "ns_prefix_2"]
 
 
-def validate_config(schema_name: str, config: dict, domain: str | None = None):
+def validate_config(schema_name: str, config: dict, domain: str | None = None, enforce_domain: bool = True):
     doc = _schema_doc(schema_name)
     config = config or {}
     for f in doc.fields:
@@ -170,7 +170,7 @@ def validate_config(schema_name: str, config: dict, domain: str | None = None):
     if getattr(doc, "requires_nameservers", 0):
         if _missing(config, _NS1_ALIASES) or _missing(config, _NS2_ALIASES):
             frappe.throw("Missing required field: ns1 / ns2")
-    if getattr(doc, "requires_domain", 0):
+    if getattr(doc, "requires_domain", 0) and enforce_domain:
         effective = (domain or "").strip() or (config.get("_domain") or "").strip() or (config.get("domain") or "").strip()
         if not effective:
             frappe.throw("Missing required field: domain")

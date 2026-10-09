@@ -97,3 +97,25 @@ class TestSubdomain(IntegrationTestCase):
         with self.assertRaises(frappe.ValidationError) as ctx:
             apis.cart_add_domain(cart.name, "a.cust.test", "subdomain", 1)
         self.assertIn("attach to a hosting plan", str(ctx.exception))
+
+    def test_domain_deferred_to_step_two(self):
+        """Step 1 (configure) must not demand the domain picked in step 2."""
+        from lube_station.lube_customers.doctype.order.order import place_order
+
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": f"Defer Group {uuid.uuid4().hex[:6]}"}).insert()
+        schema = frappe.get_doc(
+            {
+                "doctype": "Product Type Schema",
+                "schema_name": f"Defer Schema {uuid.uuid4().hex[:6]}",
+                "product_type": "Shared Hosting",
+                "requires_domain": 1,
+            }
+        ).insert()
+        plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"Defer Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "product_type_schema": schema.name, "is_active": 1}).insert()
+        frappe.get_doc({"doctype": "Plan Pricing", "hosting_plan": plan.name, "billing_cycle": "Monthly", "recurring_amount": 5}).insert()
+        apis, cust = _portal_customer()
+        view = apis.cart_add(hosting_plan=plan.name, billing_cycle="Monthly", configuration={})
+        self.assertTrue(view["items"])
+        cart_name = view["cart"]
+        # ...but ordering without any domain still fails.
+        self.assertRaises(frappe.ValidationError, place_order, cart_name, cust.name)
