@@ -10,6 +10,7 @@
     {"fieldname": "billing_cycle", "fieldtype": "Select", "label": "Billing Cycle", "options": "Monthly\nQuarterly\nSemi-Annually\nAnnually\nBiennially\nTriennially\nOne Time", "default": "Monthly"},
     {"fieldname": "unit_price", "fieldtype": "Currency", "label": "Unit Price", "default": "0"},
     {"fieldname": "quantity", "fieldtype": "Int", "label": "Quantity", "default": "1"},
+    {"fieldname": "parent_service", "fieldtype": "Link", "label": "Parent Service", "options": "Service"},
     {"fieldname": "configuration_snapshot", "fieldtype": "Code", "label": "Configuration Snapshot"}
   ],
   "permissions": []

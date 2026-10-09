@@ -51,6 +51,10 @@ def place_order(cart: str, customer: str | None = None, notes: str | None = None
                 except Exception:
                     config = {}
                 validate_config(schema, config, domain=item.domain)
+        if getattr(item, "parent_service", None):
+            parent = frappe.get_doc("Service", item.parent_service)
+            if parent.customer != (customer or cart_doc.customer):
+                frappe.throw("Add-on parent belongs to another customer", frappe.PermissionError)
     fraud_score = _fraud_score(customer or cart_doc.customer, cart_doc)
     order = frappe.get_doc(
         {
@@ -68,6 +72,7 @@ def place_order(cart: str, customer: str | None = None, notes: str | None = None
                     "billing_cycle": i.billing_cycle,
                     "unit_price": i.unit_price,
                     "quantity": i.quantity,
+                    "parent_service": getattr(i, "parent_service", None),
                     "configuration_snapshot": _snapshot_config(i),
                 }
                 for i in cart_doc.items

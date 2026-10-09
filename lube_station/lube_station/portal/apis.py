@@ -209,6 +209,7 @@ def _cart_view(cart_doc) -> dict:
                 "hosting_plan": i.hosting_plan,
                 "billing_cycle": i.billing_cycle,
                 "domain": i.domain,
+                "parent_service": i.get("parent_service"),
                 "quantity": i.quantity,
                 "unit_price": i.unit_price or 0,
                 "configuration_json": i.configuration_json,
@@ -248,7 +249,8 @@ def checkout_info(plan: str):
         from lube_station.lube_catalog.doctype.product_type_schema.product_type_schema import get_product_requirements
 
         requirements = get_product_requirements(plan=plan)
-    return {"prices": prices, "requirements": requirements}
+    meta = frappe.db.get_value("Hosting Plan", plan, ["plan_name", "product_type", "product_group"], as_dict=True) or {}
+    return {"prices": prices, "requirements": requirements, "plan": meta}
 
 
 @frappe.whitelist(methods=["GET"])
@@ -450,6 +452,12 @@ def my_service_detail(service: str):
         "service": detail,
         "plan": plan,
         "server": server_info,
+        "addons": frappe.get_all(
+            "Service",
+            {"parent_service": svc.name},
+            ["name", "hosting_plan", "status", "billing_cycle", "next_due_date"],
+        ),
+        "parent_service": svc.get("parent_service"),
         "billing": {
             "billing_cycle": detail.get("billing_cycle"),
             "recurring_amount": detail.get("recurring_amount"),
@@ -806,7 +814,7 @@ def cart_current():
 
 
 @frappe.whitelist(methods=["POST"])
-def cart_add(hosting_plan: str, billing_cycle: str = "Monthly", quantity: int = 1, domain: str | None = None, configuration: dict | str | None = None, cart: str | None = None):
+def cart_add(hosting_plan: str, billing_cycle: str = "Monthly", quantity: int = 1, domain: str | None = None, configuration: dict | str | None = None, cart: str | None = None, parent_service: str | None = None):
     import json
 
     customer = my_customer()
@@ -818,6 +826,15 @@ def cart_add(hosting_plan: str, billing_cycle: str = "Monthly", quantity: int = 
         frappe.throw(f"Unknown plan {hosting_plan}")
     if not frappe.db.get_value("Hosting Plan", hosting_plan, "is_active"):
         frappe.throw(f"Plan {hosting_plan} is not active")
+    if parent_service:
+        if not frappe.db.exists("Service", parent_service):
+            frappe.throw(f"Unknown service {parent_service}")
+        parent = frappe.get_doc("Service", parent_service)
+        assert_owns(parent.customer)
+        if parent.customer != customer:
+            frappe.throw("Add-on parent belongs to another customer", frappe.PermissionError)
+        if parent.status in ("Terminated", "Cancelled"):
+            frappe.throw("Cannot attach an add-on to a closed service")
     if isinstance(configuration, dict):
         configuration = json.dumps(configuration)
     try:
@@ -836,6 +853,7 @@ def cart_add(hosting_plan: str, billing_cycle: str = "Monthly", quantity: int = 
             "hosting_plan": hosting_plan,
             "billing_cycle": billing_cycle,
             "domain": domain,
+            "parent_service": parent_service,
             "quantity": quantity or 1,
             "configuration_json": configuration,
         },

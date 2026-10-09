@@ -22,6 +22,7 @@ class Service(Document):
         self.status = "Suspended"
         self.save(ignore_permissions=True)
         _log(self, f"suspended {reason}")
+        _cascade(self, "suspend", reason)
 
     def unsuspend(self):
         if self.status != "Suspended":
@@ -29,6 +30,8 @@ class Service(Document):
         self.status = "Active"
         self.save(ignore_permissions=True)
         _log(self, "unsuspended")
+        # No cascade: add-ons suspended for their own overdue invoices must
+        # reactivate via their own payment, not the parent's.
 
     def terminate(self, approval_note: str | None = None):
         if not approval_note:
@@ -36,6 +39,23 @@ class Service(Document):
         self.status = "Terminated"
         self.save(ignore_permissions=True)
         _log(self, f"terminated: {approval_note}")
+        _cascade(self, "terminate", approval_note)
+
+
+def _cascade(parent, action: str, reason: str):
+    """WHMCS add-on lifecycle: children follow parent suspend/terminate."""
+    for row in frappe.get_all("Service", {"parent_service": parent.name}, ["name", "status"]):
+        try:
+            child = frappe.get_doc("Service", row.name)
+        except Exception:
+            continue
+        try:
+            if action == "suspend" and child.status == "Active":
+                child.suspend(f"parent {parent.name} suspended: {reason}")
+            elif action == "terminate" and child.status not in ("Terminated", "Cancelled"):
+                child.terminate(f"parent {parent.name} terminated: {reason}")
+        except Exception:
+            continue
 
 
 @frappe.whitelist(methods=["POST"])
@@ -49,7 +69,13 @@ def create_from_order(order: str) -> dict:
             continue
         plan = frappe.get_doc("Hosting Plan", item.reference)
         price = frappe.db.get_value("Plan Pricing", {"hosting_plan": plan.name, "billing_cycle": item.billing_cycle}, "recurring_amount") or item.unit_price
-        svc = frappe.get_doc({"doctype": "Service", "customer": order_doc.customer, "hosting_plan": plan.name, "order_ref": order, "billing_cycle": item.billing_cycle, "status": "Pending", "next_due_date": add_to_date(today(), months=1), "recurring_amount": price}).insert(ignore_permissions=True)
+        kwargs = {"doctype": "Service", "customer": order_doc.customer, "hosting_plan": plan.name, "order_ref": order, "billing_cycle": item.billing_cycle, "status": "Pending", "next_due_date": add_to_date(today(), months=1), "recurring_amount": price}
+        if getattr(item, "parent_service", None):
+            parent = frappe.get_doc("Service", item.parent_service)
+            if parent.customer != order_doc.customer:
+                frappe.throw("Add-on parent belongs to another customer")
+            kwargs["parent_service"] = parent.name
+        svc = frappe.get_doc(kwargs).insert(ignore_permissions=True)
         made.append(svc.name)
     return {"services": made}
 

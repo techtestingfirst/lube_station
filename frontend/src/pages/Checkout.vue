@@ -10,7 +10,10 @@ import LoadingBlock from '../components/LoadingBlock.vue'
 
 interface ReqField { field_key: string; label: string; field_type: string; required: boolean; options_json?: any }
 interface Price { billing_cycle: string; recurring_amount: number; setup_fee?: number }
-interface Info { prices: Price[]; requirements: { fields: ReqField[]; flags: Record<string, boolean> } | null }
+interface PlanMeta { plan_name?: string; product_type?: string; product_group?: string }
+interface Info { prices: Price[]; requirements: { fields: ReqField[]; flags: Record<string, boolean> } | null; plan?: PlanMeta | null }
+
+const ADDON_TYPES = ['SSL', 'Backup Addon', 'Migration Service']
 
 const FLAG_DEFS = [
   { key: 'hostname', label: 'Hostname', flag: 'requires_hostname', type: 'text', placeholder: 'vps1.example.com' },
@@ -37,9 +40,13 @@ const info = ref<Info | null>(null)
 const cycle = ref('Monthly')
 const quantity = ref(1)
 const values = ref<Record<string, any>>({})
+const parentService = ref('')
+const parentOptions = ref<{ label: string; value: string }[]>([])
 const error = ref('')
 const fetching = ref(true)
 const submitting = ref(false)
+
+const isAddon = computed(() => ADDON_TYPES.includes(info.value?.plan?.product_type ?? ''))
 
 const coveredKeys = computed(() => {
   const set = new Set<string>()
@@ -137,6 +144,20 @@ async function load() {
   error.value = ''
   try {
     info.value = await call('lube_station.lube_station.portal.apis.checkout_info', { plan })
+    if (ADDON_TYPES.includes(info.value?.plan?.product_type ?? '')) {
+      try {
+        const svcs = await call<{ name: string; hosting_plan: string; status: string }[]>(
+          'lube_station.lube_station.portal.apis.my_services', {}, 'GET')
+        parentOptions.value = [
+          { label: 'Standalone (no parent service)', value: '' },
+          ...svcs
+            .filter((s) => s.status === 'Active' || s.status === 'Pending')
+            .map((s) => ({ label: `${s.hosting_plan} (${s.name})`, value: s.name })),
+        ]
+      } catch {
+        parentOptions.value = []
+      }
+    }
   } catch (e) {
     error.value = friendlyError(e)
   } finally {
@@ -165,6 +186,7 @@ async function cont() {
   try {
     const cart = await call<{ items: { row: string }[] }>('lube_station.lube_station.portal.apis.cart_add', {
       hosting_plan: plan, billing_cycle: cycle.value, quantity: quantity.value, configuration: values.value,
+      parent_service: parentService.value || undefined,
     })
     const row = cart.items[cart.items.length - 1].row
     router.push(`/domain/${row}`)
@@ -221,6 +243,12 @@ async function cont() {
             <Button label="+" size="sm" @click="quantity = quantity + 1" />
           </div>
         </div>
+        <Select
+          v-if="isAddon && parentOptions.length"
+          v-model="parentService"
+          label="Attach to service (optional)"
+          :options="parentOptions"
+        />
         <div v-if="info.requirements" class="space-y-2">
           <div v-if="needsDomain" class="rounded-md bg-surface-gray-1 p-2 text-xs text-ink-gray-5">
             Domain picked in next step (register / transfer / own domain).
