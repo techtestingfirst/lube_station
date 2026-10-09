@@ -55,7 +55,18 @@ def _lookup(domain: str, registrar: str | None) -> dict:
             status = out.get("status", "unknown").capitalize()
             if status not in ("Available", "Taken", "Premium"):
                 status = "Unknown"
-            return {"domain": domain, "status": status, "premium_price": out.get("premium_price", 0)}
+            result = {"domain": domain, "status": status, "premium_price": out.get("premium_price", 0)}
+            try:
+                from lube_station.lube_domains.doctype.tld_pricing.tld_pricing import domain_price
+
+                result["pricing"] = {
+                    "register": domain_price(domain, "register"),
+                    "renew": domain_price(domain, "renew"),
+                    "transfer": domain_price(domain, "transfer"),
+                }
+            except Exception:
+                pass
+            return result
         except Exception:
             pass
     return {"domain": domain, "status": "Available", "premium_price": 0}
@@ -91,6 +102,8 @@ def register_domain(domain: str, customer: str | None = None, registrar: str | N
 
 @frappe.whitelist(methods=["POST"])
 def renew_domain(domain: str, years: int = 1) -> dict:
+    from lube_station.lube_domains.doctype.tld_pricing.tld_pricing import domain_price
+
     adapter, name = _adapter_for(domain)
     out = adapter.renew_domain(domain, years)
     if frappe.db.exists("Domain", domain):
@@ -99,7 +112,8 @@ def renew_domain(domain: str, years: int = 1) -> dict:
         dom.expiry_date = add_to_date(base, years=years)
         dom.save(ignore_permissions=True)
         if dom.customer:
-            frappe.get_doc({"doctype": "Hosting Invoice", "customer": dom.customer, "invoice_items": [{"description": f"Domain renewal {domain} x{years}y", "service_ref": domain, "amount": 15 * years}], "status": "Unpaid", "idempotency_key": f"domain-renew:{domain}:{dom.expiry_date}"}).insert(ignore_permissions=True)
+            rate = domain_price(domain, "renew")
+            frappe.get_doc({"doctype": "Hosting Invoice", "customer": dom.customer, "invoice_items": [{"description": f"Domain renewal {domain} x{years}y", "service_ref": domain, "amount": rate * years}], "status": "Unpaid", "idempotency_key": f"domain-renew:{domain}:{dom.expiry_date}"}).insert(ignore_permissions=True)
     return {"renewed": domain, "vendor": out}
 
 

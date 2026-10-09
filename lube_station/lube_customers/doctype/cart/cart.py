@@ -35,10 +35,15 @@ def recalc(doc):
         elif item.item_type == "Domain":
             if not item.domain:
                 frappe.throw("Domain required")
-            # Per-year fee from Lube Station Settings (same rate renewal bills).
-            from lube_station.lube_station.settings import get_setting
+            # WHMCS per-TLD pricing: action (register/transfer) from the line
+            # config, years from quantity. Falls back to the flat setting rate.
+            from lube_station.lube_domains.doctype.tld_pricing.tld_pricing import domain_price
 
-            item.unit_price = get_setting("domain_year_price")
+            try:
+                action = (json.loads(item.configuration_json or "{}") or {}).get("domain_action", "register")
+            except Exception:
+                action = "register"
+            item.unit_price = domain_price(item.domain, action)
             item.quantity = item.quantity or 1
         item.unit_price = item.unit_price or 0
         item.quantity = item.quantity or 1
