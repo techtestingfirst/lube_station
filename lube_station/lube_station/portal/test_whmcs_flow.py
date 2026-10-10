@@ -41,6 +41,20 @@ class TestWhmcsFlow(IntegrationTestCase):
         cart = apis.cart_set_domain(cart=cart["cart"], row=row, domain="flowexample.com", domain_action="own")
         self.assertEqual(cart["items"][-1]["domain"], "flowexample.com")
 
+    def test_cart_row_mismatch_throws(self):
+        """Refresh safety: row ops on the wrong cart fail loudly, never blank."""
+        cust_name, plan = self._setup()
+        cart = apis.cart_add(hosting_plan=plan, billing_cycle="Monthly", quantity=1)
+        row = cart["items"][-1]["row"]
+        other = frappe.get_doc({"doctype": "Cart", "customer": cust_name}).insert().name
+        self.assertRaises(frappe.ValidationError, apis.cart_set_domain, other, row, "other.com", "own")
+        self.assertRaises(frappe.ValidationError, apis.cart_set_qty, other, row, 2)
+        self.assertRaises(frappe.ValidationError, apis.cart_remove, other, row)
+        # Owning cart still intact.
+        current = apis.cart_current()
+        self.assertEqual(current["cart"], cart["cart"])
+        self.assertTrue(any(i["row"] == row for i in current["items"]))
+
     def test_checkout_notes_and_fulfillment(self):
         from lube_station.lube_customers.doctype.order.order import place_order
 

@@ -46,6 +46,11 @@ async function refresh() {
       call<{ name: string }[]>('lube_station.lube_station.portal.apis.payment_gateways', {}, 'GET'),
     ])
     cart.value = c
+    try {
+      localStorage.setItem('lube-last-cart', c.cart)
+    } catch {
+      // Non-fatal.
+    }
     gateways.value = g.map((x) => ({ label: x.name, value: x.name }))
     if (!gateway.value && gateways.value.length) gateway.value = gateways.value[0].value
   } catch (e) {

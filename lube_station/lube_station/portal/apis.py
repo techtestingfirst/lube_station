@@ -316,12 +316,30 @@ def _assert_cart_access(cart_doc):
 
 
 def _open_cart(customer: str):
-    """Latest cart for customer with no Order yet, else new one."""
-    carts = frappe.get_all("Cart", {"customer": customer}, ["name"], order_by="modified desc", limit=10)
-    for c in carts:
-        if not frappe.db.exists("Order", {"source_cart": c.name}):
-            return frappe.get_doc("Cart", c.name)
+    """Latest open cart for customer with no Order yet, else new one.
+
+    ERPNext pattern: server resolves the single open quotation/party cart,
+    frontend never invents identity. Deterministic order so refresh and
+    multi-step flows always land on the same cart. Carts with items win
+    over freshly created empty ones, so a blank cart never shadows real
+    selections after refresh.
+    """
+    carts = frappe.get_all("Cart", {"customer": customer}, ["name"], order_by="modified desc, creation desc", limit=20)
+    open_carts = [c.name for c in carts if not frappe.db.exists("Order", {"source_cart": c.name})]
+    for name in open_carts:
+        if frappe.db.count("Cart Item", {"parent": name}):
+            return frappe.get_doc("Cart", name)
+    for name in open_carts:
+        return frappe.get_doc("Cart", name)
     return frappe.get_doc({"doctype": "Cart", "customer": customer}).insert(ignore_permissions=True)
+
+
+def _cart_row(cart_doc, row: str):
+    """Row belonging to this cart, else loud error (never silent no-op)."""
+    for item in cart_doc.items or []:
+        if item.name == row:
+            return item
+    frappe.throw("Cart item not found in this cart. Please re-add the plan.")
 
 
 def _cart_view(cart_doc) -> dict:
@@ -1256,16 +1274,15 @@ def cart_set_domain(cart: str, row: str, domain: str | None = None, domain_actio
         _validate_domain_choice(domain, domain_action, auth_code)
         if _premium_for(domain, domain_action):
             frappe.throw("That is a premium domain: order it as a separate domain item")
-    for item in cart_doc.items:
-        if item.name == row:
-            item.domain = (domain or "").strip().lower() or None
-            config = {}
-            try:
-                config = json.loads(item.configuration_json or "{}")
-            except Exception:
-                config = {}
-            config.update({"domain_action": domain_action, "domain_years": years or 1, "epp": auth_code or ""})
-            item.configuration_json = json.dumps(config)
+    item = _cart_row(cart_doc, row)
+    item.domain = (domain or "").strip().lower() or None
+    config = {}
+    try:
+        config = json.loads(item.configuration_json or "{}")
+    except Exception:
+        config = {}
+    config.update({"domain_action": domain_action, "domain_years": years or 1, "epp": auth_code or ""})
+    item.configuration_json = json.dumps(config)
     cart_doc.save(ignore_permissions=True)
     return _cart_view(cart_doc)
 
@@ -1286,9 +1303,10 @@ def _validate_domain_choice(domain: str | None, domain_action: str, auth_code: s
 def cart_set_qty(cart: str, row: str, quantity: int):
     cart_doc = frappe.get_doc("Cart", cart)
     _assert_cart_access(cart_doc)
-    for item in cart_doc.items:
-        if item.name == row:
-            item.quantity = quantity
+    quantity = frappe.utils.cint(quantity)
+    if quantity < 1:
+        frappe.throw("Quantity must be at least 1")
+    _cart_row(cart_doc, row).quantity = quantity
     cart_doc.save(ignore_permissions=True)
     return _cart_view(cart_doc)
 
@@ -1297,6 +1315,7 @@ def cart_set_qty(cart: str, row: str, quantity: int):
 def cart_remove(cart: str, row: str):
     cart_doc = frappe.get_doc("Cart", cart)
     _assert_cart_access(cart_doc)
+    _cart_row(cart_doc, row)
     cart_doc.items = [i for i in cart_doc.items if i.name != row]
     cart_doc.save(ignore_permissions=True)
     return _cart_view(cart_doc)

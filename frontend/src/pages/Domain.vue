@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, ErrorMessage, Select, TextInput } from 'frappe-ui'
 import { call, friendlyError } from '../api'
@@ -8,6 +8,9 @@ import StatusBadge from '../components/StatusBadge.vue'
 
 const route = useRoute()
 const router = useRouter()
+// New flow carries the owning cart: /domain/:cart/:row survives refresh.
+// Legacy /domain/:row falls back to cart_current.
+const cartParam = route.params.cart as string | undefined
 const row = route.params.row as string
 const option = ref<'register' | 'transfer' | 'own' | 'subdomain' | 'none'>('register')
 const domain = ref('')
@@ -21,6 +24,38 @@ const premium = ref(0)
 const pricing = ref<{ register: number; renew: number; transfer: number } | null>(null)
 const checking = ref(false)
 const error = ref('')
+
+// Domain choice draft survives refresh; keyed by owning cart + row.
+const draftKey = `lube-domain-${cartParam ?? 'legacy'}-${row}`
+
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(draftKey)
+    if (!raw) return
+    const d = JSON.parse(raw)
+    if (typeof d.option === 'string') option.value = d.option
+    if (typeof d.domain === 'string') domain.value = d.domain
+    if (typeof d.subPrefix === 'string') subPrefix.value = d.subPrefix
+    if (typeof d.subSuffix === 'string') subSuffix.value = d.subSuffix
+    if (typeof d.years === 'number' && d.years >= 1) years.value = d.years
+    if (typeof d.authCode === 'string') authCode.value = d.authCode
+  } catch {
+    // Corrupt draft: start fresh.
+  }
+}
+
+function saveDraft() {
+  try {
+    localStorage.setItem(draftKey, JSON.stringify({
+      option: option.value, domain: domain.value, subPrefix: subPrefix.value,
+      subSuffix: subSuffix.value, years: years.value, authCode: authCode.value,
+    }))
+  } catch {
+    // Non-fatal.
+  }
+}
+
+watch([option, domain, subPrefix, subSuffix, years, authCode], saveDraft)
 
 async function check() {
   error.value = ''
@@ -45,12 +80,23 @@ async function check() {
 async function cont() {
   error.value = ''
   try {
-    const cart = await call<{ cart: string }>('lube_station.lube_station.portal.apis.cart_current', {}, 'GET')
+    // Explicit owning cart: never re-derive and risk attaching to a new empty cart.
+    let cartId = cartParam
+    if (!cartId) {
+      const cart = await call<{ cart: string }>('lube_station.lube_station.portal.apis.cart_current', {}, 'GET')
+      cartId = cart.cart
+    }
     const full = option.value === 'subdomain' ? `${subPrefix.value.trim().toLowerCase()}.${subSuffix.value}` : (domain.value || undefined)
     await call('lube_station.lube_station.portal.apis.cart_set_domain', {
-      cart: cart.cart, row, domain: full,
+      cart: cartId, row, domain: full,
       domain_action: option.value, years: years.value, auth_code: authCode.value || undefined,
     })
+    try {
+      localStorage.setItem('lube-last-cart', cartId)
+      localStorage.removeItem(draftKey)
+    } catch {
+      // Non-fatal.
+    }
     router.push('/cart')
   } catch (e) {
     error.value = friendlyError(e)
@@ -58,6 +104,7 @@ async function cont() {
 }
 
 onMounted(async () => {
+  restoreDraft()
   try {
     const list = await call<string[]>('lube_station.lube_station.portal.apis.subdomain_suffixes', {}, 'GET')
     suffixes.value = list.map((s) => ({ label: `.${s}`, value: s }))

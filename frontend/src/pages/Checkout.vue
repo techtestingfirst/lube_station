@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button, Checkbox, Select, TextInput } from 'frappe-ui'
 import { call, friendlyError } from '../api'
@@ -45,6 +45,35 @@ const parentOptions = ref<{ label: string; value: string }[]>([])
 const error = ref('')
 const fetching = ref(true)
 const submitting = ref(false)
+
+// Draft survives refresh: form lives in memory, URL holds only plan.
+const draftKey = `lube-checkout-${plan}`
+
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(draftKey)
+    if (!raw) return
+    const d = JSON.parse(raw)
+    if (typeof d.cycle === 'string') cycle.value = d.cycle
+    if (typeof d.quantity === 'number' && d.quantity >= 1) quantity.value = d.quantity
+    if (d.values && typeof d.values === 'object') values.value = d.values
+    if (typeof d.parentService === 'string') parentService.value = d.parentService
+  } catch {
+    // Corrupt draft: start fresh.
+  }
+}
+
+function saveDraft() {
+  try {
+    localStorage.setItem(draftKey, JSON.stringify({
+      cycle: cycle.value, quantity: quantity.value, values: values.value, parentService: parentService.value,
+    }))
+  } catch {
+    // Storage full/blocked: form still works for this session.
+  }
+}
+
+watch([cycle, quantity, values, parentService], saveDraft, { deep: true })
 
 const isAddon = computed(() => ADDON_TYPES.includes(info.value?.plan?.product_type ?? ''))
 
@@ -165,7 +194,10 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  restoreDraft()
+  load()
+})
 
 const selected = computed(
   () => info.value?.prices.find((p) => p.billing_cycle === cycle.value) ?? info.value?.prices[0] ?? null,
@@ -184,12 +216,19 @@ async function cont() {
   error.value = ''
   submitting.value = true
   try {
-    const cart = await call<{ items: { row: string }[] }>('lube_station.lube_station.portal.apis.cart_add', {
+    const cart = await call<{ cart: string; items: { row: string }[] }>('lube_station.lube_station.portal.apis.cart_add', {
       hosting_plan: plan, billing_cycle: cycle.value, quantity: quantity.value, configuration: values.value,
       parent_service: parentService.value || undefined,
     })
     const row = cart.items[cart.items.length - 1].row
-    router.push(`/domain/${row}`)
+    try {
+      localStorage.setItem('lube-last-cart', cart.cart)
+      localStorage.removeItem(draftKey)
+    } catch {
+      // Non-fatal.
+    }
+    // Cart id in URL: refresh on next step keeps the owning cart.
+    router.push(`/domain/${cart.cart}/${row}`)
   } catch (e) {
     error.value = friendlyError(e)
   } finally {
