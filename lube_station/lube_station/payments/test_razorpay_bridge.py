@@ -95,6 +95,58 @@ class TestRazorpayBridge(IntegrationTestCase):
             frappe.db.count("Payment Transaction", {"gateway_txn_id": "pay_bridge_1"}), 1
         )
 
+    def test_repeat_callback_with_existing_txn_still_fulfills(self):
+        cust = _customer()
+        plan = _plan()
+        order = frappe.get_doc(
+            {
+                "doctype": "Order",
+                "customer": cust.name,
+                "status": "Pending Review",
+                "items": [
+                    {
+                        "item_type": "Hosting Plan",
+                        "reference": plan.name,
+                        "billing_cycle": "Monthly",
+                        "unit_price": 100,
+                        "quantity": 1,
+                    }
+                ],
+            }
+        ).insert(ignore_permissions=True)
+        inv = _invoice(cust.name, 100, order.name)
+        svc = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": cust.name,
+                "hosting_plan": plan.name,
+                "order_ref": order.name,
+                "status": "Pending",
+                "recurring_amount": 100,
+            }
+        ).insert(ignore_permissions=True)
+        # Gateway retried the webhook: transaction row already stored,
+        # invoice never marked Paid, fulfillment never ran.
+        frappe.get_doc(
+            {
+                "doctype": "Payment Transaction",
+                "invoice": inv.name,
+                "gateway": "Razorpay",
+                "gateway_txn_id": "pay_bridge_retry_1",
+                "amount": 100,
+                "status": "Success",
+                "raw_response": "{}",
+            }
+        ).insert(ignore_permissions=True)
+
+        frappe.flags.data = {"razorpay_payment_id": "pay_bridge_retry_1"}
+        inv.reload()
+        inv.on_payment_authorized("Completed")
+
+        self.assertEqual(frappe.db.get_value("Hosting Invoice", inv.name, "status"), "Paid")
+        self.assertEqual(frappe.db.get_value("Service", svc.name, "status"), "Active")
+        self.assertTrue(frappe.db.exists("Notification Event", {"event_key": f"payment:{inv.name}"}))
+
     def test_on_payment_authorized_stripe(self):
         cust = _customer()
         inv = _invoice(cust.name, 50)

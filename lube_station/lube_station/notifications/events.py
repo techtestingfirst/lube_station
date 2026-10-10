@@ -1,6 +1,25 @@
 import frappe
 
 # WHMCS parity: General, Product/Service, Domain, Invoice, Support, Affiliate.
+# Trigger map (event -> producer). Events with no producer yet are reserved
+# for the per-plan Dunning Step engine / registrar webhooks; fire() rejects
+# unknown events but never invents mail for reserved ones.
+#   signup -> portal/apis.py signup_customer
+#   order, invoice -> portal/apis.py checkout via place_order/generate_invoice
+#   payment, credentials -> hosting_invoice._fulfill_order on Paid
+#   welcome, credentials, suspension, unsuspension, termination,
+#     cancellation_confirm -> Service lifecycle (service.py)
+#   invoice_reminder, overdue_first, overdue_third -> apply_dunning (service.py)
+#   payment_failed -> auto_charge_invoice / gateway webhooks
+#   refund, credit -> issue_refund / CreditNote.on_submit
+#   renewal -> renewal invoice; renewal_confirm -> on_invoice_paid
+#   domain_* -> registered_domain.py; support_* -> support/tickets.py
+#   affiliate_signup, affiliate_commission -> affiliate.py / metrics.py
+#   download -> downloadable_asset.log_download
+#   password_reset -> audit only (Frappe core sends the link)
+# Reserved (no producer yet): email_verification, overdue, overdue_second,
+#   trial_ending, domain_expired, domain_transfer_away, domain_contact_update,
+#   affiliate_withdrawal.
 TEMPLATES = {
     "signup": "Welcome, account created",
     "email_verification": "Please verify your email",
@@ -131,6 +150,8 @@ def _send(event_type: str, recipient: str, reference: str, context: dict | None,
             lines.append(f"{k}: {context[k]}")
         message = "\n".join(lines)
     try:
-        frappe.sendmail(recipients=[recipient], subject=subject, message=message, sender=_sender())
+        # now=True: transactional mail sends over SMTP immediately instead of
+        # waiting for the scheduler's Email Queue flush (scheduler off == silent pile-up).
+        frappe.sendmail(recipients=[recipient], subject=subject, message=message, sender=_sender(), now=True)
     except Exception:
         pass

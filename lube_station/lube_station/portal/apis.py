@@ -1069,8 +1069,8 @@ def checkout(cart: str | None = None, gateway: str | None = None, notes: str | N
         order_name = place_order(cart_doc.name, customer, notes)["order"]
         _notify(customer, fire, "order", order_name)
     inv = generate_invoice(order_name, gateway)
-    if not inv.get("reused"):
-        _notify(customer, fire, "invoice", inv["invoice"])
+    # Invoice mail already fired once inside generate_invoice (_notify_invoice);
+    # re-firing here would only hit the Notification Event dedupe, so skip it.
     link = payment_link(inv["invoice"], gateway)
     return {"order": order_name, "customer": customer, **inv, "payment": link}
 

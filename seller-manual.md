@@ -120,12 +120,12 @@ Screen: Desk > Lube Station > Dunning Rule > New.
 6. Enter Termination Days. Default is 30.
 7. Add steps. Use Step Type Pre-due, Due, Overdue, Suspend, or Terminate Queue.
 8. Enter Days Offset for each step.
-9. Pick Template for each notify step from the seeded Lube Station templates (Due Soon, Due Today, Overdue, Suspended, Termination Notice).
+9. Pick Template for each notify step from the seeded Lube templates (Lube Invoice Reminder, Lube Overdue First, Lube Overdue Second, Lube Overdue Third).
 10. Select Action Notify, Suspend, or Queue Termination.
 11. Check Active.
 12. Save.
 
-Nine Lube Station email templates ship with the app: Due Soon, Due Today, Overdue, Suspended, Termination Notice, Payment Received, Service Restored, Service Welcome, Renewal Reminder. Edits you make to them are kept on update.
+44 Lube email templates seed on migrate (one per lifecycle event: signup, order, invoice, payment, welcome, credentials, suspension, domain, support, affiliate, download). Trigger map lives in `lube_station/lube_station/notifications/events.py`. Edits you make to them are kept on update. Transactional mails send immediately (no scheduler needed); dunning/domain-expiry batches need the scheduler on.
 
 Create at least one active global rule before you sell.
 

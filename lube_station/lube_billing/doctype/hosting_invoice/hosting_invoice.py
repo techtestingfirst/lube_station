@@ -33,6 +33,9 @@ class HostingInvoice(Document):
             if self.status != "Paid":
                 self.status = "Paid"
                 self.save(ignore_permissions=True)
+            # Retry/webhook repeat: transaction exists but fulfillment may never
+            # have run (early-return used to skip it). Idempotent via fire() keys.
+            _fulfill_order(self)
             return "/store/invoices"
         frappe.get_doc(
             {
