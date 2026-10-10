@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lube Station</title>
+    <link rel="icon" href="/assets/lube_station/images/logo.svg" type="image/svg+xml" />
+    <script>
+      // Apply the saved light or dark mode before the first paint, so the page
+      // doesn't flash. useColorScheme() in the app keeps it in sync after that.
+      const scheme = localStorage.getItem('theme')
+      const dark =
+        scheme === 'dark' ||
+        (scheme !== 'light' &&
+          matchMedia('(prefers-color-scheme: dark)').matches)
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+    </script>
+    <script type="module" crossorigin src="/assets/lube_station/frontend/assets/index-BiMMTB84.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/lube_station/frontend/assets/index-DjHPSHF9.css">
+  </head>
+  <body>
+    <div id="app"></div>
+  
+          <script>
+              {% for key in boot %}
+              window["{{ key }}"] = {{ boot[key] | tojson }};
+              {% endfor %}
+          </script>
+          </body>
+          
+</html>
