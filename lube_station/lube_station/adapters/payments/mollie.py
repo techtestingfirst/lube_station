@@ -89,7 +89,7 @@ class MollieAdapter(PaymentGatewayAdapter):
             {
                 "amount": {"currency": currency, "value": f"{float(inv.total_due):.2f}"},
                 "description": f"Hosting Invoice {inv.name}",
-                "redirectUrl": f"{site}/lube_station/invoices",
+                "redirectUrl": f"{site}/store/invoices",
                 "metadata": {"invoice": inv.name},
             },
             transport,

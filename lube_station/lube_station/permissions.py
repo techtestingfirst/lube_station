@@ -45,7 +45,14 @@ def has_customer_document_permission(doc, user=None) -> bool:
 hosting_invoice_query = customer_document_query("Hosting Invoice")
 
 
+STAFF_ROLES = {"System Manager", "Support Agent", "Billing Admin", "Provisioning Operator"}
+
+
 def has_app_permission() -> bool:
-    """App tile gate for /apps screen: all logged-in users, like storefront."""
+    """App tile gate for /apps screen: staff only. Customers use /store."""
     user = frappe.session.user
-    return bool(user and user != "Guest")
+    if not user or user == "Guest":
+        return False
+    if user == "Administrator":
+        return True
+    return bool(STAFF_ROLES.intersection(frappe.get_roles(user)))

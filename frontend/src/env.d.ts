@@ -1,6 +1,6 @@
 interface Window {
   /**
-   * The logged-in user, from the boot data in `www/lube_station.py`. Only a
+   * The logged-in user, from the boot data in `www/store.html`. Only a
    * production build has boot data. The dev server serves the page without
    * Frappe.
    */

@@ -16,7 +16,7 @@ add_to_apps_screen = [
 		"name": "lube_station",
 		"logo": "/assets/lube_station/images/logo.svg",
 		"title": "Lube Station",
-		"route": "/lube_station",
+		"route": "/app/lube-station",
 		"has_permission": "lube_station.lube_station.permissions.has_app_permission",
 	}
 ]
@@ -252,7 +252,7 @@ export_python_type_annotations = True
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
-# Load the frontend on every path under /lube_station
+# Customer storefront SPA. Staff command-center lives in Desk (workspace Lube Station).
 website_route_rules = [
-	{"from_route": "/lube_station/<path:app_path>", "to_route": "lube_station"},
+	{"from_route": "/store/<path:app_path>", "to_route": "store"},
 ]

@@ -44,12 +44,12 @@ export async function login(usr: string, pwd: string): Promise<void> {
     .then((r) => r.json())
     .catch(() => ({}))
   if (!loggedUserOf(me)) throw new Error('Session not established, try again')
-  window.location.href = '/lube_station/'
+  window.location.href = '/store/'
 }
 
 export async function logout(): Promise<void> {
   await fetch('/api/method/logout', { method: 'POST', credentials: 'include' })
-  window.location.href = '/lube_station/login'
+  window.location.href = '/store/login'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

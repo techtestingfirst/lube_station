@@ -1,7 +1,16 @@
 {
  "app": "lube_station",
- "charts": [],
- "content": "[{\"id\":\"ls_head_setup\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Set up your hosting business</b></span><br><span class=\\\"text-muted\\\">Work top to bottom: catalog, servers, plans with prices, then payments. The storefront opens once a plan has a price and a gateway is live.</span>\",\"col\":12}},{\"id\":\"ls_sc_plan\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Hosting Plan\",\"col\":3}},{\"id\":\"ls_sc_server\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Server\",\"col\":3}},{\"id\":\"ls_sc_price\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Plan Pricing\",\"col\":3}},{\"id\":\"ls_sc_order\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Order\",\"col\":3}},{\"id\":\"ls_sp_1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ls_head_areas\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Setup areas</b></span>\",\"col\":12}},{\"id\":\"ls_card_catalog\",\"type\":\"card\",\"data\":{\"card_name\":\"Catalog, Plans & Pricing\",\"col\":4}},{\"id\":\"ls_card_servers\",\"type\":\"card\",\"data\":{\"card_name\":\"Servers & Provisioning\",\"col\":4}},{\"id\":\"ls_card_billing\",\"type\":\"card\",\"data\":{\"card_name\":\"Billing & Payments\",\"col\":4}},{\"id\":\"ls_card_domains\",\"type\":\"card\",\"data\":{\"card_name\":\"Domains & Downloads\",\"col\":4}},{\"id\":\"ls_card_customers\",\"type\":\"card\",\"data\":{\"card_name\":\"Customers & Operations\",\"col\":4}}]",
+ "charts": [
+  {
+   "chart_name": "Lube Services by Status",
+   "label": "Services by Status"
+  },
+  {
+   "chart_name": "Lube Invoice Revenue",
+   "label": "Invoice Revenue"
+  }
+ ],
+ "content": "[{\"id\": \"ls_head_glance\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Business at a glance</b></span><br><span class=\\\"text-muted\\\">Seller command-center: revenue, dues, services and churn.</span>\", \"col\": 12}}, {\"id\": \"ls_nc_mrr\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"MRR\", \"col\": 3}}, {\"id\": \"ls_nc_od\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Overdue Receivable\", \"col\": 3}}, {\"id\": \"ls_nc_svc\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Active Services\", \"col\": 3}}, {\"id\": \"ls_nc_churn\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Churn Rate\", \"col\": 3}}, {\"id\": \"ls_sp_0\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ls_ch_svc\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Lube Services by Status\", \"col\": 6}}, {\"id\": \"ls_ch_rev\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Lube Invoice Revenue\", \"col\": 6}}, {\"id\": \"ls_sp_01\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ls_head_setup\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Set up your hosting business</b></span><br><span class=\\\"text-muted\\\">Work top to bottom: catalog, servers, plans with prices, then payments. The storefront opens once a plan has a price and a gateway is live.</span>\", \"col\": 12}}, {\"id\": \"ls_sc_plan\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hosting Plan\", \"col\": 3}}, {\"id\": \"ls_sc_server\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Server\", \"col\": 3}}, {\"id\": \"ls_sc_price\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Plan Pricing\", \"col\": 3}}, {\"id\": \"ls_sc_order\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Order\", \"col\": 3}}, {\"id\": \"ls_sp_1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ls_head_areas\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Setup areas</b></span>\", \"col\": 12}}, {\"id\": \"ls_card_catalog\", \"type\": \"card\", \"data\": {\"card_name\": \"Catalog, Plans & Pricing\", \"col\": 4}}, {\"id\": \"ls_card_servers\", \"type\": \"card\", \"data\": {\"card_name\": \"Servers & Provisioning\", \"col\": 4}}, {\"id\": \"ls_card_billing\", \"type\": \"card\", \"data\": {\"card_name\": \"Billing & Payments\", \"col\": 4}}, {\"id\": \"ls_card_domains\", \"type\": \"card\", \"data\": {\"card_name\": \"Domains & Downloads\", \"col\": 4}}, {\"id\": \"ls_card_customers\", \"type\": \"card\", \"data\": {\"card_name\": \"Customers & Operations\", \"col\": 4}}]",
  "creation": "2026-10-02 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -465,13 +474,43 @@
  "modified_by": "Administrator",
  "module": "Lube Station",
  "name": "Lube Station",
- "number_cards": [],
+ "number_cards": [
+  {
+   "label": "MRR",
+   "number_card_name": "MRR"
+  },
+  {
+   "label": "Overdue Receivable",
+   "number_card_name": "Overdue Receivable"
+  },
+  {
+   "label": "Active Services",
+   "number_card_name": "Active Services"
+  },
+  {
+   "label": "Churn Rate",
+   "number_card_name": "Churn Rate"
+  }
+ ],
  "owner": "Administrator",
  "parent_page": "",
  "public": 1,
  "quick_lists": [],
  "restrict_to_domain": "",
- "roles": [],
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Support Agent"
+  },
+  {
+   "role": "Billing Admin"
+  },
+  {
+   "role": "Provisioning Operator"
+  }
+ ],
  "sequence_id": 1.0,
  "shortcuts": [
   {

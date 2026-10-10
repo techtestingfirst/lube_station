@@ -8,7 +8,7 @@ export default defineConfig({
   // Payment website pages must also proxy, or gateway redirects 404 in dev.
   plugins: [
     frappeui({
-      frontendRoute: '/lube_station',
+      frontendRoute: '/store',
       frappeProxy: {
         // Legacy frappe.call posts website callbacks to root "/" — must proxy
         // or make_payment never reaches the bench in dev.

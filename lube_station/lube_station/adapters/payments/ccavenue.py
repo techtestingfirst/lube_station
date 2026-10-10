@@ -67,7 +67,7 @@ class CCAvenueAdapter(PaymentGatewayAdapter):
             "amount": f"{float(inv.total_due):.2f}",
             "currency": "INR",
             "redirect_url": f"{site}/api/method/lube_station.lube_station.payments.methods.ccavenue_return",
-            "cancel_url": f"{site}/lube_station/invoices",
+            "cancel_url": f"{site}/store/invoices",
             "billing_email": email,
             "merchant_param1": inv.name,
         }

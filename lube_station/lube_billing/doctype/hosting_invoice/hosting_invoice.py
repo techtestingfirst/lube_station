@@ -18,7 +18,7 @@ class HostingInvoice(Document):
         if payment_status not in ("Authorized", "Verified", "Completed"):
             return
         if self.status == "Paid":
-            return "/lube_station/invoices"
+            return "/store/invoices"
         data = (frappe.flags.data or {}) if hasattr(frappe.flags, "data") else {}
         gateway_txn = str(data.get("razorpay_payment_id") or data.get("stripe_token_id") or data.get("transaction_id") or "")
         if data.get("stripe_token_id"):
@@ -33,7 +33,7 @@ class HostingInvoice(Document):
             if self.status != "Paid":
                 self.status = "Paid"
                 self.save(ignore_permissions=True)
-            return "/lube_station/invoices"
+            return "/store/invoices"
         frappe.get_doc(
             {
                 "doctype": "Payment Transaction",
@@ -48,7 +48,7 @@ class HostingInvoice(Document):
         self.status = "Paid"
         self.save(ignore_permissions=True)
         _fulfill_order(self)
-        return "/lube_station/invoices"
+        return "/store/invoices"
 
 
 def _fulfill_order(inv):

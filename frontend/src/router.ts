@@ -27,7 +27,7 @@ const routes = [
 ]
 
 export const router = createRouter({
-  history: createWebHistory('/lube_station'),
+  history: createWebHistory('/store'),
   routes,
 })
 
