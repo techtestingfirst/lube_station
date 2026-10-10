@@ -12,6 +12,8 @@ from .base import PaymentGatewayAdapter
 
 
 def _settings():
+    if not frappe.db.exists("DocType", "Stripe Settings"):
+        frappe.throw("Stripe not configured: create Stripe Settings with Publishable/Secret keys first")
     rows = frappe.get_all("Stripe Settings", ["name"])
     settings = None
     for row in rows:

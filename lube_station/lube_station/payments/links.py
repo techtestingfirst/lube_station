@@ -81,6 +81,8 @@ def _stripe_url(inv) -> dict:
     Requires Stripe Settings with keys (saving it auto-creates Payment Gateway).
     """
     settings = None
+    if not frappe.db.exists("DocType", "Stripe Settings"):
+        frappe.throw("Stripe not configured: create Stripe Settings with Publishable/Secret keys first")
     for row in frappe.get_all("Stripe Settings", ["name"]):
         doc = frappe.get_doc("Stripe Settings", row.name)
         if doc.get("publishable_key"):

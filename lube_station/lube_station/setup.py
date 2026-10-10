@@ -364,6 +364,9 @@ def ensure_all():
 
     ensure_roles()
     ensure_settings()
+    from lube_station.lube_station.adapters.seed import seed
+
+    seed()
     ensure_print_formats()
     ensure_product_schemas()
     ensure_email_templates()

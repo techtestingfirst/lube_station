@@ -76,6 +76,13 @@ def _invoice(amount=250):
 
 
 class TestRazorpayLiveAdapter(IntegrationTestCase):
+    def setUp(self):
+        super().setUp()
+        try:
+            import razorpay  # noqa: F401
+        except ImportError:
+            self.skipTest("razorpay library not installed")
+
     def _patched(self, calls):
         return patch("razorpay.Client", lambda auth=None: FakeClient(calls, auth))
 

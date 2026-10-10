@@ -8,6 +8,11 @@ from lube_station.lube_station.payments.links import payment_link
 
 
 class TestPaymentLink(IntegrationTestCase):
+    def setUp(self):
+        super().setUp()
+        if not frappe.db.exists("DocType", "Stripe Settings"):
+            self.skipTest("Stripe Settings (payments app) not installed")
+
     def test_payment_link(self):
         seed()
         cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()

@@ -46,6 +46,12 @@ class FakeAdapter:
 
 
 class TestServiceActions(IntegrationTestCase):
+    def setUp(self):
+        super().setUp()
+        from lube_station.lube_station.adapters.seed import seed
+
+        seed()
+
     def tearDown(self):
         frappe.set_user("Administrator")
         super().tearDown()
@@ -439,6 +445,12 @@ class FakeSsoAdapter:
 
 
 class TestPanelSso(IntegrationTestCase):
+    def setUp(self):
+        super().setUp()
+        from lube_station.lube_station.adapters.seed import seed
+
+        seed()
+
     def tearDown(self):
         frappe.set_user("Administrator")
         super().tearDown()

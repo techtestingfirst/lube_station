@@ -57,6 +57,9 @@ def make_factory(sock, replies=None):
 
 class TestNominetLiveAdapter(IntegrationTestCase):
     def _account(self):
+        from lube_station.lube_station.adapters.seed import seed
+
+        seed()
         name = frappe.db.get_value("Registrar Account", {"registrar": "Nominet"}, "name")
         if name:
             return name, False

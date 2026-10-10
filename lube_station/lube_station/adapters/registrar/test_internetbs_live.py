@@ -36,6 +36,9 @@ class FakeTransport:
 
 class TestInternetBsLiveAdapter(IntegrationTestCase):
     def _account(self):
+        from lube_station.lube_station.adapters.seed import seed
+
+        seed()
         name = frappe.db.get_value("Registrar Account", {"registrar": "Internet.bs"}, "name")
         if name:
             return name, False

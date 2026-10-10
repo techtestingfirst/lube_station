@@ -40,6 +40,9 @@ class FakeTransport:
 
 class TestPorkbunLiveAdapter(IntegrationTestCase):
     def _account(self):
+        from lube_station.lube_station.adapters.seed import seed
+
+        seed()
         name = frappe.db.get_value("Registrar Account", {"registrar": "Porkbun"}, "name")
         if name:
             return name, False

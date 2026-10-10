@@ -14,6 +14,20 @@ def _customer():
 
 
 class TestVerifyRazorpay(IntegrationTestCase):
+    def setUp(self):
+        super().setUp()
+        if not frappe.db.exists("DocType", "Razorpay Settings"):
+            self.skipTest("Razorpay Settings (payments app) not installed")
+        try:
+            import razorpay  # noqa: F401
+        except ImportError:
+            import sys
+            import types
+
+            fake = types.ModuleType("razorpay")
+            fake.Client = object
+            sys.modules["razorpay"] = fake
+
     def _invoice(self, cust_name, amount=80):
         return frappe.get_doc(
             {

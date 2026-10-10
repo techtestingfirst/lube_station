@@ -9,6 +9,9 @@ readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # "frappe~=16.0.0" # Installed and managed by bench.
+    "pycryptodome>=3.20",
+    "razorpay>=1.4",
+    "stripe>=8.0",
 ]
 
 [build-system]

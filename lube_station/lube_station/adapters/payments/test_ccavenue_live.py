@@ -33,6 +33,13 @@ def _invoice(amount=1100):
 
 
 class TestCCAvenueLiveAdapter(IntegrationTestCase):
+    def setUp(self):
+        super().setUp()
+        try:
+            from Crypto.Cipher import AES  # noqa: F401
+        except ImportError:
+            self.skipTest("pycryptodome library not installed")
+
     def test_crypto_roundtrip(self):
         enc = encrypt("WK" * 16, "order_id=INV-1&amount=100.00")
         self.assertNotIn("INV-1", enc)

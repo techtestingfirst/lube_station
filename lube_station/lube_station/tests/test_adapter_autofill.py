@@ -3,6 +3,12 @@ from frappe.tests import IntegrationTestCase
 
 
 class TestAdapterAutofill(IntegrationTestCase):
+    def setUp(self):
+        super().setUp()
+        from lube_station.lube_station.adapters.seed import seed
+
+        seed()
+
     def test_payment_autofill(self):
         doc = frappe.get_doc("Payment Gateway Adapter", "Mollie")
         original = doc.class_path

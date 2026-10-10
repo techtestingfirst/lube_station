@@ -36,6 +36,9 @@ def ok(attrs=None):
 
 class TestOpenSrsLiveAdapter(IntegrationTestCase):
     def _account(self):
+        from lube_station.lube_station.adapters.seed import seed
+
+        seed()
         name = frappe.db.get_value("Registrar Account", {"registrar": "OpenSRS"}, "name")
         if name:
             return name, False

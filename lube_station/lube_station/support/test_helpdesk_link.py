@@ -7,6 +7,11 @@ from lube_station.lube_station.support.tickets import create_ticket
 
 
 class TestHelpdeskLink(IntegrationTestCase):
+    def setUp(self):
+        super().setUp()
+        if not frappe.db.exists("DocType", "HD Ticket"):
+            self.skipTest("HD Ticket (helpdesk app) not installed")
+
     def test_helpdesk_link(self):
         cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         group = frappe.get_doc({"doctype": "Product Group", "group_name": "Sup Group"}).insert()
