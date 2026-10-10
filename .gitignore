@@ -57,3 +57,4 @@ jspm_packages/
 # Built by the frontend
 lube_station/public/frontend
 lube_station/www/lube_station.html
+lube_station/www/store.html
