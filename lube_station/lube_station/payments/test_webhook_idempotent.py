@@ -1,4 +1,6 @@
 import frappe
+
+from lube_station.lube_station.tests.helpers import make_customer, make_user
 from frappe.tests import IntegrationTestCase
 
 from lube_station.lube_station.payments.webhooks import handle_webhook
@@ -6,7 +8,7 @@ from lube_station.lube_station.payments.webhooks import handle_webhook
 
 class TestWebhookIdempotent(IntegrationTestCase):
     def test_webhook_idempotent(self):
-        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         inv = frappe.get_doc({"doctype": "Hosting Invoice", "customer": cust.name, "invoice_items": [{"description": "t", "amount": 100}], "status": "Unpaid"}).insert()
         payload = {"id": "txn-1", "event": "evt-1", "invoice": inv.name, "status": "paid", "amount": 100}
         first = handle_webhook("Stripe", payload)

@@ -1,4 +1,6 @@
 import frappe
+
+from lube_station.lube_station.tests.helpers import make_customer, make_user
 from frappe.tests import IntegrationTestCase
 from unittest.mock import patch
 
@@ -9,7 +11,7 @@ from lube_station.lube_station.payments.methods import auto_charge_invoice
 class TestAutoCharge(IntegrationTestCase):
     def test_auto_charge(self):
         seed()
-        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         method = frappe.get_doc({"doctype": "Saved Payment Method", "customer": cust.name, "gateway": "Stripe", "token": "tok_123", "default_method": 1, "last_four": "4242"}).insert()
         inv = frappe.get_doc({"doctype": "Hosting Invoice", "customer": cust.name, "invoice_items": [{"description": "t", "amount": 60}], "status": "Unpaid"}).insert()
         with patch(

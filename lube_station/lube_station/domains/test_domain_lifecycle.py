@@ -1,4 +1,6 @@
 import frappe
+
+from lube_station.lube_station.tests.helpers import make_customer, make_user
 from frappe.tests import IntegrationTestCase
 from unittest.mock import patch
 
@@ -14,7 +16,7 @@ def _fake_call(self, action, obj, attributes=None, transport=None):
 class TestDomainLifecycle(IntegrationTestCase):
     def test_domain_lifecycle(self):
         seed()
-        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         with patch(
             "lube_station.lube_station.adapters.registrar.opensrs.OpenSrsAdapter._call", _fake_call
         ):

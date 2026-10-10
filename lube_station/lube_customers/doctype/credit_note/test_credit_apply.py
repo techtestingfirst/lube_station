@@ -1,4 +1,6 @@
 import frappe
+
+from lube_station.lube_station.tests.helpers import make_customer, make_user
 from frappe.tests import IntegrationTestCase
 
 from lube_station.lube_customers.doctype.credit_note.credit_note import apply_credit
@@ -6,7 +8,7 @@ from lube_station.lube_customers.doctype.credit_note.credit_note import apply_cr
 
 class TestCreditApply(IntegrationTestCase):
     def test_credit_apply(self):
-        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         cn = frappe.get_doc({"doctype": "Credit Note", "customer": cust.name, "amount": 50, "reason": "goodwill"}).insert()
         cn.submit()
         self.assertEqual(frappe.db.get_value("Hosting Customer", cust.name, "credit_balance"), 50)

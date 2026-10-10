@@ -1,4 +1,6 @@
 import frappe
+
+from lube_station.lube_station.tests.helpers import make_customer, make_user
 from frappe.tests import IntegrationTestCase
 
 from lube_station.lube_station.adapters.seed import seed
@@ -8,7 +10,7 @@ from lube_station.lube_station.payments.links import payment_link
 class TestPaymentLink(IntegrationTestCase):
     def test_payment_link(self):
         seed()
-        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         inv = frappe.get_doc(
             {"doctype": "Hosting Invoice", "customer": cust.name, "invoice_items": [{"description": "t", "amount": 100}], "status": "Unpaid"}
         ).insert()

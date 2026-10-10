@@ -6,7 +6,7 @@ from lube_station.lube_station.provisioning.jobs import run_change_package, run_
 
 class TestProvisionLifecycle(IntegrationTestCase):
     def test_provision_lifecycle(self):
-        frappe.get_doc({"doctype": "Provisioning Module", "module_name": "cPanel-Test", "control_panel": "cPanel", "class_path": "lube_station.lube_station.adapters.provisioning.cpanel.CpanelWhmAdapter"}).insert()
+        frappe.get_doc({"doctype": "Provisioning Module", "module_name": "cPanel-Test", "control_panel": "cPanel / WHM", "class_path": "lube_station.lube_station.adapters.provisioning.cpanel.CpanelWhmAdapter"}).insert()
         first = run_create("SVC-1", key="idem-1")
         second = run_create("SVC-1", key="idem-1")
         self.assertFalse(first["reused"])

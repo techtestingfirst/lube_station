@@ -1,6 +1,8 @@
 from datetime import date, timedelta
 
 import frappe
+
+from lube_station.lube_station.tests.helpers import make_customer, make_user
 from frappe.tests import IntegrationTestCase
 
 from lube_station.lube_billing.doctype.dunning_rule.dunning_rule import evaluate_invoice
@@ -8,7 +10,7 @@ from lube_station.lube_billing.doctype.dunning_rule.dunning_rule import evaluate
 
 class TestDunningSuspend(IntegrationTestCase):
     def test_dunning_suspend(self):
-        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         frappe.get_doc({"doctype": "Dunning Rule", "rule_name": "Default-Test", "grace_days": 7, "termination_days": 30, "active": 1}).insert()
         inv = frappe.get_doc(
             {

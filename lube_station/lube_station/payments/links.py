@@ -6,6 +6,24 @@ from lube_station.lube_station.settings import BRIDGED_GATEWAYS, gateway_order
 # Legacy display order, used only before first Settings save.
 MVP_ORDER = list(BRIDGED_GATEWAYS) + ["PayPal Checkout"]
 
+GATEWAY_TIMEOUT = 30
+
+
+def _bounded(fn, *args, **kwargs):
+    """Run a gateway call with a hard timeout. Provider throws surface as ValidationError."""
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(fn, *args, **kwargs)
+        try:
+            return future.result(timeout=GATEWAY_TIMEOUT)
+        except TimeoutError:
+            frappe.throw("gateway call timed out", frappe.ValidationError)
+        except frappe.ValidationError:
+            raise
+        except Exception as e:
+            frappe.throw(str(e), frappe.ValidationError)
+
 
 def _site_path(url: str) -> str:
     """Site-relative path so checkout redirect stays on the portal origin.

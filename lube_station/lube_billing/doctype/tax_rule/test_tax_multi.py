@@ -1,4 +1,6 @@
 import frappe
+
+from lube_station.lube_station.tests.helpers import make_customer, make_user
 from contextlib import contextmanager
 from frappe.tests import IntegrationTestCase
 
@@ -23,7 +25,7 @@ def _only_owned(owned):
 
 class TestTaxMulti(IntegrationTestCase):
     def test_tax_multi(self):
-        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         rules = []
         for tax_name, percentage in (("GST", 10), ("Cess", 5)):
             name = frappe.db.get_value("Tax Rule", {"tax_name": tax_name}, "name")

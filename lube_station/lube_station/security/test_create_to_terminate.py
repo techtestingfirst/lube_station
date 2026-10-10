@@ -1,6 +1,8 @@
 from datetime import date, timedelta
 
 import frappe
+
+from lube_station.lube_station.tests.helpers import make_customer, make_user
 from frappe.tests import IntegrationTestCase
 
 from lube_station.lube_billing.doctype.dunning_rule.dunning_rule import evaluate_invoice
@@ -14,7 +16,7 @@ class TestCreateToTerminate(IntegrationTestCase):
         ensure_roles()
         for r in ["Customer", "Support Agent", "Billing Admin", "Provisioning Operator"]:
             self.assertTrue(frappe.db.exists("Role", r))
-        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         group = frappe.get_doc({"doctype": "Product Group", "group_name": "E2E Group"}).insert()
         plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": "E2E Plan", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
         frappe.get_doc({"doctype": "Plan Pricing", "hosting_plan": plan.name, "billing_cycle": "Monthly", "recurring_amount": 120}).insert()

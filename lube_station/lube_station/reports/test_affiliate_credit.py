@@ -1,4 +1,6 @@
 import frappe
+
+from lube_station.lube_station.tests.helpers import make_customer, make_user
 from frappe.tests import IntegrationTestCase
 
 from lube_station.lube_station.reports.metrics import credit_affiliate, mrr
@@ -6,7 +8,7 @@ from lube_station.lube_station.reports.metrics import credit_affiliate, mrr
 
 class TestAffiliateCredit(IntegrationTestCase):
     def test_affiliate_credit(self):
-        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": make_user(__name__.split(".")[-1]), "status": "Active"}).insert()
         aff = frappe.get_doc({"doctype": "Affiliate", "customer": cust.name, "referral_code": "REF-1", "commission_percentage": 10}).insert()
         inv = frappe.get_doc({"doctype": "Hosting Invoice", "customer": cust.name, "invoice_items": [{"description": "t", "amount": 100}], "status": "Unpaid"}).insert()
         self.assertFalse(credit_affiliate(aff.name, inv.name)["credited"])
