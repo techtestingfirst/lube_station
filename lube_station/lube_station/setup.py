@@ -123,6 +123,7 @@ DASHBOARD_CHARTS = [
     {
         "name": "Lube Services by Status",
         "chart_name": "Lube Services by Status",
+        "currency": None,
         "chart_type": "Group By",
         "document_type": "Service",
         "group_by_based_on": "status",
@@ -135,6 +136,7 @@ DASHBOARD_CHARTS = [
         "name": "Lube Invoice Revenue",
         "chart_name": "Lube Invoice Revenue",
         "chart_type": "Sum",
+        "timeseries": 1,
         "document_type": "Hosting Invoice",
         "based_on": "creation",
         "value_based_on": "total_due",
@@ -161,6 +163,7 @@ DASHBOARD_CHARTS = [
     {
         "name": "Lube Daily Customers",
         "chart_name": "Lube Daily Customers",
+        "currency": None,
         "chart_type": "Count",
         "document_type": "Hosting Customer",
         "based_on": "creation",
@@ -174,6 +177,7 @@ DASHBOARD_CHARTS = [
     {
         "name": "Lube Daily Services",
         "chart_name": "Lube Daily Services",
+        "currency": None,
         "chart_type": "Count",
         "document_type": "Service",
         "based_on": "creation",
@@ -187,6 +191,7 @@ DASHBOARD_CHARTS = [
     {
         "name": "Lube Daily Invoices",
         "chart_name": "Lube Daily Invoices",
+        "currency": None,
         "chart_type": "Count",
         "document_type": "Hosting Invoice",
         "based_on": "creation",
@@ -198,6 +203,9 @@ DASHBOARD_CHARTS = [
         "module": "Lube Station",
     },
 ]
+
+
+REVENUE_CHARTS = {"Lube Daily Revenue", "Lube Invoice Revenue"}
 
 
 def ensure_dashboard():
@@ -212,8 +220,10 @@ def ensure_dashboard():
         if frappe.db.exists("Dashboard Chart", name):
             doc = frappe.get_doc("Dashboard Chart", name)
             updated = False
-            for key in ("timespan", "time_interval", "timeseries", "type", "chart_type", "based_on", "value_based_on",
+            for key in ("timespan", "time_interval", "timeseries", "currency", "type", "chart_type", "based_on", "value_based_on",
                         "group_by_based_on", "group_by_type", "filters_json", "module"):
+                if key not in chart:
+                    continue
                 if doc.get(key) != chart.get(key):
                     doc.set(key, chart.get(key))
                     updated = True
@@ -221,6 +231,11 @@ def ensure_dashboard():
                 doc.save(ignore_permissions=True)
             continue
         frappe.get_doc({"doctype": "Dashboard Chart", "is_public": 1, **chart}).insert(ignore_permissions=True)
+    # Revenue charts keep the site default currency; count charts stay currency-free.
+    default_currency = frappe.db.get_default("currency")
+    for name in REVENUE_CHARTS:
+        if default_currency and not frappe.db.get_value("Dashboard Chart", name, "currency"):
+            frappe.db.set_value("Dashboard Chart", name, "currency", default_currency)
     # Sync the staff command-center workspace file into the DB.
     from frappe.modules.import_file import import_file_by_path
 
