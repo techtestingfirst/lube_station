@@ -428,3 +428,106 @@ class TestServiceActions(IntegrationTestCase):
         frappe.set_user(user2)
         detail2 = apis.my_service_detail(svc2.name)
         self.assertNotIn("whm", [b["key"] for b in detail2["management"]["buttons"]])
+
+
+class FakeSsoAdapter:
+    def create_sso_session(self, service):
+        return {"url": f"https://panel.test:2083/cpsess{service}/login/?session=one-time"}
+
+    def get_client_area(self, service):
+        return {"panels": [], "buttons": []}
+
+
+class TestPanelSso(IntegrationTestCase):
+    def tearDown(self):
+        frappe.set_user("Administrator")
+        super().tearDown()
+
+    def _sso_service(self, cust_name, status="Active", with_user=True):
+        server = frappe.get_doc(
+            {
+                "doctype": "Server",
+                "hostname": f"sso-{uuid.uuid4().hex[:6]}.test",
+                "ip_address": "203.0.113.20",
+                "control_panel": "cPanel / WHM",
+                **({"api_username": "root"} if with_user else {}),
+            }
+        ).insert()
+        module = frappe.get_doc(
+            {
+                "doctype": "Provisioning Module",
+                "module_name": f"ssomod-{uuid.uuid4().hex[:6]}",
+                "control_panel": "cPanel / WHM",
+                "class_path": "lube_station.lube_station.adapters.provisioning.cpanel.CpanelWhmAdapter",
+            }
+        ).insert()
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": f"SSG {uuid.uuid4().hex[:6]}"}).insert()
+        plan = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": f"SSP {uuid.uuid4().hex[:6]}",
+                "product_group": group.name,
+                "product_type": "Shared Hosting",
+                "is_active": 1,
+                "provisioning_module": module.name,
+            }
+        ).insert()
+        svc = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": cust_name,
+                "hosting_plan": plan.name,
+                "server": server.name,
+                "svc_username": "ssouser1",
+                "status": status,
+                "recurring_amount": 10,
+            }
+        ).insert()
+        return svc
+
+    def test_can_sso_flag(self):
+        cust_name, user_name = _make_customer()
+        svc = self._sso_service(cust_name)
+        frappe.set_user(user_name)
+        detail = apis.my_service_detail(svc.name)
+        self.assertTrue(detail["capabilities"]["can_sso"])
+        self.assertTrue(detail["capabilities"]["can_panel"])
+
+    def test_can_sso_off_when_suspended_or_no_creds(self):
+        cust_name, user_name = _make_customer()
+        svc = self._sso_service(cust_name, status="Suspended")
+        frappe.set_user(user_name)
+        self.assertFalse(apis.my_service_detail(svc.name)["capabilities"]["can_sso"])
+        frappe.set_user("Administrator")
+        cust2, user2 = _make_customer()
+        svc2 = self._sso_service(cust2, with_user=False)
+        frappe.set_user(user2)
+        self.assertFalse(apis.my_service_detail(svc2.name)["capabilities"]["can_sso"])
+
+    def test_get_panel_login_happy_path(self):
+        cust_name, user_name = _make_customer()
+        svc = self._sso_service(cust_name)
+        frappe.set_user(user_name)
+        with mock.patch.object(apis, "_adapter_for_plan", return_value=FakeSsoAdapter()):
+            out = apis.get_panel_login(svc.name)
+        self.assertTrue(out["url"].startswith("https://"))
+        self.assertNotIn("api_secret", frappe.as_json(out).lower())
+        comments = frappe.get_all("Comment", {"reference_doctype": "Service", "reference_name": svc.name}, ["content"])
+        self.assertTrue(any("Panel login" in (c["content"] or "") for c in comments))
+
+    def test_get_panel_login_gates(self):
+        cust_name, user_name = _make_customer()
+        svc = self._sso_service(cust_name, status="Suspended")
+        frappe.set_user(user_name)
+        with mock.patch.object(apis, "_adapter_for_plan", return_value=FakeSsoAdapter()):
+            self.assertRaises(frappe.ValidationError, apis.get_panel_login, svc.name)
+        frappe.set_user("Administrator")
+        cust2, user2 = _make_customer()
+        svc2 = self._sso_service(cust2)
+        frappe.set_user(user2)
+        with mock.patch.object(apis, "_adapter_for_plan", return_value=None):
+            self.assertRaises(frappe.ValidationError, apis.get_panel_login, svc2.name)
+        _other, other_user = _make_customer()
+        frappe.set_user(other_user)
+        with mock.patch.object(apis, "_adapter_for_plan", return_value=FakeSsoAdapter()):
+            self.assertRaises(frappe.PermissionError, apis.get_panel_login, svc2.name)

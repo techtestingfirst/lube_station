@@ -192,6 +192,25 @@ class PleskAdapter(ProvisioningAdapter):
         return {"ok": True, "server": doc.name}
 
     # -- helpers ----------------------------------------------------------
+    def create_sso_session(self, service, transport=None):
+        """Plesk server/create_session -> one-time rsession URL."""
+        svc = self._service(service)
+        host = self._panel_host(svc)
+        if not host:
+            frappe.throw("Panel login failed, please try again later")
+        packet = ET.Element("packet")
+        op = ET.SubElement(packet, "server")
+        node = ET.SubElement(op, "create_session")
+        ET.SubElement(node, "login").text = svc.svc_username
+        data = ET.SubElement(node, "data")
+        ET.SubElement(data, "user_ip").text = ""
+        ET.SubElement(data, "source_server").text = ""
+        result = self._call(svc.server, "server", "create_session", ET.tostring(packet, encoding="unicode"), transport)
+        session_id = (result.findtext("id") or result.findtext(".//id") or "").strip() if result is not None else ""
+        if not session_id:
+            frappe.throw("Panel login failed, please try again later")
+        return {"url": f"https://{host}:8443/enterprise/rsession_init.php?PLESKSESSID={session_id}"}
+
     def _panel_host(self, svc):
         try:
             if not svc.server or not frappe.db.exists("Server", svc.server):

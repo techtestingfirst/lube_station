@@ -194,6 +194,32 @@ class DirectAdminAdapter(ProvisioningAdapter):
         return {"ok": True, "server": doc.name}
 
     # -- helpers ----------------------------------------------------------
+    def create_sso_session(self, service, transport=None):
+        """DirectAdmin login-key create -> one-time auto-login URL."""
+        import secrets
+        import time
+
+        svc = self._service(service)
+        host = self._panel_host(svc)
+        if not host:
+            frappe.throw("Panel login failed, please try again later")
+        key_name = f"portal-{int(time.time())}"
+        key_value = secrets.token_urlsafe(24)
+        self._call(
+            svc.server,
+            "CMD_API_LOGIN_KEYS",
+            {
+                "action": "create",
+                "user": svc.svc_username,
+                "key": key_name,
+                "passwd": key_value,
+                "clear_key": "yes",
+                "commands": "ALL",
+            },
+            transport,
+        )
+        return {"url": f"https://{host}:2222/CMD_LOGIN?user={svc.svc_username}|{key_name}&key={key_value}"}
+
     def _panel_host(self, svc):
         try:
             if not svc.server or not frappe.db.exists("Server", svc.server):

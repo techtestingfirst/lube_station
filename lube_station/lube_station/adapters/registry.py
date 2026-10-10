@@ -68,6 +68,7 @@ PROVISIONING_LIFECYCLE = [
     "change_package",
     "get_usage",
     "test_connection",
+    "create_sso_session",
 ]
 
 

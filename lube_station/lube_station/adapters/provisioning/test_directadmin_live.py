@@ -143,3 +143,16 @@ class TestDirectAdminLiveAdapter(IntegrationTestCase):
             self.assertRaises(Exception, DirectAdminAdapter().test_connection, name, transport=FakeTransport([ok()]))
         finally:
             frappe.delete_doc("Server", name, ignore_permissions=True, force=True)
+
+    def test_create_sso_session(self):
+        server = self._server()
+        svc = self._service(server)
+        try:
+            t = FakeTransport([ok()])
+            out = DirectAdminAdapter().create_sso_session(svc, transport=t)
+            self.assertIn("CMD_API_LOGIN_KEYS", t.calls[0]["url"])
+            self.assertEqual(t.calls[0]["params"]["user"], "dauser1")
+            self.assertTrue(out["url"].startswith("https://"))
+            self.assertIn("CMD_LOGIN", out["url"])
+        finally:
+            frappe.delete_doc("Service", svc, ignore_permissions=True, force=True)

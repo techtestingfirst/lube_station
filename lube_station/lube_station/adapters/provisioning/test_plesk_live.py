@@ -148,3 +148,14 @@ class TestPleskLiveAdapter(IntegrationTestCase):
             self.assertRaises(Exception, PleskAdapter().change_package, svc, "X", transport=t)
         finally:
             frappe.delete_doc("Service", svc, ignore_permissions=True, force=True)
+
+    def test_create_sso_session(self):
+        server = self._server()
+        svc = self._service(server)
+        try:
+            t = FakeTransport([ok_op("server", "create_session", "<id>sess-123</id>")])
+            out = PleskAdapter().create_sso_session(svc, transport=t)
+            self.assertIn("PLESKSESSID=sess-123", out["url"])
+            self.assertIn("create_session", t.calls[0]["body"])
+        finally:
+            frappe.delete_doc("Service", svc, ignore_permissions=True, force=True)

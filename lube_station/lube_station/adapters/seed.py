@@ -121,6 +121,7 @@ def seed():
                     "api_mode": mode,
                     "supports_usage": 1,
                     "supports_change_plan": 1,
+                    "supports_sso": 1 if name in ("cPanel / WHM", "Plesk", "DirectAdmin") else 0,
                     "active": active,
                 }
             ).insert(ignore_permissions=True)
@@ -129,6 +130,9 @@ def seed():
         dirty = False
         if mode and not doc.api_mode:
             doc.api_mode = mode
+            dirty = True
+        if name in ("cPanel / WHM", "Plesk", "DirectAdmin") and not doc.get("supports_sso"):
+            doc.supports_sso = 1
             dirty = True
         if doc.class_path and not doc.lifecycle_methods:
             dirty = True

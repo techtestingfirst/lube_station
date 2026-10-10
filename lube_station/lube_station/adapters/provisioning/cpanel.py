@@ -151,6 +151,31 @@ class CpanelWhmAdapter(ProvisioningAdapter):
         doc = server if not isinstance(server, str) else frappe.get_doc("Server", server)
         return {"ok": True, "server": doc.name}
 
+    def create_sso_session(self, service, transport=None):
+        """WHM create_user_session -> one-time panel URL, no secret in logs."""
+        svc = self._service(service)
+        try:
+            product_type = frappe.db.get_value("Hosting Plan", svc.hosting_plan, "product_type")
+        except Exception:
+            product_type = None
+        panel_service = "whm" if product_type == "Reseller" else "cpaneld"
+        out = self._call(
+            svc.server,
+            "create_user_session",
+            {"user": svc.svc_username, "service": panel_service, "api.version": 1},
+            transport,
+        )
+        url = (out.get("url") or out.get("session_url") or "").strip() if isinstance(out, dict) else ""
+        if not url:
+            token = out.get("session") or out.get("cp_security_token") if isinstance(out, dict) else None
+            host = self._panel_host(svc)
+            if token and host:
+                port = 2087 if panel_service == "whm" else 2083
+                url = f"https://{host}:{port}/cpsess{token}/login/?session={token}"
+        if not url or not url.startswith("https://"):
+            frappe.throw("Panel login failed, please try again later")
+        return {"url": url, "service": panel_service}
+
     def get_client_area(self, service):
         svc = self._service(service)
         host = self._panel_host(svc)

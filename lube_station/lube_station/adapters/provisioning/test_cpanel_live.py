@@ -126,3 +126,15 @@ class TestCpanelLiveAdapter(IntegrationTestCase):
             self.assertRaises(Exception, CpanelWhmAdapter().test_connection, name, transport=FakeTransport([ok()]))
         finally:
             frappe.delete_doc("Server", name, ignore_permissions=True, force=True)
+
+    def test_create_sso_session(self):
+        server = self._server()
+        svc = self._service(server)
+        try:
+            t = FakeTransport([ok({"url": "https://10.0.0.9:2083/cpsess123/login/?session=abc"})])
+            out = CpanelWhmAdapter().create_sso_session(svc, transport=t)
+            self.assertTrue(out["url"].startswith("https://"))
+            self.assertIn("create_user_session", t.calls[0]["url"])
+            self.assertEqual(t.calls[0]["params"]["user"], "whmuser1")
+        finally:
+            frappe.delete_doc("Service", svc, ignore_permissions=True, force=True)

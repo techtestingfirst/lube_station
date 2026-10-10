@@ -138,6 +138,21 @@ async function vpsAction(instance: string, action: string) {
   }
 }
 
+async function panelLogin() {
+  actionMsg.value = ''
+  actionBusy.value = 'sso'
+  try {
+    const out = await call<{ url?: string }>('lube_station.lube_station.portal.apis.get_panel_login', { service: id }, 'POST')
+    if (!out?.url) throw new Error('Panel login failed, please try again later')
+    window.open(out.url, '_blank', 'noopener')
+    actionMsg.value = 'Hosting panel opened in a new tab. Link expires soon.'
+  } catch (e) {
+    actionMsg.value = friendlyError(e)
+  } finally {
+    actionBusy.value = ''
+  }
+}
+
 async function submitPassword() {
   actionMsg.value = ''
   if (pw1.value !== pw2.value) {
@@ -504,6 +519,7 @@ onMounted(load)
         <h2 class="text-sm font-medium text-ink-gray-8">Management</h2>
         <p class="mt-1 text-xs text-ink-gray-5">{{ detail.management_note }}</p>
         <div class="mt-3 flex flex-wrap gap-2">
+          <Button v-if="detail.capabilities.can_sso" label="Login to hosting panel" size="sm" variant="solid" :loading="actionBusy === 'sso'" @click="panelLogin" />
           <Button v-if="detail.capabilities.can_change_password" label="Change password" size="sm" @click="showPw = true" />
           <Button v-if="detail.capabilities.can_upgrade" label="Upgrade / Downgrade" size="sm" variant="subtle" @click="showUpgrade = true" />
           <Button v-if="detail.capabilities.can_cancel" label="Request cancellation" size="sm" variant="subtle" @click="showCancel = true" />

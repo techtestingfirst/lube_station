@@ -147,6 +147,24 @@ def _client_area_for(svc, adapter) -> dict:
         return {"panels": [], "buttons": []}
 
 
+def _can_sso(svc, adapter) -> bool:
+    """Server decides SSO visibility; frontend only renders."""
+    if not svc or svc.get("status") != "Active":
+        return False
+    if adapter is None or not _adapter_overrides(adapter, "create_sso_session"):
+        return False
+    return _server_has_api_user(svc.get("server"))
+
+
+def _sso_rate_ok(service: str) -> bool:
+    key = f"panel-sso:{service}:{frappe.session.user}"
+    count = frappe.cache().get_value(key) or 0
+    if count >= 10:
+        return False
+    frappe.cache().set_value(key, count + 1, expires_in_sec=3600)
+    return True
+
+
 def _upgrade_options(plan_name: str | None, billing_cycle: str | None) -> list:
     """Same product_type, active, other plans with pricing for the cycle."""
     if not plan_name or not frappe.db.exists("Hosting Plan", plan_name):
@@ -571,7 +589,7 @@ def my_service_detail(service: str):
         "can_vps_snapshot": bool(can_vps and (vps_spec or {}).get("backup_enabled")),
         "can_dedicated_control": bool(dedicated) and is_active,
         "can_change_password": can_password,
-        "can_sso": False,
+        "can_sso": _can_sso(svc, adapter),
         "can_panel": bool(panel_url) and is_active,
         "can_upgrade": bool(upgrade_list),
         "can_cancel": bool(cancellation_open and is_active and not svc.get("cancellation_requested")),
@@ -677,6 +695,42 @@ def change_service_password(service: str, new_password: str) -> dict:
     except Exception:
         pass
     return {"changed": True}
+
+
+@frappe.whitelist(methods=["POST"])
+def get_panel_login(service: str) -> dict:
+    """Single-click hosting panel login: short-lived one-time URL.
+
+    Owner-only, Active services only, rate-limited. Adapter creates the
+    session with server-side API creds; the URL (with token) is returned
+    to the owner only and never stored or logged.
+    """
+    if not isinstance(service, str) or not service.strip():
+        frappe.throw("Service is required")
+    svc = _service_for_customer(service.strip())
+    if svc.get("status") != "Active":
+        frappe.throw("Panel login is available for Active services only")
+    if not _sso_rate_ok(svc.name):
+        frappe.throw("Rate limit exceeded, try later")
+    adapter = _adapter_for_plan(svc.get("hosting_plan"))
+    if adapter is None or not _adapter_overrides(adapter, "create_sso_session"):
+        frappe.throw("Panel login is not supported for this product")
+    if not _server_has_api_user(svc.get("server")):
+        frappe.throw("Panel login is not available for this service yet")
+    try:
+        out = adapter.create_sso_session(svc.name)
+    except frappe.ValidationError:
+        raise
+    except Exception:
+        frappe.throw("Panel login failed, please try again later")
+    url = (out.get("url") or "").strip() if isinstance(out, dict) else ""
+    if not url.startswith("https://"):
+        frappe.throw("Panel login failed, please try again later")
+    try:
+        svc.add_comment("Comment", "Panel login issued via customer portal.")
+    except Exception:
+        pass
+    return {"url": url, "expires_in": 60}
 
 
 @frappe.whitelist(methods=["POST"])

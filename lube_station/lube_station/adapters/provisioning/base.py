@@ -25,6 +25,14 @@ class ProvisioningAdapter:
     def test_connection(self, server):
         raise NotImplementedError
 
+    def create_sso_session(self, service):
+        """One-time panel login URL for an owned service.
+
+        Returns {"url": ...}. Implementations must use server-side API
+        creds only, never expose secrets, and return a short-lived URL.
+        """
+        raise NotImplementedError
+
     def get_client_area(self, service):
         """Customer-portal controls supplied by the module (WHMCS parity).
 
