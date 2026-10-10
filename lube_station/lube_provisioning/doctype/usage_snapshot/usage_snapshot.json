@@ -6,10 +6,13 @@
   "autoname": "format:USE-{####}",
   "naming_rule": "Expression",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Usage Snapshot"},
     {"fieldname": "service_ref", "fieldtype": "Link", "label": "Service", "options": "Service", "reqd": 1},
     {"fieldname": "snap_date", "fieldtype": "Date", "label": "Date", "reqd": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "disk_used", "fieldtype": "Float", "label": "Disk Used", "default": "0"},
     {"fieldname": "bandwidth_used", "fieldtype": "Float", "label": "Bandwidth Used", "default": "0"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}],
+  "modified": "2026-10-10 17:30:00.000000"
 }

@@ -5,9 +5,11 @@
   "engine": "InnoDB",
   "istable": 1,
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Item Details"},
     {"fieldname": "description", "fieldtype": "Data", "label": "Description", "reqd": 1},
     {"fieldname": "service_ref", "fieldtype": "Data", "label": "Service"},
     {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "reqd": 1}
   ],
-  "permissions": []
+  "permissions": [],
+  "modified": "2026-10-10 17:30:00.000000"
 }

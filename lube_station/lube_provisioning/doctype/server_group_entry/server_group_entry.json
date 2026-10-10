@@ -5,7 +5,9 @@
   "engine": "InnoDB",
   "istable": 1,
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Server Entry"},
     {"fieldname": "server", "fieldtype": "Link", "label": "Server", "options": "Server", "reqd": 1}
   ],
-  "permissions": []
+  "permissions": [],
+  "modified": "2026-10-10 17:30:00.000000"
 }

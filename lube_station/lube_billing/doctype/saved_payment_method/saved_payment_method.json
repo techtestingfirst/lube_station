@@ -6,12 +6,15 @@
   "autoname": "format:PM-{####}",
   "naming_rule": "Expression",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Payment Method"},
     {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer", "reqd": 1},
     {"fieldname": "gateway", "fieldtype": "Data", "label": "Gateway", "reqd": 1},
     {"fieldname": "token", "fieldtype": "Password", "label": "Token", "reqd": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "default_method", "fieldtype": "Check", "label": "Default", "default": "0"},
     {"fieldname": "last_four", "fieldtype": "Data", "label": "Last Four"},
     {"fieldname": "expiry", "fieldtype": "Data", "label": "Expiry"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1, "create": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1, "create": 1}],
+  "modified": "2026-10-10 17:30:00.000000"
 }

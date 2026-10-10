@@ -6,9 +6,11 @@
   "autoname": "format:AE-{####}",
   "naming_rule": "Expression",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Earning Details"},
     {"fieldname": "affiliate", "fieldtype": "Link", "label": "Affiliate", "options": "Affiliate", "reqd": 1},
     {"fieldname": "invoice", "fieldtype": "Link", "label": "Invoice", "options": "Hosting Invoice", "reqd": 1, "unique": 1},
     {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "default": "0"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0}],
+  "modified": "2026-10-10 17:30:00.000000"
 }

@@ -5,9 +5,12 @@
   "engine": "InnoDB",
   "autoname": "format:NEV-{####}",
   "naming_rule": "Expression",
+  "modified": "2026-10-10 17:30:00.000000",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Event Details"},
     {"fieldname": "event_key", "fieldtype": "Data", "label": "Event Key", "reqd": 1, "unique": 1},
     {"fieldname": "event_type", "fieldtype": "Select", "label": "Event Type", "options": "signup\norder\ninvoice\npayment\nrenewal\noverdue\nsuspension\nunsuspension\ntermination\ncredentials\ndomain_renewal\ndownload\nsupport", "reqd": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "reference", "fieldtype": "Data", "label": "Reference", "reqd": 1},
     {"fieldname": "recipient", "fieldtype": "Data", "label": "Recipient"}
   ],

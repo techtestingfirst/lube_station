@@ -15,6 +15,11 @@
     ],
     "fields": [
         {
+            "fieldname": "section_break_0",
+            "fieldtype": "Section Break",
+            "label": "Tax Details"
+        },
+        {
             "fieldname": "country",
             "fieldtype": "Link",
             "label": "Country",
@@ -33,6 +38,10 @@
             "reqd": 1
         },
         {
+            "fieldname": "column_break_0",
+            "fieldtype": "Column Break"
+        },
+        {
             "default": "1",
             "fieldname": "level",
             "fieldtype": "Select",
@@ -47,10 +56,20 @@
             "reqd": 1
         },
         {
+            "fieldname": "section_break_1",
+            "fieldtype": "Section Break",
+            "label": "Eligible Groups"
+        },
+        {
             "fieldname": "eligible_groups",
             "fieldtype": "Table",
             "label": "Eligible Groups",
             "options": "Tax Eligible Group"
+        },
+        {
+            "fieldname": "section_break_2",
+            "fieldtype": "Section Break",
+            "label": "Status"
         },
         {
             "default": "1",
@@ -60,7 +79,7 @@
         }
     ],
     "links": [],
-    "modified": "2026-10-02 13:06:45.260646",
+    "modified": "2026-10-10 17:30:00.000000",
     "modified_by": "Administrator",
     "module": "Lube Billing",
     "name": "Tax Rule",

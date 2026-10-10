@@ -5,10 +5,13 @@
   "engine": "InnoDB",
   "autoname": "format:DNS-{####}",
   "naming_rule": "Expression",
+  "modified": "2026-10-10 17:30:00.000000",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Record Details"},
     {"fieldname": "domain", "fieldtype": "Link", "label": "Domain", "options": "Registered Domain", "reqd": 1},
     {"fieldname": "record_type", "fieldtype": "Select", "label": "Record Type", "options": "A\nAAAA\nCNAME\nMX\nTXT\nNS\nSRV", "default": "A", "reqd": 1},
     {"fieldname": "hostname", "fieldtype": "Data", "label": "Hostname", "reqd": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "record_value", "fieldtype": "Data", "label": "Value", "reqd": 1},
     {"fieldname": "ttl", "fieldtype": "Int", "label": "TTL", "default": "3600"},
     {"fieldname": "priority", "fieldtype": "Int", "label": "Priority", "default": "0"}

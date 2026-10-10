@@ -6,12 +6,56 @@
   "autoname": "hash",
   "naming_rule": "Random",
   "fields": [
-    {"fieldname": "asset", "fieldtype": "Link", "label": "Asset", "options": "Downloadable Asset", "reqd": 1},
-    {"fieldname": "user_id", "fieldtype": "Data", "label": "User"},
-    {"fieldname": "customer", "fieldtype": "Data", "label": "Customer"},
-    {"fieldname": "service", "fieldtype": "Data", "label": "Service"},
-    {"fieldname": "order_ref", "fieldtype": "Data", "label": "Order"},
-    {"fieldname": "ip", "fieldtype": "Data", "label": "IP"}
+    {
+      "fieldname": "section_break_0",
+      "fieldtype": "Section Break",
+      "label": "Download Details"
+    },
+    {
+      "fieldname": "asset",
+      "fieldtype": "Link",
+      "label": "Asset",
+      "options": "Downloadable Asset",
+      "reqd": 1
+    },
+    {
+      "fieldname": "user_id",
+      "fieldtype": "Data",
+      "label": "User"
+    },
+    {
+      "fieldname": "customer",
+      "fieldtype": "Data",
+      "label": "Customer"
+    },
+    {
+      "fieldname": "column_break_0",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "service",
+      "fieldtype": "Data",
+      "label": "Service"
+    },
+    {
+      "fieldname": "order_ref",
+      "fieldtype": "Data",
+      "label": "Order"
+    },
+    {
+      "fieldname": "ip",
+      "fieldtype": "Data",
+      "label": "IP"
+    }
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0}]
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0
+    }
+  ],
+  "modified": "2026-10-10 17:30:00.000000"
 }

@@ -6,10 +6,13 @@
   "autoname": "format:AFF-{####}",
   "naming_rule": "Expression",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Affiliate Details"},
     {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer", "reqd": 1, "unique": 1},
     {"fieldname": "referral_code", "fieldtype": "Data", "label": "Referral Code", "reqd": 1, "unique": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "commission_percentage", "fieldtype": "Float", "label": "Commission Percentage", "default": "10"},
     {"fieldname": "total_earned", "fieldtype": "Currency", "label": "Total Earned", "default": "0"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}],
+  "modified": "2026-10-10 17:30:00.000000"
 }

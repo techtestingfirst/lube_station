@@ -7,16 +7,96 @@
   "naming_rule": "Expression",
   "track_changes": 1,
   "fields": [
-    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1},
-    {"fieldname": "category", "fieldtype": "Link", "label": "Category", "options": "Download Category"},
-    {"fieldname": "storage_type", "fieldtype": "Select", "label": "Storage Type", "options": "Frappe File\nPrivate Object Storage\nRemote URL", "default": "Frappe File", "reqd": 1},
-    {"fieldname": "file", "fieldtype": "Attach", "label": "File"},
-    {"fieldname": "remote_url", "fieldtype": "Data", "label": "Remote URL"},
-    {"fieldname": "access_policy", "fieldtype": "Select", "label": "Access Policy", "options": "Public\nLogged-in Customers\nPurchased Product\nActive Service", "default": "Logged-in Customers", "reqd": 1},
-    {"fieldname": "allowed_products", "fieldtype": "Table", "label": "Allowed Products", "options": "Download Allowed Product"},
-    {"fieldname": "version", "fieldtype": "Data", "label": "Version", "default": "1.0"},
-    {"fieldname": "download_count", "fieldtype": "Int", "label": "Download Count", "default": "0"},
-    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1"}
+    {
+      "fieldname": "section_break_0",
+      "fieldtype": "Section Break",
+      "label": "Asset Details"
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "Title",
+      "reqd": 1
+    },
+    {
+      "fieldname": "category",
+      "fieldtype": "Link",
+      "label": "Category",
+      "options": "Download Category"
+    },
+    {
+      "fieldname": "storage_type",
+      "fieldtype": "Select",
+      "label": "Storage Type",
+      "options": "Frappe File\nPrivate Object Storage\nRemote URL",
+      "default": "Frappe File",
+      "reqd": 1
+    },
+    {
+      "fieldname": "file",
+      "fieldtype": "Attach",
+      "label": "File"
+    },
+    {
+      "fieldname": "remote_url",
+      "fieldtype": "Data",
+      "label": "Remote URL"
+    },
+    {
+      "fieldname": "column_break_0",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "access_policy",
+      "fieldtype": "Select",
+      "label": "Access Policy",
+      "options": "Public\nLogged-in Customers\nPurchased Product\nActive Service",
+      "default": "Logged-in Customers",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_1",
+      "fieldtype": "Section Break",
+      "label": "Allowed Products"
+    },
+    {
+      "fieldname": "allowed_products",
+      "fieldtype": "Table",
+      "label": "Allowed Products",
+      "options": "Download Allowed Product"
+    },
+    {
+      "fieldname": "section_break_2",
+      "fieldtype": "Section Break",
+      "label": "Version and Status"
+    },
+    {
+      "fieldname": "version",
+      "fieldtype": "Data",
+      "label": "Version",
+      "default": "1.0"
+    },
+    {
+      "fieldname": "download_count",
+      "fieldtype": "Int",
+      "label": "Download Count",
+      "default": "0"
+    },
+    {
+      "fieldname": "active",
+      "fieldtype": "Check",
+      "label": "Active",
+      "default": "1"
+    }
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    }
+  ],
+  "modified": "2026-10-10 17:30:00.000000"
 }

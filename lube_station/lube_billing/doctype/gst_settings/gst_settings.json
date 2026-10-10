@@ -4,10 +4,13 @@
   "module": "Lube Billing",
   "issingle": 1,
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Seller Details"},
     {"fieldname": "seller_state", "fieldtype": "Select", "label": "Seller State / UT", "options": "\nAndaman and Nicobar Islands\nAndhra Pradesh\nArunachal Pradesh\nAssam\nBihar\nChandigarh\nChhattisgarh\nDadra and Nagar Haveli and Daman and Diu\nDelhi\nGoa\nGujarat\nHaryana\nHimachal Pradesh\nJammu and Kashmir\nJharkhand\nKarnataka\nKerala\nLadakh\nLakshadweep\nMadhya Pradesh\nMaharashtra\nManipur\nMeghalaya\nMizoram\nNagaland\nOdisha\nPuducherry\nPunjab\nRajasthan\nSikkim\nTamil Nadu\nTelangana\nTripura\nUttar Pradesh\nUttarakhand\nWest Bengal"},
     {"fieldname": "gst_rate", "fieldtype": "Float", "label": "GST Rate %", "default": "18"},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "seller_country", "fieldtype": "Link", "label": "Seller Country", "options": "Country", "default": "India"},
     {"fieldname": "gstin", "fieldtype": "Data", "label": "Seller GSTIN"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}],
+  "modified": "2026-10-10 17:30:00.000000"
 }

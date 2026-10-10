@@ -7,13 +7,16 @@
   "naming_rule": "Expression",
   "track_changes": 1,
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Instance Details"},
     {"fieldname": "configuration", "fieldtype": "Link", "label": "Configuration", "options": "VPS Configuration", "reqd": 1},
     {"fieldname": "order_ref", "fieldtype": "Link", "label": "Order", "options": "Order"},
     {"fieldname": "provider", "fieldtype": "Link", "label": "Provider", "options": "Infrastructure Provider"},
     {"fieldname": "image", "fieldtype": "Data", "label": "Image", "reqd": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "location", "fieldtype": "Data", "label": "Location", "reqd": 1},
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Provisioning\nActive\nSuspended\nTerminated", "default": "Provisioning", "reqd": 1},
     {"fieldname": "ipv4", "fieldtype": "Data", "label": "IPv4"}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1}],
+  "modified": "2026-10-10 17:30:00.000000"
 }

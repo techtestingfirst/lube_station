@@ -1,71 +1,80 @@
 {
- "actions": [],
- "autoname": "format:{billing_cycle}-{hosting_plan}",
- "creation": "2026-10-01 23:36:40.629674",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "hosting_plan",
-  "billing_cycle",
-  "setup_fee",
-  "recurring_amount",
-  "currency"
- ],
- "fields": [
-  {
-   "fieldname": "hosting_plan",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Hosting Plan",
-   "options": "Hosting Plan",
-   "reqd": 1
-  },
-  {
-   "fieldname": "billing_cycle",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Billing Cycle",
-   "options": "Monthly\nQuarterly\nSemi-Annually\nAnnually\nBiennially\nTriennially\nOne Time",
-   "reqd": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "setup_fee",
-   "fieldtype": "Currency",
-   "label": "Setup Fee"
-  },
-  {
-   "fieldname": "recurring_amount",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Recurring Amount",
-   "reqd": 1
-  },
-  {
-   "fieldname": "currency",
-   "fieldtype": "Link",
-   "label": "Currency",
-   "options": "Currency"
-  }
- ],
- "links": [],
- "modified": "2026-10-02 12:54:02.682722",
- "modified_by": "Administrator",
- "module": "Lube Catalog",
- "name": "Plan Pricing",
- "naming_rule": "Expression (old style)",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "read": 1,
-   "role": "System Manager",
-   "write": 1
-  }
- ],
- "row_format": "Dynamic",
- "sort_field": "creation",
- "sort_order": "DESC",
- "states": []
+  "actions": [],
+  "autoname": "format:{billing_cycle}-{hosting_plan}",
+  "creation": "2026-10-01 23:36:40.629674",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "hosting_plan",
+    "billing_cycle",
+    "setup_fee",
+    "recurring_amount",
+    "currency"
+  ],
+  "fields": [
+    {
+      "fieldname": "section_break_0",
+      "fieldtype": "Section Break",
+      "label": "Pricing Details"
+    },
+    {
+      "fieldname": "hosting_plan",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Hosting Plan",
+      "options": "Hosting Plan",
+      "reqd": 1
+    },
+    {
+      "fieldname": "billing_cycle",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Billing Cycle",
+      "options": "Monthly\nQuarterly\nSemi-Annually\nAnnually\nBiennially\nTriennially\nOne Time",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_0",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "0",
+      "fieldname": "setup_fee",
+      "fieldtype": "Currency",
+      "label": "Setup Fee"
+    },
+    {
+      "fieldname": "recurring_amount",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Recurring Amount",
+      "reqd": 1
+    },
+    {
+      "fieldname": "currency",
+      "fieldtype": "Link",
+      "label": "Currency",
+      "options": "Currency"
+    }
+  ],
+  "links": [],
+  "modified": "2026-10-10 17:30:00.000000",
+  "modified_by": "Administrator",
+  "module": "Lube Catalog",
+  "name": "Plan Pricing",
+  "naming_rule": "Expression (old style)",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    }
+  ],
+  "row_format": "Dynamic",
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": []
 }

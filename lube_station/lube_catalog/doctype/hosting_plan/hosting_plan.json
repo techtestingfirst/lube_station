@@ -1,121 +1,144 @@
 {
- "actions": [],
- "autoname": "Format: {plan_name}-{product_type}-{#####}",
- "creation": "2026-10-01 23:36:40.855776",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "plan_name",
-  "product_group",
-  "product_type",
-  "provisioning_module",
-  "server_group",
-  "welcome_email_template",
-  "product_type_schema",
-  "config_fields",
-  "is_active",
-  "stock_control",
-  "qty_available"
- ],
- "fields": [
-  {
-   "fieldname": "plan_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Plan Name",
-   "reqd": 1,
-   "unique": 1
-  },
-  {
-   "fieldname": "product_group",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Product Group",
-   "options": "Product Group",
-   "reqd": 1
-  },
-  {
-   "fieldname": "product_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Product Type",
-   "options": "Shared Hosting\nReseller\nVPS\nDedicated Server\nCloud\nEmail Hosting\nWebsite Builder\nSSL\nBackup Addon\nMigration Service\nDownloadable Product",
-   "reqd": 1
-  },
-  {
-   "fieldname": "provisioning_module",
-   "fieldtype": "Link",
-   "label": "Provisioning Module",
-   "options": "Provisioning Module"
-  },
-  {
-   "fieldname": "server_group",
-   "fieldtype": "Link",
-   "label": "Server Group",
-   "options": "Server Group"
-  },
-  {
-   "fieldname": "welcome_email_template",
-   "fieldtype": "Link",
-   "label": "Welcome Email Template",
-   "options": "Email Template"
-  },
-  {
-   "fieldname": "product_type_schema",
-   "fieldtype": "Link",
-   "label": "Product Type Schema",
-   "options": "Product Type Schema"
-  },
-  {
-   "fieldname": "config_fields",
-   "fieldtype": "Table",
-   "label": "Config Fields",
-   "options": "Plan Config Field"
-  },
-  {
-   "default": "1",
-   "fieldname": "is_active",
-   "fieldtype": "Check",
-   "label": "Is Active"
-  },
-  {
-   "default": "1",
-   "fieldname": "taxable",
-   "fieldtype": "Check",
-   "label": "Apply Tax"
-  },
-  {
-   "default": "0",
-   "fieldname": "stock_control",
-   "fieldtype": "Check",
-   "label": "Stock Control"
-  },
-  {
-   "default": "0",
-   "fieldname": "qty_available",
-   "fieldtype": "Int",
-   "label": "Qty Available"
-  }
- ],
- "links": [],
- "modified": "2026-10-02 12:48:31.969022",
- "modified_by": "Administrator",
- "module": "Lube Catalog",
- "name": "Hosting Plan",
- "naming_rule": "Expression",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "read": 1,
-   "role": "System Manager",
-   "write": 1
-  }
- ],
- "row_format": "Dynamic",
- "sort_field": "creation",
- "sort_order": "DESC",
- "states": [],
- "track_changes": 1
+  "actions": [],
+  "autoname": "Format: {plan_name}-{product_type}-{#####}",
+  "creation": "2026-10-01 23:36:40.855776",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "plan_name",
+    "product_group",
+    "product_type",
+    "provisioning_module",
+    "server_group",
+    "welcome_email_template",
+    "product_type_schema",
+    "config_fields",
+    "is_active",
+    "stock_control",
+    "qty_available"
+  ],
+  "fields": [
+    {
+      "fieldname": "section_break_0",
+      "fieldtype": "Section Break",
+      "label": "Plan Details"
+    },
+    {
+      "fieldname": "plan_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Plan Name",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "product_group",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Product Group",
+      "options": "Product Group",
+      "reqd": 1
+    },
+    {
+      "fieldname": "product_type",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Product Type",
+      "options": "Shared Hosting\nReseller\nVPS\nDedicated Server\nCloud\nEmail Hosting\nWebsite Builder\nSSL\nBackup Addon\nMigration Service\nDownloadable Product",
+      "reqd": 1
+    },
+    {
+      "fieldname": "provisioning_module",
+      "fieldtype": "Link",
+      "label": "Provisioning Module",
+      "options": "Provisioning Module"
+    },
+    {
+      "fieldname": "column_break_0",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "server_group",
+      "fieldtype": "Link",
+      "label": "Server Group",
+      "options": "Server Group"
+    },
+    {
+      "fieldname": "welcome_email_template",
+      "fieldtype": "Link",
+      "label": "Welcome Email Template",
+      "options": "Email Template"
+    },
+    {
+      "fieldname": "product_type_schema",
+      "fieldtype": "Link",
+      "label": "Product Type Schema",
+      "options": "Product Type Schema"
+    },
+    {
+      "fieldname": "section_break_1",
+      "fieldtype": "Section Break",
+      "label": "Configuration"
+    },
+    {
+      "fieldname": "config_fields",
+      "fieldtype": "Table",
+      "label": "Config Fields",
+      "options": "Plan Config Field"
+    },
+    {
+      "fieldname": "section_break_2",
+      "fieldtype": "Section Break",
+      "label": "Stock and Status"
+    },
+    {
+      "default": "1",
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active"
+    },
+    {
+      "default": "1",
+      "fieldname": "taxable",
+      "fieldtype": "Check",
+      "label": "Apply Tax"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "0",
+      "fieldname": "stock_control",
+      "fieldtype": "Check",
+      "label": "Stock Control"
+    },
+    {
+      "default": "0",
+      "fieldname": "qty_available",
+      "fieldtype": "Int",
+      "label": "Qty Available"
+    }
+  ],
+  "links": [],
+  "modified": "2026-10-10 17:30:00.000000",
+  "modified_by": "Administrator",
+  "module": "Lube Catalog",
+  "name": "Hosting Plan",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    }
+  ],
+  "row_format": "Dynamic",
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
 }

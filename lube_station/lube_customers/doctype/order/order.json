@@ -3,17 +3,23 @@
   "module": "Lube Customers",
   "doctype": "DocType",
   "engine": "InnoDB",
+  "modified": "2026-10-10 17:30:00.000000",
   "autoname": "format:ORD-{####}",
   "naming_rule": "Expression",
   "track_changes": 1,
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Order Details"},
     {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer"},
     {"fieldname": "source_cart", "fieldtype": "Link", "label": "Source Cart", "options": "Cart"},
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending Review\nAccepted\nFraud\nCancelled", "default": "Pending Review", "reqd": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "fraud_score", "fieldtype": "Float", "label": "Fraud Score", "default": "0"},
     {"fieldname": "coupon_code", "fieldtype": "Data", "label": "Coupon Code"},
+    {"fieldname": "section_break_1", "fieldtype": "Section Break", "label": "Customer Notes"},
     {"fieldname": "customer_notes", "fieldtype": "Small Text", "label": "Customer Notes"},
+    {"fieldname": "section_break_2", "fieldtype": "Section Break", "label": "Items"},
     {"fieldname": "items", "fieldtype": "Table", "label": "Items", "options": "Order Item"},
+    {"fieldname": "section_break_3", "fieldtype": "Section Break", "label": "Total"},
     {"fieldname": "total", "fieldtype": "Currency", "label": "Total", "default": "0"}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1}]

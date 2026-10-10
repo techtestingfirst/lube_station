@@ -6,10 +6,13 @@
   "autoname": "field:module_name",
   "naming_rule": "By fieldname",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Module Details"},
     {"fieldname": "module_name", "fieldtype": "Data", "label": "Module Name", "reqd": 1, "unique": 1},
     {"fieldname": "provisioning_adapter", "fieldtype": "Link", "label": "Provisioning Adapter", "options": "Provisioning Adapter", "description": "Pick an adapter to fill Control Panel and Class Path."},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "control_panel", "fieldtype": "Select", "label": "Control Panel", "options": "\ncPanel / WHM\nPlesk\nDirectAdmin", "description": "Must match exactly. Unknown text falls back to cPanel / WHM."},
     {"fieldname": "class_path", "fieldtype": "Data", "label": "Python Class Path", "description": "Auto-filled from the linked adapter. Optional without an adapter."}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}],
+  "modified": "2026-10-10 17:30:00.000000"
 }

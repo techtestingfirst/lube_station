@@ -7,22 +7,30 @@
   "naming_rule": "Expression",
   "track_changes": 1,
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Invoice Details"},
     {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer", "reqd": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "order_ref", "fieldtype": "Link", "label": "Order", "options": "Order"},
+    {"fieldname": "section_break_1", "fieldtype": "Section Break", "label": "Items"},
     {"fieldname": "invoice_items", "fieldtype": "Table", "label": "Invoice Items", "options": "Invoice Item"},
+    {"fieldname": "section_break_2", "fieldtype": "Section Break", "label": "Tax and Totals"},
     {"fieldname": "tax_amount", "fieldtype": "Currency", "label": "Tax", "default": "0"},
     {"fieldname": "subtotal_amount", "fieldtype": "Currency", "label": "Subtotal (ex-tax)", "default": "0"},
     {"fieldname": "tax_label", "fieldtype": "Data", "label": "Tax Breakup Label"},
     {"fieldname": "cgst_amount", "fieldtype": "Currency", "label": "CGST", "default": "0"},
     {"fieldname": "sgst_amount", "fieldtype": "Currency", "label": "SGST", "default": "0"},
+    {"fieldname": "column_break_1", "fieldtype": "Column Break"},
     {"fieldname": "ugst_amount", "fieldtype": "Currency", "label": "UGST", "default": "0"},
     {"fieldname": "igst_amount", "fieldtype": "Currency", "label": "IGST", "default": "0"},
     {"fieldname": "credit_applied", "fieldtype": "Currency", "label": "Credit", "default": "0"},
     {"fieldname": "total_due", "fieldtype": "Currency", "label": "Total Due", "default": "0"},
+    {"fieldname": "section_break_3", "fieldtype": "Section Break", "label": "Status and Reference"},
     {"fieldname": "due_date", "fieldtype": "Date", "label": "Due Date"},
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nUnpaid\nPaid\nOverdue\nCancelled", "default": "Unpaid", "reqd": 1},
+    {"fieldname": "column_break_2", "fieldtype": "Column Break"},
     {"fieldname": "gateway", "fieldtype": "Data", "label": "Gateway"},
     {"fieldname": "idempotency_key", "fieldtype": "Data", "label": "Idempotency Key", "unique": 1}
   ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1}, {"role": "Customer", "read": 1, "print": 1}]
+  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1}, {"role": "Customer", "read": 1, "print": 1}],
+  "modified": "2026-10-10 17:30:00.000000"
 }

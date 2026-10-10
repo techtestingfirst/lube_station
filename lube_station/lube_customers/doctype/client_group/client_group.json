@@ -3,9 +3,11 @@
   "module": "Lube Customers",
   "doctype": "DocType",
   "engine": "InnoDB",
+  "modified": "2026-10-10 17:30:00.000000",
   "autoname": "field:group_name",
   "naming_rule": "By fieldname",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Client Group"},
     {"fieldname": "group_name", "fieldtype": "Data", "label": "Group Name", "reqd": 1, "unique": 1}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}]

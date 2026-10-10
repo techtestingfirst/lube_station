@@ -6,9 +6,12 @@
   "autoname": "field:tld",
   "naming_rule": "By fieldname",
   "track_changes": 1,
+  "modified": "2026-10-10 17:30:00.000000",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "TLD Pricing"},
     {"fieldname": "tld", "fieldtype": "Data", "label": "TLD", "description": "Lowercase with leading dot, e.g. .com or .co.in. Longest suffix wins.", "reqd": 1, "unique": 1},
     {"fieldname": "register_price", "fieldtype": "Currency", "label": "Register Price / Year", "default": "0"},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "renew_price", "fieldtype": "Currency", "label": "Renew Price / Year", "default": "0"},
     {"fieldname": "transfer_price", "fieldtype": "Currency", "label": "Transfer Price", "default": "0"}
   ],

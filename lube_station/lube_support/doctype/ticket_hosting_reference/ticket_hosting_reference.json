@@ -5,9 +5,12 @@
   "engine": "InnoDB",
   "autoname": "format:THR-{####}",
   "naming_rule": "Expression",
+  "modified": "2026-10-10 17:30:00.000000",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Ticket Links"},
     {"fieldname": "ticket", "fieldtype": "Link", "label": "Ticket", "options": "HD Ticket", "reqd": 1, "unique": 1},
     {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer"},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "service", "fieldtype": "Link", "label": "Service", "options": "Service"},
     {"fieldname": "invoice", "fieldtype": "Link", "label": "Invoice", "options": "Hosting Invoice"}
   ],

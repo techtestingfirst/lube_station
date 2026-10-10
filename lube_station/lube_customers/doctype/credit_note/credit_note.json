@@ -3,13 +3,17 @@
   "module": "Lube Customers",
   "doctype": "DocType",
   "engine": "InnoDB",
+  "modified": "2026-10-10 17:30:00.000000",
   "autoname": "format:CN-{####}",
   "naming_rule": "Expression",
   "is_submittable": 1,
   "track_changes": 1,
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Credit Note Details"},
     {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer", "reqd": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "reqd": 1},
+    {"fieldname": "section_break_1", "fieldtype": "Section Break", "label": "Reason"},
     {"fieldname": "reason", "fieldtype": "Small Text", "label": "Reason"},
     {"fieldname": "reference_invoice", "fieldtype": "Data", "label": "Reference Invoice"}
   ],

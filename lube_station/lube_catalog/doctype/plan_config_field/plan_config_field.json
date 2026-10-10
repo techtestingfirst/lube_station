@@ -5,8 +5,23 @@
   "engine": "InnoDB",
   "istable": 1,
   "fields": [
-    {"fieldname": "field_key", "fieldtype": "Data", "label": "Field Key", "reqd": 1},
-    {"fieldname": "field_value", "fieldtype": "Data", "label": "Field Value"}
+    {
+      "fieldname": "section_break_0",
+      "fieldtype": "Section Break",
+      "label": "Config Field"
+    },
+    {
+      "fieldname": "field_key",
+      "fieldtype": "Data",
+      "label": "Field Key",
+      "reqd": 1
+    },
+    {
+      "fieldname": "field_value",
+      "fieldtype": "Data",
+      "label": "Field Value"
+    }
   ],
-  "permissions": []
+  "permissions": [],
+  "modified": "2026-10-10 17:30:00.000000"
 }

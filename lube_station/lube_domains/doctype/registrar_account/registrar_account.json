@@ -5,9 +5,12 @@
   "engine": "InnoDB",
   "autoname": "format:RACC-{####}",
   "naming_rule": "Expression",
+  "modified": "2026-10-10 17:30:00.000000",
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Account Details"},
     {"fieldname": "registrar", "fieldtype": "Link", "label": "Registrar", "options": "Registrar Adapter", "reqd": 1},
     {"fieldname": "api_key", "fieldtype": "Password", "label": "API Key"},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
     {"fieldname": "api_secret", "fieldtype": "Password", "label": "API Secret"},
     {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1"},
     {"fieldname": "client_ip", "fieldtype": "Data", "label": "Client IP", "description": "Egress IP Namecheap sees; blank attempts auto-detect"}

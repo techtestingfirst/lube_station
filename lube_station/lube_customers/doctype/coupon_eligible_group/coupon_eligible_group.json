@@ -3,8 +3,10 @@
   "module": "Lube Customers",
   "doctype": "DocType",
   "engine": "InnoDB",
+  "modified": "2026-10-10 17:30:00.000000",
   "istable": 1,
   "fields": [
+    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Eligible Group"},
     {"fieldname": "client_group", "fieldtype": "Link", "label": "Client Group", "options": "Client Group", "reqd": 1}
   ],
   "permissions": []
