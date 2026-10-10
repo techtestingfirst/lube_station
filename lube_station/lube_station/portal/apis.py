@@ -173,6 +173,136 @@ def _upgrade_options(plan_name: str | None, billing_cycle: str | None) -> list:
     return sorted(options, key=lambda o: o["recurring_amount"])
 
 
+_CYCLE_DAYS = {
+    "Monthly": 30,
+    "Quarterly": 91,
+    "Semi-Annually": 182,
+    "Annually": 365,
+    "Biennially": 730,
+    "Triennially": 1095,
+    "One Time": 30,
+}
+
+
+def _cycle_days(cycle: str | None) -> int:
+    return _CYCLE_DAYS.get(cycle or "Monthly", 30)
+
+
+def _remaining_days(svc) -> int:
+    """Days left in the current cycle (ERPNext Subscription prorata style)."""
+    from frappe.utils import date_diff, getdate, today
+
+    try:
+        due = svc.get("next_due_date")
+        if not due:
+            return _cycle_days(svc.get("billing_cycle"))
+        return max(0, date_diff(getdate(due), getdate(today())))
+    except Exception:
+        return _cycle_days(svc.get("billing_cycle"))
+
+
+def _upgrade_quote(svc, new_plan: str) -> dict:
+    """Prorated balance for a plan change.
+
+    ERPNext Subscription pattern: (new - old) * remaining / cycle_days,
+    plus positive setup-fee difference. Positive total needs payment before
+    the swap; zero/negative swaps immediately (credit for the negative part).
+    """
+    cycle = svc.get("billing_cycle") or "Monthly"
+    old_plan = svc.get("hosting_plan")
+    old_rec = frappe.db.get_value("Plan Pricing", {"hosting_plan": old_plan, "billing_cycle": cycle}, "recurring_amount") or 0
+    new_rec = frappe.db.get_value("Plan Pricing", {"hosting_plan": new_plan, "billing_cycle": cycle}, "recurring_amount") or 0
+    old_setup = frappe.db.get_value("Plan Pricing", {"hosting_plan": old_plan, "billing_cycle": cycle}, "setup_fee") or 0
+    new_setup = frappe.db.get_value("Plan Pricing", {"hosting_plan": new_plan, "billing_cycle": cycle}, "setup_fee") or 0
+    cycle_days = _cycle_days(cycle)
+    remaining = _remaining_days(svc)
+    prorated = round((float(new_rec or 0) - float(old_rec or 0)) * remaining / cycle_days, 2) if cycle_days else 0.0
+    setup_diff = round(max(float(new_setup or 0) - float(old_setup or 0), 0.0), 2)
+    total = round(prorated + setup_diff, 2)
+    return {
+        "old_plan": old_plan,
+        "new_plan": new_plan,
+        "billing_cycle": cycle,
+        "old_recurring": float(old_rec or 0),
+        "new_recurring": float(new_rec or 0),
+        "cycle_days": cycle_days,
+        "remaining_days": remaining,
+        "prorated_diff": prorated,
+        "setup_diff": setup_diff,
+        "total_due": total,
+        "payment_required": total > 0,
+    }
+
+
+def _apply_plan_swap(service_name: str, new_plan: str, credit_amount: float = 0, invoice_name: str | None = None) -> dict:
+    """Swap hosting plan immediately. Idempotent. No new table (comment trail)."""
+    svc = frappe.get_doc("Service", service_name)
+    old_plan = svc.get("hosting_plan")
+    if old_plan == new_plan:
+        return {"applied": True, "already": True}
+    cycle = svc.get("billing_cycle") or "Monthly"
+    new_rec = frappe.db.get_value("Plan Pricing", {"hosting_plan": new_plan, "billing_cycle": cycle}, "recurring_amount")
+    if new_rec is None:
+        new_rec = svc.get("recurring_amount") or 0
+    svc.hosting_plan = new_plan
+    svc.recurring_amount = new_rec
+    svc.save(ignore_permissions=True)
+    credit_note = None
+    if (credit_amount or 0) > 0:
+        try:
+            cn = frappe.get_doc(
+                {
+                    "doctype": "Credit Note",
+                    "customer": svc.get("customer"),
+                    "amount": round(float(credit_amount), 2),
+                    "reason": f"Downgrade credit: {service_name} {old_plan} -> {new_plan}",
+                    "reference_invoice": invoice_name,
+                }
+            ).insert(ignore_permissions=True)
+            try:
+                cn.submit()
+            except Exception:
+                pass
+            credit_note = cn.name
+        except Exception:
+            credit_note = None
+    try:
+        svc.add_comment(
+            "Comment",
+            f"Plan changed via portal: {old_plan} -> {new_plan}"
+            + (f" (invoice {invoice_name})" if invoice_name else " (no payment needed)")
+            + (f" (credit {credit_note})" if credit_note else ""),
+        )
+    except Exception:
+        pass
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        notify_customer(
+            svc.get("customer"),
+            "upgrade",
+            f"{service_name}:{new_plan}",
+            {"service": service_name, "from": old_plan, "to": new_plan, "invoice": invoice_name or ""},
+        )
+    except Exception:
+        pass
+    # Best-effort provisioning package change; never fails the swap.
+    # Manual gate: no live effect until provider creds land.
+    try:
+        adapter = _adapter_for_plan(new_plan)
+        if adapter is not None and _adapter_overrides(adapter, "change_package"):
+            adapter.change_package(service_name, new_plan)
+    except Exception:
+        pass
+    try:
+        from lube_station.lube_station.provisioning.jobs import run_change_package
+
+        run_change_package(service_name, new_plan=new_plan, key=f"upgrade:{service_name}:{new_plan}")
+    except Exception:
+        pass
+    return {"applied": True, "from": old_plan, "to": new_plan, "credit_note": credit_note}
+
+
 def _is_staff() -> bool:
     return "System Manager" in frappe.get_roles()
 
@@ -447,8 +577,10 @@ def my_service_detail(service: str):
     detail["cancellation_mode"] = svc.get("cancellation_mode")
     management = _client_area_for(svc, adapter)
     management_note = (
-        "Panel links and VPS actions below come from the provisioning module; "
-        "password, upgrade and cancellation actions are gated by service status."
+        "Upgrades swap automatically once the prorated balance is paid "
+        "(downgrades with no balance swap immediately). Cancellations need "
+        "reason + typed confirmation; Immediate stops now, End of cycle "
+        "auto-cancels on next due date and can be withdrawn until then."
     )
     return {
         "service": detail,
@@ -530,12 +662,16 @@ def change_service_password(service: str, new_password: str) -> dict:
 
 
 @frappe.whitelist(methods=["POST"])
-def request_cancellation(service: str, reason: str, mode: str = "End of Billing Cycle") -> dict:
-    """WHMCS Request Cancellation: reason + immediate vs end-of-cycle.
+def request_cancellation(
+    service: str, reason: str, mode: str = "End of Billing Cycle", confirm_text: str | None = None, acknowledged: bool = False
+) -> dict:
+    """Guarded automatic cancellation.
 
-    Records the request (fields + approval-trail comment); status stays
-    Active until staff terminates. Approval-gate decision: comment + status,
-    no new table.
+    Safeguards against accidental clicks (frontend also enforces):
+    reason >= 10 chars, mode radio, type-service-ID to confirm, explicit
+    acknowledge checkbox. Immediate terminates now; End of Billing Cycle
+    stays Active until next due date (daily scheduler auto-terminates).
+    Withdraw via withdraw_cancellation while still Active.
     """
     from lube_station.lube_station.settings import get_setting
 
@@ -547,16 +683,27 @@ def request_cancellation(service: str, reason: str, mode: str = "End of Billing 
     if svc.get("cancellation_requested"):
         frappe.throw("A cancellation request is already open for this service")
     reason = (reason or "").strip()
-    if len(reason) < 5:
-        frappe.throw("Tell us the reason for cancellation")
+    if len(reason) < 10:
+        frappe.throw("Please tell us why (10+ characters) so we can help")
     if mode not in ("Immediate", "End of Billing Cycle"):
         frappe.throw("Unknown cancellation mode")
+    if (confirm_text or "").strip() != svc.name:
+        frappe.throw(f"Type {svc.name} to confirm cancellation")
+    if not acknowledged or str(acknowledged).lower() not in ("1", "true"):
+        frappe.throw("Please acknowledge you understand the cancellation")
     svc.cancellation_requested = 1
     svc.cancellation_mode = mode
     svc.cancellation_reason = reason
     svc.save(ignore_permissions=True)
+    if mode == "Immediate":
+        try:
+            svc.reload()
+            svc.terminate(f"Auto-cancel via portal (Immediate): {reason}")
+        except Exception as e:
+            frappe.throw(f"Cancellation failed: {e}")
+        return {"requested": True, "mode": mode, "terminated": True}
     try:
-        svc.add_comment("Comment", f"Cancellation requested via portal ({mode}): {reason}")
+        svc.add_comment("Comment", f"Cancellation scheduled via portal ({mode}): {reason}")
     except Exception:
         pass
     try:
@@ -565,7 +712,48 @@ def request_cancellation(service: str, reason: str, mode: str = "End of Billing 
         notify_customer(svc.get("customer"), "cancellation_request", f"{service}:cancel", {"service": service, "mode": mode, "reason": reason})
     except Exception:
         pass
-    return {"requested": True, "mode": mode}
+    return {"requested": True, "mode": mode, "terminated": False}
+
+
+@frappe.whitelist(methods=["POST"])
+def withdraw_cancellation(service: str) -> dict:
+    """Undo a scheduled (not yet executed) cancellation."""
+    svc = _service_for_customer(service)
+    if not svc.get("cancellation_requested"):
+        frappe.throw("No open cancellation request for this service")
+    if svc.get("status") != "Active":
+        frappe.throw("Only scheduled cancellations on Active services can be withdrawn")
+    svc.cancellation_requested = 0
+    svc.cancellation_mode = None
+    svc.cancellation_reason = None
+    svc.save(ignore_permissions=True)
+    try:
+        svc.add_comment("Comment", "Cancellation withdrawn via portal.")
+    except Exception:
+        pass
+    return {"withdrawn": True}
+
+
+def process_scheduled_cancellations() -> dict:
+    """Daily: auto-terminate end-of-cycle requests past next due date."""
+    from frappe.utils import getdate, today
+
+    rows = frappe.get_all(
+        "Service",
+        {"cancellation_requested": 1, "cancellation_mode": "End of Billing Cycle", "status": "Active"},
+        ["name", "next_due_date", "cancellation_reason"],
+    )
+    done = []
+    for r in rows:
+        try:
+            if r.get("next_due_date") and getdate(r["next_due_date"]) > getdate(today()):
+                continue
+            doc = frappe.get_doc("Service", r.name)
+            doc.terminate(f"Auto-cancel via portal (end of cycle): {r.get('cancellation_reason') or ''}")
+            done.append(r.name)
+        except Exception:
+            continue
+    return {"terminated": done}
 
 
 @frappe.whitelist(methods=["GET"])
@@ -575,49 +763,159 @@ def upgrade_options(service: str) -> list:
     return _upgrade_options(svc.get("hosting_plan"), svc.get("billing_cycle"))
 
 
-@frappe.whitelist(methods=["POST"])
-def request_upgrade(service: str, new_plan: str) -> dict:
-    """Upgrade/downgrade request: Pending Review order for staff to accept.
-
-    Staff acceptance runs normal fulfillment; the prorated invoice follows
-    from the accepted order. No direct plan swap from the portal.
-    """
+@frappe.whitelist(methods=["GET"])
+def upgrade_quote(service: str, new_plan: str) -> dict:
+    """Price breakdown before confirm (old/new/prorated/setup/total)."""
     svc = _service_for_customer(service)
     if svc.get("status") != "Active":
         frappe.throw("Upgrades apply to Active services only")
     options = {o["plan"]: o for o in _upgrade_options(svc.get("hosting_plan"), svc.get("billing_cycle"))}
     if new_plan not in options:
         frappe.throw("That plan is not an upgrade option for this service")
-    target = options[new_plan]
+    return _upgrade_quote(svc, new_plan)
+
+
+@frappe.whitelist(methods=["POST"])
+def request_upgrade(service: str, new_plan: str) -> dict:
+    """Automatic upgrade/downgrade.
+
+    Positive prorated balance -> Accepted order + Unpaid invoice; the plan
+    swaps automatically in on_invoice_paid once the invoice is Paid.
+    Zero/negative balance -> immediate swap + Credit Note for the negative part.
+    Idempotent on retry via upgrade:{service}:{new_plan} invoice key.
+    """
+    from frappe.utils import add_days, today
+
+    from lube_station.lube_station.settings import get_setting
+
+    svc = _service_for_customer(service)
+    if svc.get("status") != "Active":
+        frappe.throw("Upgrades apply to Active services only")
+    options = {o["plan"]: o for o in _upgrade_options(svc.get("hosting_plan"), svc.get("billing_cycle"))}
+    if new_plan not in options:
+        frappe.throw("That plan is not an upgrade option for this service")
+    quote = _upgrade_quote(svc, new_plan)
+    key = f"upgrade:{service}:{new_plan}"
+    if frappe.db.exists("Hosting Invoice", {"idempotency_key": key}):
+        inv = frappe.get_doc("Hosting Invoice", {"idempotency_key": key})
+        if inv.status == "Paid":
+            _apply_plan_swap(service, new_plan, invoice_name=inv.name)
+            return {"order": inv.order_ref, "invoice": inv.name, "status": "Paid", "applied": True, "quote": quote}
+        try:
+            from lube_station.lube_station.payments.links import payment_link
+
+            pay = payment_link(inv.name, None)
+        except Exception:
+            pay = {}
+        return {
+            "order": inv.order_ref,
+            "invoice": inv.name,
+            "status": inv.status,
+            "total_due": inv.total_due,
+            "payment_required": True,
+            "payment": pay,
+            "quote": quote,
+        }
+    if quote["total_due"] <= 0:
+        credit = round(-quote["total_due"], 2) if quote["total_due"] < 0 else 0
+        out = _apply_plan_swap(service, new_plan, credit_amount=credit)
+        return {"order": None, "invoice": None, "applied": True, "credit_note": out.get("credit_note"), "quote": quote}
     order = frappe.get_doc(
         {
             "doctype": "Order",
             "customer": svc.get("customer"),
-            "status": "Pending Review",
-            "customer_notes": f"Portal upgrade request: {svc.name} from {svc.get('hosting_plan')} to {new_plan}",
+            "status": "Accepted",
+            "customer_notes": f"Portal upgrade: {svc.name} from {svc.get('hosting_plan')} to {new_plan} (prorated {quote['total_due']})",
             "items": [
                 {
                     "item_type": "Hosting Plan",
                     "reference": new_plan,
                     "billing_cycle": svc.get("billing_cycle"),
-                    "unit_price": target["recurring_amount"],
+                    "unit_price": quote["total_due"],
                     "quantity": 1,
-                    "configuration_snapshot": json.dumps({"upgrade_of": svc.name}),
+                    "configuration_snapshot": json.dumps(
+                        {"upgrade_of": svc.name, "upgrade_to": new_plan, "prorated": quote["total_due"]}
+                    ),
                 }
             ],
         }
     ).insert(ignore_permissions=True)
-    try:
-        svc.add_comment("Comment", f"Upgrade requested via portal to {new_plan} (order {order.name}).")
-    except Exception:
-        pass
+    # Single-line upgrade invoice (tax + credit like initial invoices).
+    taxable = True
+    if frappe.db.exists("Hosting Plan", new_plan):
+        flag = frappe.db.get_value("Hosting Plan", new_plan, "taxable")
+        taxable = True if flag is None else bool(flag)
+    tax = 0
+    subtotal = quote["total_due"]
+    label = "No tax"
+    breakup = {"cgst": 0, "sgst": 0, "ugst": 0, "igst": 0}
+    if frappe.db.exists("DocType", "Tax Rule"):
+        from lube_station.lube_billing.doctype.tax_rule.tax_rule import tax_breakup
+
+        out = tax_breakup(svc.get("customer"), [{"amount": quote["total_due"], "taxable": taxable}])
+        tax = out["total"]
+        label = out["label"]
+        breakup = out
+        if out["mode"] == "inclusive":
+            subtotal = round(quote["total_due"] - tax, 2)
+    credit = 0
+    if frappe.db.exists("DocType", "Credit Note"):
+        from lube_station.lube_customers.doctype.credit_note.credit_note import apply_credit
+
+        credit = apply_credit(svc.get("customer"), quote["total_due"] + tax)
+    inv = frappe.get_doc(
+        {
+            "doctype": "Hosting Invoice",
+            "customer": svc.get("customer"),
+            "order_ref": order.name,
+            "invoice_items": [
+                {
+                    "description": f"Upgrade {service}: {quote['old_plan']} -> {new_plan} ({quote['remaining_days']}/{quote['cycle_days']} days)",
+                    "service_ref": new_plan,
+                    "amount": quote["total_due"],
+                }
+            ],
+            "tax_amount": tax,
+            "subtotal_amount": subtotal,
+            "tax_label": label,
+            "cgst_amount": breakup["cgst"],
+            "sgst_amount": breakup["sgst"],
+            "ugst_amount": breakup["ugst"],
+            "igst_amount": breakup["igst"],
+            "credit_applied": credit,
+            "due_date": add_days(today(), get_setting("invoice_due_days") or 7),
+            "status": "Unpaid",
+            "idempotency_key": key,
+        }
+    ).insert(ignore_permissions=True)
     try:
         from lube_station.lube_station.notifications.events import notify_customer
 
-        notify_customer(svc.get("customer"), "upgrade", f"{service}:{order.name}", {"service": service, "from": svc.get("hosting_plan"), "to": new_plan, "order": order.name})
+        notify_customer(svc.get("customer"), "invoice", inv.name, {"invoice": inv.name, "amount": inv.total_due})
+        notify_customer(
+            svc.get("customer"), "upgrade", f"{service}:{order.name}", {"service": service, "from": svc.get("hosting_plan"), "to": new_plan, "order": order.name}
+        )
     except Exception:
         pass
-    return {"order": order.name, "status": order.status}
+    try:
+        svc.add_comment("Comment", f"Upgrade invoice {inv.name} for {new_plan} (order {order.name}). Plan swaps on payment.")
+    except Exception:
+        pass
+    try:
+        from lube_station.lube_station.payments.links import payment_link
+
+        pay = payment_link(inv.name, None)
+    except Exception:
+        pay = {}
+    return {
+        "order": order.name,
+        "status": order.status,
+        "invoice": inv.name,
+        "total_due": inv.total_due,
+        "payment_required": True,
+        "payment": pay,
+        "quote": quote,
+    }
 
 
 @frappe.whitelist(methods=["GET"])

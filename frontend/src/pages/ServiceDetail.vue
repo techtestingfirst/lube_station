@@ -78,8 +78,12 @@ const pw2 = ref('')
 const showCancel = ref(false)
 const cancelReason = ref('')
 const cancelMode = ref('End of Billing Cycle')
+const cancelConfirm = ref('')
+const cancelAck = ref(false)
 const showUpgrade = ref(false)
 const upgradePlan = ref('')
+const upgradeQuote = ref<{ old_plan: string; new_plan: string; billing_cycle: string; old_recurring: number; new_recurring: number; remaining_days: number; cycle_days: number; prorated_diff: number; setup_diff: number; total_due: number; payment_required: boolean } | null>(null)
+const quoting = ref(false)
 const showRdns = ref(false)
 const rdnsTarget = ref('')
 const rdnsHost = ref('')
@@ -157,18 +161,66 @@ async function submitPassword() {
 
 async function submitCancellation() {
   actionMsg.value = ''
+  if (cancelReason.value.trim().length < 10) {
+    actionMsg.value = 'Please tell us why (10+ characters).'
+    return
+  }
+  if (cancelConfirm.value.trim() !== id) {
+    actionMsg.value = `Type ${id} to confirm cancellation.`
+    return
+  }
+  if (!cancelAck.value) {
+    actionMsg.value = 'Please acknowledge you understand the cancellation.'
+    return
+  }
   actionBusy.value = 'cancel'
   try {
-    const out = await call('lube_station.lube_station.portal.apis.request_cancellation', { service: id, reason: cancelReason.value, mode: cancelMode.value }, 'POST')
-    actionMsg.value = `Cancellation requested (${(out as { mode?: string }).mode || cancelMode.value}). Staff will confirm.`
+    const out = await call<{ mode?: string; terminated?: boolean }>('lube_station.lube_station.portal.apis.request_cancellation', { service: id, reason: cancelReason.value, mode: cancelMode.value, confirm_text: cancelConfirm.value.trim(), acknowledged: cancelAck.value }, 'POST')
+    actionMsg.value = out.terminated
+      ? 'Service cancelled immediately as requested.'
+      : `Cancellation scheduled (${out.mode || cancelMode.value}). Service stays active until end of cycle. You can withdraw it below.`
     showCancel.value = false
     cancelReason.value = ''
+    cancelConfirm.value = ''
+    cancelAck.value = false
     await load()
   } catch (e) {
     actionMsg.value = friendlyError(e)
   } finally {
     actionBusy.value = ''
   }
+}
+
+async function withdrawCancellation() {
+  actionMsg.value = ''
+  actionBusy.value = 'withdraw'
+  try {
+    await call('lube_station.lube_station.portal.apis.withdraw_cancellation', { service: id }, 'POST')
+    actionMsg.value = 'Scheduled cancellation withdrawn. Service continues.'
+    await load()
+  } catch (e) {
+    actionMsg.value = friendlyError(e)
+  } finally {
+    actionBusy.value = ''
+  }
+}
+
+async function fetchQuote(plan: string) {
+  upgradeQuote.value = null
+  if (!plan) return
+  quoting.value = true
+  try {
+    upgradeQuote.value = await call('lube_station.lube_station.portal.apis.upgrade_quote', { service: id, new_plan: plan }, 'GET')
+  } catch (e) {
+    actionMsg.value = friendlyError(e)
+  } finally {
+    quoting.value = false
+  }
+}
+
+function pickUpgrade(plan: string) {
+  upgradePlan.value = plan
+  fetchQuote(plan)
 }
 
 async function submitUpgrade() {
@@ -179,10 +231,17 @@ async function submitUpgrade() {
   }
   actionBusy.value = 'upgrade'
   try {
-    const out = await call('lube_station.lube_station.portal.apis.request_upgrade', { service: id, new_plan: upgradePlan.value }, 'POST')
-    actionMsg.value = `Upgrade requested (order ${(out as { order?: string }).order}). Staff will send the prorated invoice.`
+    const out = await call<{ order?: string; invoice?: string; total_due?: number; payment_required?: boolean; applied?: boolean; payment?: { url?: string } }>('lube_station.lube_station.portal.apis.request_upgrade', { service: id, new_plan: upgradePlan.value }, 'POST')
+    if (out.payment_required && out.invoice) {
+      actionMsg.value = `Balance of ${formatMoney(out.total_due || 0)} due. Redirecting to payment...`
+      showUpgrade.value = false
+      router.push(`/pay/${out.invoice}`)
+      return
+    }
+    actionMsg.value = 'Plan changed. No balance was due.'
     showUpgrade.value = false
     upgradePlan.value = ''
+    upgradeQuote.value = null
     await load()
   } catch (e) {
     actionMsg.value = friendlyError(e)
@@ -448,8 +507,9 @@ onMounted(load)
           <Button v-if="detail.capabilities.can_change_password" label="Change password" size="sm" @click="showPw = true" />
           <Button v-if="detail.capabilities.can_upgrade" label="Upgrade / Downgrade" size="sm" variant="subtle" @click="showUpgrade = true" />
           <Button v-if="detail.capabilities.can_cancel" label="Request cancellation" size="sm" variant="subtle" @click="showCancel = true" />
+          <Button v-if="detail.service.cancellation_requested && detail.service.status === 'Active'" label="Withdraw cancellation" size="sm" variant="subtle" :loading="actionBusy === 'withdraw'" @click="withdrawCancellation" />
         </div>
-        <p v-if="detail.service.cancellation_requested" class="mt-2 text-xs text-ink-gray-5">Cancellation requested ({{ detail.service.cancellation_mode || 'mode pending' }}). Service stays active until staff confirms.</p>
+        <p v-if="detail.service.cancellation_requested" class="mt-2 text-xs text-ink-gray-5">Cancellation {{ detail.service.cancellation_mode || 'requested' }} — {{ detail.service.status === 'Active' ? 'service stays active until it executes. Withdraw above to keep it.' : 'executed.' }}</p>
         <p v-if="actionMsg" class="mt-2 text-xs text-ink-gray-6">{{ actionMsg }}</p>
       </div>
 
@@ -469,16 +529,19 @@ onMounted(load)
       <Dialog v-model="showCancel" :options="{ title: 'Request cancellation' }">
         <template #body-content>
           <div class="space-y-3">
-            <FormControl v-model="cancelReason" type="textarea" label="Reason" placeholder="Why are you cancelling?" />
+            <p class="text-xs text-ink-gray-5">Immediate stops the service now. End of billing cycle keeps it active until {{ formatDate(detail.billing.next_due_date) }} and cancels automatically.</p>
+            <FormControl v-model="cancelReason" type="textarea" label="Reason for cancellation (required, 10+ characters)" placeholder="Why are you cancelling? This helps us improve." />
             <div class="flex gap-4 text-sm">
               <label class="flex items-center gap-1.5"><input v-model="cancelMode" type="radio" value="End of Billing Cycle" /> End of billing cycle</label>
               <label class="flex items-center gap-1.5"><input v-model="cancelMode" type="radio" value="Immediate" /> Immediate</label>
             </div>
+            <FormControl v-model="cancelConfirm" :label="`Type ${id} to confirm`" :placeholder="id" />
+            <label class="flex items-start gap-2 text-sm text-ink-gray-6"><input v-model="cancelAck" type="checkbox" class="mt-1" /> I understand this will {{ cancelMode === 'Immediate' ? 'stop the service now' : 'schedule automatic cancellation' }} and data may be deleted.</label>
           </div>
         </template>
         <template #actions>
           <Button label="Back" variant="subtle" @click="showCancel = false" />
-          <Button label="Request" variant="solid" :loading="actionBusy === 'cancel'" @click="submitCancellation" />
+          <Button :label="cancelMode === 'Immediate' ? 'Confirm cancellation' : 'Schedule cancellation'" variant="solid" :loading="actionBusy === 'cancel'" @click="submitCancellation" />
         </template>
       </Dialog>
 
@@ -490,16 +553,24 @@ onMounted(load)
               :key="o.plan"
               class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-outline-gray-1 px-3 py-2 text-sm"
             >
-              <span class="flex items-center gap-2"><input v-model="upgradePlan" type="radio" :value="o.plan" />{{ o.plan_name }}</span>
+              <span class="flex items-center gap-2"><input v-model="upgradePlan" type="radio" :value="o.plan" @change="pickUpgrade(o.plan)" />{{ o.plan_name }}</span>
               <span class="text-ink-gray-6">{{ formatMoney(o.recurring_amount) }}/{{ detail.billing.billing_cycle }}</span>
             </label>
-            <p class="text-xs text-ink-gray-5">Staff reviews the request and sends the prorated invoice.</p>
+            <div v-if="quoting" class="text-xs text-ink-gray-5">Calculating prorated balance...</div>
+            <div v-if="upgradeQuote" class="rounded-lg bg-surface-gray-2 px-3 py-2 text-xs text-ink-gray-6">
+              <div class="flex justify-between"><span>Current</span><span>{{ formatMoney(upgradeQuote.old_recurring) }}</span></div>
+              <div class="flex justify-between"><span>New</span><span>{{ formatMoney(upgradeQuote.new_recurring) }}</span></div>
+              <div class="flex justify-between"><span>Remaining {{ upgradeQuote.remaining_days }}/{{ upgradeQuote.cycle_days }} days</span><span>{{ formatMoney(upgradeQuote.prorated_diff) }}</span></div>
+              <div class="flex justify-between"><span>Setup difference</span><span>{{ formatMoney(upgradeQuote.setup_diff) }}</span></div>
+              <div class="flex justify-between font-medium text-ink-gray-8"><span>Balance due now</span><span>{{ formatMoney(upgradeQuote.total_due) }}</span></div>
+              <p class="mt-1">{{ upgradeQuote.payment_required ? 'Plan swaps automatically once this balance is paid.' : 'No payment needed — plan swaps immediately on confirm.' }}</p>
+            </div>
           </div>
           <p v-else class="text-sm text-ink-gray-5">No upgrade options for this plan.</p>
         </template>
         <template #actions>
           <Button label="Back" variant="subtle" @click="showUpgrade = false" />
-          <Button label="Request" variant="solid" :loading="actionBusy === 'upgrade'" @click="submitUpgrade" />
+          <Button :label="upgradeQuote && !upgradeQuote.payment_required ? 'Confirm change' : 'Continue to payment'" variant="solid" :loading="actionBusy === 'upgrade'" @click="submitUpgrade" />
         </template>
       </Dialog>
 

@@ -127,9 +127,16 @@ def on_invoice_paid(invoice: str) -> dict:
     inv = frappe.get_doc("Hosting Invoice", invoice)
     if inv.status != "Paid":
         return {"action": "none"}
+    # Upgrade invoices: swap plan automatically once balance is paid.
+    # Idempotent: already-swapped services are skipped.
+    upgraded = _apply_upgrade_for_invoice(inv)
     out = []
     if inv.order_ref:
         for svc in frappe.get_all("Service", {"order_ref": inv.order_ref}, ["name", "status"]):
+            # Upgrade orders own no Service rows (order_ref points at the
+            # upgrade order, not the original service order).
+            if any(u["service"] == svc["name"] for u in upgraded):
+                continue
             doc = frappe.get_doc("Service", svc.name)
             if doc.status == "Pending":
                 doc.activate()
@@ -137,6 +144,8 @@ def on_invoice_paid(invoice: str) -> dict:
             elif doc.status == "Suspended":
                 doc.unsuspend()
                 out.append(doc.name)
+    if upgraded:
+        return {"action": "upgraded", "services": [u["service"] for u in upgraded]}
     if not out and inv.order_ref:
         # Renewal payment: services already Active, confirm renewal.
         try:
@@ -147,6 +156,52 @@ def on_invoice_paid(invoice: str) -> dict:
         except Exception:
             pass
     return {"action": "activated", "services": out}
+
+
+def _apply_upgrade_for_invoice(inv) -> list:
+    """Apply portal upgrade swap for a Paid upgrade invoice."""
+    import json
+
+    if not inv.get("order_ref") or not frappe.db.exists("Order", inv.order_ref):
+        # Fallback: idempotency key upgrade:{service}:{plan}.
+        key = inv.get("idempotency_key") or ""
+        if key.startswith("upgrade:"):
+            try:
+                _, svc_name, plan = key.split(":", 2)
+                if frappe.db.exists("Service", svc_name) and frappe.db.exists("Hosting Plan", plan):
+                    from lube_station.lube_station.portal.apis import _apply_plan_swap
+
+                    if frappe.db.get_value("Service", svc_name, "hosting_plan") != plan:
+                        _apply_plan_swap(svc_name, plan, invoice_name=inv.name)
+                        return [{"service": svc_name}]
+            except Exception:
+                pass
+        return []
+    try:
+        order = frappe.get_doc("Order", inv.order_ref)
+    except Exception:
+        return []
+    done = []
+    for item in order.items or []:
+        if item.get("item_type") != "Hosting Plan":
+            continue
+        try:
+            snap = json.loads(item.get("configuration_snapshot") or "{}")
+        except Exception:
+            snap = {}
+        svc_name = snap.get("upgrade_of")
+        new_plan = snap.get("upgrade_to") or item.get("reference")
+        if not svc_name or not new_plan or not frappe.db.exists("Service", svc_name):
+            continue
+        try:
+            from lube_station.lube_station.portal.apis import _apply_plan_swap
+
+            if frappe.db.get_value("Service", svc_name, "hosting_plan") != new_plan:
+                _apply_plan_swap(svc_name, new_plan, invoice_name=inv.name)
+            done.append({"service": svc_name})
+        except Exception:
+            continue
+    return done
 
 
 @frappe.whitelist(methods=["POST"])

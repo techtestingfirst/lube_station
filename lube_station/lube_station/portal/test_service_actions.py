@@ -154,12 +154,58 @@ class TestServiceActions(IntegrationTestCase):
         frappe.set_user(user_name)
         detail = apis.my_service_detail(svc.name)
         self.assertTrue(detail["capabilities"]["can_cancel"])
-        out = apis.request_cancellation(svc.name, "Moving provider", "End of Billing Cycle")
+        # Guards: short reason, wrong confirm, missing ack all rejected.
+        self.assertRaises(frappe.ValidationError, apis.request_cancellation, svc.name, "short", "End of Billing Cycle", svc.name, True)
+        self.assertRaises(frappe.ValidationError, apis.request_cancellation, svc.name, "Moving provider now", "End of Billing Cycle", "WRONG", True)
+        self.assertRaises(frappe.ValidationError, apis.request_cancellation, svc.name, "Moving provider now", "End of Billing Cycle", svc.name, False)
+        out = apis.request_cancellation(svc.name, "Moving provider now", "End of Billing Cycle", svc.name, True)
         self.assertTrue(out["requested"])
+        self.assertFalse(out["terminated"])
         self.assertEqual(frappe.db.get_value("Service", svc.name, "cancellation_mode"), "End of Billing Cycle")
-        # Status stays Active until staff acts; duplicate rejected.
+        # Status stays Active until end of cycle; duplicate rejected.
         self.assertEqual(frappe.db.get_value("Service", svc.name, "status"), "Active")
-        self.assertRaises(frappe.ValidationError, apis.request_cancellation, svc.name, "Again", "Immediate")
+        self.assertRaises(frappe.ValidationError, apis.request_cancellation, svc.name, "Moving provider now", "Immediate", svc.name, True)
+        # Withdraw works while scheduled.
+        frappe.set_user(user_name)
+        self.assertTrue(apis.withdraw_cancellation(svc.name)["withdrawn"])
+        self.assertEqual(frappe.db.get_value("Service", svc.name, "cancellation_requested"), 0)
+
+    def test_cancellation_immediate_auto_terminates(self):
+        cust_name, user_name = _make_customer()
+        plan = _plan()
+        _price(plan.name)
+        svc = frappe.get_doc(
+            {"doctype": "Service", "customer": cust_name, "hosting_plan": plan.name, "status": "Active", "recurring_amount": 5}
+        ).insert()
+        frappe.db.set_single_value("Lube Station Settings", "show_cancellation_link", 1)
+        frappe.set_user(user_name)
+        out = apis.request_cancellation(svc.name, "Closing project now", "Immediate", svc.name, True)
+        self.assertTrue(out["terminated"])
+        self.assertEqual(frappe.db.get_value("Service", svc.name, "status"), "Terminated")
+
+    def test_scheduled_cancellation_auto_terminates_past_due(self):
+        from frappe.utils import add_days, today
+
+        cust_name, user_name = _make_customer()
+        plan = _plan()
+        _price(plan.name)
+        svc = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": cust_name,
+                "hosting_plan": plan.name,
+                "status": "Active",
+                "recurring_amount": 5,
+                "next_due_date": add_days(today(), -1),
+            }
+        ).insert()
+        frappe.db.set_single_value("Lube Station Settings", "show_cancellation_link", 1)
+        frappe.set_user(user_name)
+        apis.request_cancellation(svc.name, "No longer needed here", "End of Billing Cycle", svc.name, True)
+        frappe.set_user("Administrator")
+        done = apis.process_scheduled_cancellations()
+        self.assertIn(svc.name, done["terminated"])
+        self.assertEqual(frappe.db.get_value("Service", svc.name, "status"), "Terminated")
 
     def test_cancellation_disabled_by_setting(self):
         cust_name, user_name = _make_customer()
@@ -172,7 +218,7 @@ class TestServiceActions(IntegrationTestCase):
         frappe.set_user(user_name)
         detail = apis.my_service_detail(svc.name)
         self.assertFalse(detail["capabilities"]["can_cancel"])
-        self.assertRaises(frappe.ValidationError, apis.request_cancellation, svc.name, "Moving provider", "Immediate")
+        self.assertRaises(frappe.ValidationError, apis.request_cancellation, svc.name, "Moving provider now", "Immediate", svc.name, True)
 
     def test_upgrade_options_and_request(self):
         cust_name, user_name = _make_customer()
@@ -190,11 +236,41 @@ class TestServiceActions(IntegrationTestCase):
         self.assertNotIn(small.name, [o["plan"] for o in options])
         detail = apis.my_service_detail(svc.name)
         self.assertTrue(detail["capabilities"]["can_upgrade"])
+        quote = apis.upgrade_quote(svc.name, big.name)
+        self.assertGreaterEqual(quote["total_due"], 0)
+        self.assertTrue(quote["payment_required"] or quote["total_due"] <= 0)
         out = apis.request_upgrade(svc.name, big.name)
-        order = frappe.get_doc("Order", out["order"])
-        self.assertEqual(order.status, "Pending Review")
-        self.assertIn(svc.name, order.customer_notes or "")
-        self.assertRaises(frappe.ValidationError, apis.request_upgrade, svc.name, small.name)
+        # Positive prorated balance -> unpaid upgrade invoice, no swap yet.
+        self.assertTrue(out.get("payment_required"))
+        self.assertTrue(out.get("invoice"))
+        inv = frappe.get_doc("Hosting Invoice", out["invoice"])
+        self.assertEqual(inv.status, "Unpaid")
+        self.assertEqual(frappe.db.get_value("Service", svc.name, "hosting_plan"), small.name)
+        # Paying the balance swaps the plan automatically.
+        inv.status = "Paid"
+        inv.save(ignore_permissions=True)
+        from lube_station.lube_provisioning.doctype.service.service import on_invoice_paid
+
+        frappe.set_user("Administrator")
+        on_invoice_paid(inv.name)
+        self.assertEqual(frappe.db.get_value("Service", svc.name, "hosting_plan"), big.name)
+        frappe.set_user(user_name)
+        self.assertRaises(frappe.ValidationError, apis.request_upgrade, svc.name, big.name)
+
+    def test_downgrade_no_balance_swaps_immediately(self):
+        cust_name, user_name = _make_customer()
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": f"DG {uuid.uuid4().hex[:6]}"}).insert()
+        cheap = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"DC {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
+        pricey = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"DP {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
+        _price(cheap.name, amount=5)
+        _price(pricey.name, amount=30)
+        svc = frappe.get_doc(
+            {"doctype": "Service", "customer": cust_name, "hosting_plan": pricey.name, "billing_cycle": "Monthly", "status": "Active", "recurring_amount": 30}
+        ).insert()
+        frappe.set_user(user_name)
+        out = apis.request_upgrade(svc.name, cheap.name)
+        self.assertTrue(out.get("applied"))
+        self.assertEqual(frappe.db.get_value("Service", svc.name, "hosting_plan"), cheap.name)
 
     def test_usage_section_links_snapshots_and_limits(self):
         from lube_station.lube_station.usage.collect import collect_usage

@@ -73,11 +73,32 @@ def _notify_invoice(doc, is_renewal: bool = False):
         pass
 
 
+def _is_upgrade_order(order_name: str) -> bool:
+    """Upgrade orders carry upgrade_of in a Hosting Plan snapshot."""
+    import json
+
+    try:
+        order = frappe.get_doc("Order", order_name)
+    except Exception:
+        return False
+    for item in order.items or []:
+        if item.get("item_type") != "Hosting Plan":
+            continue
+        try:
+            snap = json.loads(item.get("configuration_snapshot") or "{}")
+        except Exception:
+            continue
+        if snap.get("upgrade_of"):
+            return True
+    return False
+
+
 def _fulfill_order(inv):
     """WHMCS steps 9-10: services, domains, provisioning, welcome emails.
 
     Idempotent: create_from_order only adds missing hosting services,
     domain calls reuse existing Domain rows, notifications dedupe by key.
+    Upgrade invoices skip new-service creation; on_invoice_paid swaps plan.
     """
     from lube_station.lube_station.notifications.events import notify_customer
 
@@ -88,12 +109,16 @@ def _fulfill_order(inv):
         try:
             from lube_station.lube_provisioning.doctype.service.service import create_from_order, on_invoice_paid
 
-            if not frappe.db.exists("Service", {"order_ref": order_name}):
-                create_from_order(order_name)
-            on_invoice_paid(inv.name)
+            if _is_upgrade_order(order_name):
+                on_invoice_paid(inv.name)
+            else:
+                if not frappe.db.exists("Service", {"order_ref": order_name}):
+                    create_from_order(order_name)
+                on_invoice_paid(inv.name)
         except Exception:
             pass
-        _fulfill_domains(order_name, inv.customer)
+        if not _is_upgrade_order(order_name):
+            _fulfill_domains(order_name, inv.customer)
     for svc in frappe.get_all("Service", {"order_ref": order_name} if order_name else {"customer": inv.customer}, ["name", "hosting_plan"]):
         try:
             module = frappe.db.get_value("Hosting Plan", svc.hosting_plan, "provisioning_module")
