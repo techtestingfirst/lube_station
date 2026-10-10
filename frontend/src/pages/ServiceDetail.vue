@@ -531,12 +531,12 @@ onMounted(load)
           <div class="space-y-3">
             <p class="text-xs text-ink-gray-5">Immediate stops the service now. End of billing cycle keeps it active until {{ formatDate(detail.billing.next_due_date) }} and cancels automatically.</p>
             <FormControl v-model="cancelReason" type="textarea" label="Reason for cancellation (required, 10+ characters)" placeholder="Why are you cancelling? This helps us improve." />
-            <div class="flex gap-4 text-sm">
-              <label class="flex items-center gap-1.5"><input v-model="cancelMode" type="radio" value="End of Billing Cycle" /> End of billing cycle</label>
-              <label class="flex items-center gap-1.5"><input v-model="cancelMode" type="radio" value="Immediate" /> Immediate</label>
+            <div class="flex gap-4 text-sm text-ink-gray-8">
+              <label class="flex items-center gap-1.5 text-ink-gray-8"><input v-model="cancelMode" type="radio" value="End of Billing Cycle" class="h-4 w-4" /> End of billing cycle</label>
+              <label class="flex items-center gap-1.5 text-ink-gray-8"><input v-model="cancelMode" type="radio" value="Immediate" class="h-4 w-4" /> Immediate</label>
             </div>
             <FormControl v-model="cancelConfirm" :label="`Type ${id} to confirm`" :placeholder="id" />
-            <label class="flex items-start gap-2 text-sm text-ink-gray-6"><input v-model="cancelAck" type="checkbox" class="mt-1" /> I understand this will {{ cancelMode === 'Immediate' ? 'stop the service now' : 'schedule automatic cancellation' }} and data may be deleted.</label>
+            <label class="flex items-start gap-2 text-sm text-ink-gray-8"><input v-model="cancelAck" type="checkbox" class="mt-1 h-4 w-4" /> I understand this will {{ cancelMode === 'Immediate' ? 'stop the service now' : 'schedule automatic cancellation' }} and data may be deleted.</label>
             <p v-if="actionMsg && showCancel" class="text-xs text-ink-gray-6">{{ actionMsg }}</p>
           </div>
         </template>
@@ -552,19 +552,19 @@ onMounted(load)
             <label
               v-for="o in detail.upgrade_options"
               :key="o.plan"
-              class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-outline-gray-1 px-3 py-2 text-sm"
+              class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-outline-gray-2 bg-surface-white px-3 py-2 text-sm text-ink-gray-8"
             >
-              <span class="flex items-center gap-2"><input v-model="upgradePlan" type="radio" :value="o.plan" @change="pickUpgrade(o.plan)" />{{ o.plan_name }}</span>
-              <span class="text-ink-gray-6">{{ formatMoney(o.recurring_amount) }}/{{ detail.billing.billing_cycle }}</span>
+              <span class="flex items-center gap-2 font-medium text-ink-gray-9"><input v-model="upgradePlan" type="radio" :value="o.plan" class="h-4 w-4" @change="pickUpgrade(o.plan)" />{{ o.plan_name }}</span>
+              <span class="font-medium text-ink-gray-8">{{ formatMoney(o.recurring_amount) }}/{{ detail.billing.billing_cycle }}</span>
             </label>
-            <div v-if="quoting" class="text-xs text-ink-gray-5">Calculating prorated balance...</div>
-            <div v-if="upgradeQuote" class="rounded-lg bg-surface-gray-2 px-3 py-2 text-xs text-ink-gray-6">
-              <div class="flex justify-between"><span>Current</span><span>{{ formatMoney(upgradeQuote.old_recurring) }}</span></div>
-              <div class="flex justify-between"><span>New</span><span>{{ formatMoney(upgradeQuote.new_recurring) }}</span></div>
-              <div class="flex justify-between"><span>Remaining {{ upgradeQuote.remaining_days }}/{{ upgradeQuote.cycle_days }} days</span><span>{{ formatMoney(upgradeQuote.prorated_diff) }}</span></div>
-              <div class="flex justify-between"><span>Setup difference</span><span>{{ formatMoney(upgradeQuote.setup_diff) }}</span></div>
-              <div class="flex justify-between font-medium text-ink-gray-8"><span>Balance due now</span><span>{{ formatMoney(upgradeQuote.total_due) }}</span></div>
-              <p class="mt-1">{{ upgradeQuote.payment_required ? 'Plan swaps automatically once this balance is paid.' : 'No payment needed — plan swaps immediately on confirm.' }}</p>
+            <div v-if="quoting" class="text-xs text-ink-gray-6">Calculating prorated balance...</div>
+            <div v-if="upgradeQuote" class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-xs">
+              <div class="flex justify-between"><span class="text-ink-gray-6">Current</span><span class="font-medium text-ink-gray-9">{{ formatMoney(upgradeQuote.old_recurring) }}</span></div>
+              <div class="flex justify-between"><span class="text-ink-gray-6">New</span><span class="font-medium text-ink-gray-9">{{ formatMoney(upgradeQuote.new_recurring) }}</span></div>
+              <div class="flex justify-between"><span class="text-ink-gray-6">Remaining {{ upgradeQuote.remaining_days }}/{{ upgradeQuote.cycle_days }} days</span><span class="font-medium text-ink-gray-9">{{ formatMoney(upgradeQuote.prorated_diff) }}</span></div>
+              <div class="flex justify-between"><span class="text-ink-gray-6">Setup difference</span><span class="font-medium text-ink-gray-9">{{ formatMoney(upgradeQuote.setup_diff) }}</span></div>
+              <div class="flex justify-between font-medium"><span class="text-ink-gray-9">Balance due now</span><span class="text-ink-gray-9">{{ formatMoney(upgradeQuote.total_due) }}</span></div>
+              <p class="mt-1 text-ink-gray-7">{{ upgradeQuote.payment_required ? 'Plan swaps automatically once this balance is paid.' : 'No payment needed — plan swaps immediately on confirm.' }}</p>
             </div>
             <p v-if="actionMsg && showUpgrade" class="text-xs text-ink-gray-6">{{ actionMsg }}</p>
           </div>
