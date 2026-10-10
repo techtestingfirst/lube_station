@@ -513,8 +513,8 @@ onMounted(load)
         <p v-if="actionMsg" class="mt-2 text-xs text-ink-gray-6">{{ actionMsg }}</p>
       </div>
 
-      <Dialog v-model="showPw" :options="{ title: 'Change password' }">
-        <template #body-content>
+      <Dialog v-model="showPw" title="Change password">
+        <template #default>
           <div class="space-y-3">
             <FormControl v-model="pw1" type="password" label="New password" placeholder="10+ characters, letters and numbers" />
             <FormControl v-model="pw2" type="password" label="Confirm password" placeholder="Repeat the new password" />
@@ -526,8 +526,8 @@ onMounted(load)
         </template>
       </Dialog>
 
-      <Dialog v-model="showCancel" :options="{ title: 'Request cancellation' }">
-        <template #body-content>
+      <Dialog v-model="showCancel" title="Request cancellation">
+        <template #default>
           <div class="space-y-3">
             <p class="text-xs text-ink-gray-5">Immediate stops the service now. End of billing cycle keeps it active until {{ formatDate(detail.billing.next_due_date) }} and cancels automatically.</p>
             <FormControl v-model="cancelReason" type="textarea" label="Reason for cancellation (required, 10+ characters)" placeholder="Why are you cancelling? This helps us improve." />
@@ -537,6 +537,7 @@ onMounted(load)
             </div>
             <FormControl v-model="cancelConfirm" :label="`Type ${id} to confirm`" :placeholder="id" />
             <label class="flex items-start gap-2 text-sm text-ink-gray-6"><input v-model="cancelAck" type="checkbox" class="mt-1" /> I understand this will {{ cancelMode === 'Immediate' ? 'stop the service now' : 'schedule automatic cancellation' }} and data may be deleted.</label>
+            <p v-if="actionMsg && showCancel" class="text-xs text-ink-gray-6">{{ actionMsg }}</p>
           </div>
         </template>
         <template #actions>
@@ -545,8 +546,8 @@ onMounted(load)
         </template>
       </Dialog>
 
-      <Dialog v-model="showUpgrade" :options="{ title: 'Upgrade / Downgrade' }">
-        <template #body-content>
+      <Dialog v-model="showUpgrade" title="Upgrade / Downgrade">
+        <template #default>
           <div v-if="detail.upgrade_options.length" class="space-y-2">
             <label
               v-for="o in detail.upgrade_options"
@@ -565,6 +566,7 @@ onMounted(load)
               <div class="flex justify-between font-medium text-ink-gray-8"><span>Balance due now</span><span>{{ formatMoney(upgradeQuote.total_due) }}</span></div>
               <p class="mt-1">{{ upgradeQuote.payment_required ? 'Plan swaps automatically once this balance is paid.' : 'No payment needed — plan swaps immediately on confirm.' }}</p>
             </div>
+            <p v-if="actionMsg && showUpgrade" class="text-xs text-ink-gray-6">{{ actionMsg }}</p>
           </div>
           <p v-else class="text-sm text-ink-gray-5">No upgrade options for this plan.</p>
         </template>
@@ -574,8 +576,8 @@ onMounted(load)
         </template>
       </Dialog>
 
-      <Dialog v-model="showRescue" :options="{ title: 'Boot into rescue mode?' }">
-        <template #body-content>
+      <Dialog v-model="showRescue" title="Boot into rescue mode?">
+        <template #default>
           <p class="text-sm text-ink-gray-6">Rescue mode reboots <span class="font-medium">{{ rescueTarget }}</span> into a recovery environment for repair. Running services will go down until you exit rescue mode.</p>
         </template>
         <template #actions>
@@ -584,8 +586,8 @@ onMounted(load)
         </template>
       </Dialog>
 
-      <Dialog v-model="showRdns" :options="{ title: 'Set reverse DNS' }">
-        <template #body-content>
+      <Dialog v-model="showRdns" title="Set reverse DNS">
+        <template #default>
           <div class="space-y-3">
             <FormControl v-model="rdnsHost" label="Hostname" placeholder="host.example.com" />
             <p class="text-xs text-ink-gray-5">Staff reviews the request before the PTR record changes.</p>
@@ -597,8 +599,8 @@ onMounted(load)
         </template>
       </Dialog>
 
-      <Dialog v-model="showRebuild" :options="{ title: 'Reinstall server?' }">
-        <template #body-content>
+      <Dialog v-model="showRebuild" title="Reinstall server?">
+        <template #default>
           <p class="text-sm text-ink-gray-6">Reinstall wipes <span class="font-medium">{{ rebuildTarget }}</span> and rebuilds it from the plan image. Back up data first.</p>
         </template>
         <template #actions>
@@ -607,8 +609,8 @@ onMounted(load)
         </template>
       </Dialog>
 
-      <Dialog v-model="showRestore" :options="{ title: 'Restore snapshot' }">
-        <template #body-content>
+      <Dialog v-model="showRestore" title="Restore snapshot">
+        <template #default>
           <div v-if="snapsFor(restoreInstance).length" class="space-y-2">
             <label
               v-for="s in snapsFor(restoreInstance)"
