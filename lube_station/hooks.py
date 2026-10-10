@@ -11,15 +11,15 @@ app_license = "mit"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "lube_station",
-# 		"logo": "/assets/lube_station/logo.png",
-# 		"title": "Lube Station",
-# 		"route": "/lube_station",
-# 		"has_permission": "lube_station.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "lube_station",
+		"logo": "/assets/lube_station/images/logo.svg",
+		"title": "Lube Station",
+		"route": "/lube_station",
+		"has_permission": "lube_station.lube_station.permissions.has_app_permission",
+	}
+]
 
 # Includes in <head>
 # ------------------

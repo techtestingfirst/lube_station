@@ -43,3 +43,9 @@ def has_customer_document_permission(doc, user=None) -> bool:
 
 
 hosting_invoice_query = customer_document_query("Hosting Invoice")
+
+
+def has_app_permission() -> bool:
+    """App tile gate for /apps screen: all logged-in users, like storefront."""
+    user = frappe.session.user
+    return bool(user and user != "Guest")
