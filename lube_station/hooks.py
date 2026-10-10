@@ -16,7 +16,7 @@ add_to_apps_screen = [
 		"name": "lube_station",
 		"logo": "/assets/lube_station/images/logo.svg",
 		"title": "Lube Station",
-		"route": "/app/lube-station",
+		"route": "/app/lube-home",
 		"has_permission": "lube_station.lube_station.permissions.has_app_permission",
 	}
 ]
