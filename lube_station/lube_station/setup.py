@@ -151,7 +151,7 @@ DASHBOARD_CHARTS = [
         "document_type": "Hosting Invoice",
         "based_on": "creation",
         "value_based_on": "total_due",
-        "timespan": "Last Month",
+        "timespan": "Last Week",
         "time_interval": "Daily",
         "type": "Line",
         "filters_json": "[]",
@@ -163,7 +163,7 @@ DASHBOARD_CHARTS = [
         "chart_type": "Count",
         "document_type": "Hosting Customer",
         "based_on": "creation",
-        "timespan": "Last Month",
+        "timespan": "Last Week",
         "time_interval": "Daily",
         "type": "Bar",
         "filters_json": "[]",
@@ -175,7 +175,7 @@ DASHBOARD_CHARTS = [
         "chart_type": "Count",
         "document_type": "Service",
         "based_on": "creation",
-        "timespan": "Last Month",
+        "timespan": "Last Week",
         "time_interval": "Daily",
         "type": "Bar",
         "filters_json": "[]",
@@ -187,7 +187,7 @@ DASHBOARD_CHARTS = [
         "chart_type": "Count",
         "document_type": "Hosting Invoice",
         "based_on": "creation",
-        "timespan": "Last Month",
+        "timespan": "Last Week",
         "time_interval": "Daily",
         "type": "Bar",
         "filters_json": "[]",
@@ -204,7 +204,17 @@ def ensure_dashboard():
         data = {k: v for k, v in card.items() if k != "name"}
         frappe.get_doc({"doctype": "Number Card", "is_public": 1, **data}).insert(ignore_permissions=True)
     for chart in DASHBOARD_CHARTS:
-        if frappe.db.exists("Dashboard Chart", chart["name"]):
+        name = chart["name"]
+        if frappe.db.exists("Dashboard Chart", name):
+            doc = frappe.get_doc("Dashboard Chart", name)
+            updated = False
+            for key in ("timespan", "time_interval", "type", "chart_type", "based_on", "value_based_on",
+                        "group_by_based_on", "group_by_type", "filters_json", "module"):
+                if doc.get(key) != chart.get(key):
+                    doc.set(key, chart.get(key))
+                    updated = True
+            if updated:
+                doc.save(ignore_permissions=True)
             continue
         frappe.get_doc({"doctype": "Dashboard Chart", "is_public": 1, **chart}).insert(ignore_permissions=True)
     # Sync the staff command-center workspace file into the DB.
