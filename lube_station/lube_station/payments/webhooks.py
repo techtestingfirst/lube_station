@@ -14,7 +14,12 @@ def _mark_paid(invoice: str):
     if inv.status != "Paid":
         inv.status = "Paid"
         inv.save(ignore_permissions=True)
-    _unsuspend_services(inv)
+    try:
+        from lube_station.lube_billing.doctype.hosting_invoice.hosting_invoice import _fulfill_order
+
+        _fulfill_order(inv)
+    except Exception:
+        _unsuspend_services(inv)
 
 
 def _unsuspend_services(inv):

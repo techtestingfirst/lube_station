@@ -71,7 +71,8 @@ def _fulfill_order(inv):
         try:
             from lube_station.lube_provisioning.doctype.service.service import create_from_order, on_invoice_paid
 
-            create_from_order(order_name)
+            if not frappe.db.exists("Service", {"order_ref": order_name}):
+                create_from_order(order_name)
             on_invoice_paid(inv.name)
         except Exception:
             pass

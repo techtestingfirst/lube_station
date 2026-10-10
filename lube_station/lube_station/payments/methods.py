@@ -29,6 +29,12 @@ def charge_saved_method(payment_method: str, invoice: str) -> dict:
     ).insert(ignore_permissions=True)
     inv.status = "Paid"
     inv.save(ignore_permissions=True)
+    from lube_station.lube_billing.doctype.hosting_invoice.hosting_invoice import _fulfill_order
+
+    try:
+        _fulfill_order(inv)
+    except Exception:
+        pass
     return {"transaction": txn.name, "invoice": inv.name}
 
 
