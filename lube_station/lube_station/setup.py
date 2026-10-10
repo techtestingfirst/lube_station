@@ -4,6 +4,96 @@ import json
 
 import frappe
 
+# (schema_name, product_type, flags, requirement fields).
+# Contract: lube_station/tests/test_product_schemas.py. 11 types per spec.
+PRODUCT_TYPE_SCHEMAS = [
+    (
+        "Shared Hosting Default",
+        "Shared Hosting",
+        {"requires_domain": 1},
+        [{"field_key": "domain", "label": "Domain", "field_type": "Text", "required": 1}],
+    ),
+    (
+        "Reseller Default",
+        "Reseller",
+        {"requires_domain": 1},
+        [{"field_key": "domain", "label": "Domain", "field_type": "Text", "required": 1}],
+    ),
+    (
+        "VPS Default",
+        "VPS",
+        {"requires_hostname": 1, "requires_root_password": 1, "requires_os": 1, "requires_location": 1},
+        [
+            {"field_key": "hostname", "label": "Hostname", "field_type": "Text", "required": 1},
+            {"field_key": "os", "label": "OS", "field_type": "Select", "required": 1},
+            {"field_key": "location", "label": "Location", "field_type": "Text", "required": 0},
+        ],
+    ),
+    (
+        "Dedicated Server Default",
+        "Dedicated Server",
+        {"requires_hostname": 1, "requires_root_password": 1, "requires_os": 1, "requires_location": 1},
+        [
+            {"field_key": "hostname", "label": "Hostname", "field_type": "Text", "required": 1},
+            {"field_key": "os", "label": "OS", "field_type": "Select", "required": 1},
+        ],
+    ),
+    (
+        "Cloud Default",
+        "Cloud",
+        {"requires_hostname": 1, "requires_os": 1, "requires_location": 1},
+        [
+            {"field_key": "hostname", "label": "Hostname", "field_type": "Text", "required": 1},
+            {"field_key": "os", "label": "OS", "field_type": "Select", "required": 1},
+        ],
+    ),
+    (
+        "Email Hosting Default",
+        "Email Hosting",
+        {"requires_domain": 1},
+        [{"field_key": "domain", "label": "Domain", "field_type": "Text", "required": 1}],
+    ),
+    (
+        "Website Builder Default",
+        "Website Builder",
+        {"requires_domain": 1},
+        [{"field_key": "domain", "label": "Domain", "field_type": "Text", "required": 1}],
+    ),
+    (
+        "SSL Default",
+        "SSL",
+        {},
+        [
+            {"field_key": "common_name", "label": "Common Name", "field_type": "Text", "required": 1},
+            {"field_key": "approver_email", "label": "Approver Email", "field_type": "Text", "required": 1},
+        ],
+    ),
+    ("Backup Addon Default", "Backup Addon", {}, []),
+    (
+        "Migration Service Default",
+        "Migration Service",
+        {},
+        [{"field_key": "source_host", "label": "Source Host", "field_type": "Text", "required": 1}],
+    ),
+    ("Downloadable Product Default", "Downloadable Product", {}, []),
+]
+
+
+def ensure_product_schemas():
+    """Seed the 11 default type schemas. Never overwrites existing rows."""
+    for schema_name, product_type, flags, fields in PRODUCT_TYPE_SCHEMAS:
+        if frappe.db.exists("Product Type Schema", schema_name):
+            continue
+        frappe.get_doc(
+            {
+                "doctype": "Product Type Schema",
+                "schema_name": schema_name,
+                "product_type": product_type,
+                **flags,
+                "fields": fields,
+            }
+        ).insert(ignore_permissions=True)
+
 
 PRINT_FORMATS = [
     ("lube_station", "print_format", "hosting_invoice", "hosting_invoice.json"),
@@ -252,4 +342,5 @@ def ensure_all():
     ensure_roles()
     ensure_settings()
     ensure_print_formats()
+    ensure_product_schemas()
     ensure_dashboard()
