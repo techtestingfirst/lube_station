@@ -16,6 +16,7 @@ const routes = [
   { path: '/invoices', component: () => import('./pages/Invoices.vue') },
   { path: '/pay/:invoice', component: () => import('./pages/Payment.vue') },
   { path: '/services', component: () => import('./pages/Services.vue') },
+  { path: '/service/:service', component: () => import('./pages/ServiceDetail.vue') },
   { path: '/vps', component: () => import('./pages/Vps.vue') },
   { path: '/dedicated', component: () => import('./pages/Dedicated.vue') },
   { path: '/domains', component: () => import('./pages/Domains.vue') },

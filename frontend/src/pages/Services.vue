@@ -49,13 +49,16 @@ onMounted(load)
           class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3 sm:flex-nowrap"
         >
           <div class="min-w-0 flex-1">
-            <div class="truncate text-sm font-medium text-ink-gray-8">{{ s.name }}</div>
+            <RouterLink :to="`/service/${s.name}`" class="truncate text-sm font-medium text-ink-gray-8 hover:underline">{{ s.name }}</RouterLink>
             <div class="mt-0.5 truncate text-sm text-ink-gray-5">{{ s.hosting_plan }}</div>
           </div>
           <div class="w-28 shrink-0"><StatusBadge :status="s.status" /></div>
           <div class="w-36 shrink-0 sm:text-right">
             <div class="text-xs text-ink-gray-5">Next due</div>
             <div class="text-sm text-ink-gray-8">{{ formatDate(s.next_due_date) }}</div>
+          </div>
+          <div class="flex shrink-0 gap-2">
+            <RouterLink :to="`/service/${s.name}`"><Button label="View" size="sm" /></RouterLink>
           </div>
         </div>
       </div>
