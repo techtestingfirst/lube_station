@@ -368,3 +368,57 @@ def ensure_all():
     ensure_product_schemas()
     ensure_email_templates()
     ensure_dashboard()
+    ensure_sso_flags()
+    ensure_service_servers()
+
+
+def ensure_sso_flags():
+    """One-way enablement: MVP panels support single-click login."""
+    if not frappe.db.exists("DocType", "Provisioning Adapter"):
+        return
+    for name in ("cPanel / WHM", "Plesk", "DirectAdmin"):
+        try:
+            if frappe.db.exists("Provisioning Adapter", name):
+                frappe.db.set_value("Provisioning Adapter", name, "supports_sso", 1)
+        except Exception:
+            continue
+
+
+def ensure_service_servers(limit: int = 500):
+    """Backfill server + username for services created before assignment.
+
+    Idempotent: fills null/empty values and repairs panel mismatches
+    (server panel != module panel). New orders are covered in
+    create_from_order; this heals demo/history data so the panel-login
+    button has something to work with.
+    """
+    from lube_station.lube_provisioning.doctype.service.service import _make_username, _module_panel, _pick_server_for_plan
+
+    try:
+        rows = frappe.get_all(
+            "Service",
+            {},
+            ["name", "hosting_plan", "primary_domain", "status", "server", "svc_username"],
+            limit=limit,
+        )
+    except Exception:
+        return
+    for r in rows:
+        try:
+            product_type = frappe.db.get_value("Hosting Plan", r.get("hosting_plan"), "product_type")
+            want_user = product_type in ("Shared Hosting", "Reseller", "Email Hosting", "Website Builder")
+            server = (r.get("server") or "").strip()
+            needs_server = not server
+            if server and want_user:
+                want_panel = _module_panel(r.get("hosting_plan"))
+                have_panel = frappe.db.get_value("Server", server, "control_panel")
+                if want_panel and have_panel and want_panel != have_panel:
+                    needs_server = True
+            if needs_server:
+                picked = _pick_server_for_plan(r.get("hosting_plan"))
+                if picked:
+                    frappe.db.set_value("Service", r.name, "server", picked)
+            if want_user and not (r.get("svc_username") or "").strip():
+                frappe.db.set_value("Service", r.name, "svc_username", _make_username(r.get("primary_domain")))
+        except Exception:
+            continue

@@ -312,6 +312,16 @@ async function confirmRescue() {
   else await dedicatedStep(rescueTarget.value, 'rescue')
 }
 
+function ssoDisabledReason(): string {
+  const d = detail.value
+  if (!d) return 'Panel login unavailable'
+  if (d.service.status !== 'Active') return 'Panel login is available for Active services only'
+  if (!d.service.server) return 'Server not assigned yet — provisioning will enable login'
+  if (!d.service.svc_username) return 'Panel account not ready yet — provisioning will enable login'
+  if (!d.panel_url && !d.management.buttons.length) return 'Panel login is not supported for this product'
+  return 'Single sign-on not ready — use the panel link above'
+}
+
 function usagePct(used: number, limit: number): number {
   if (!limit || limit <= 0) return 0
   return Math.min(100, Math.round((used / limit) * 100))
@@ -520,12 +530,14 @@ onMounted(load)
         <p class="mt-1 text-xs text-ink-gray-5">{{ detail.management_note }}</p>
         <div class="mt-3 flex flex-wrap gap-2">
           <Button v-if="detail.capabilities.can_sso" label="Login to hosting panel" size="sm" variant="solid" :loading="actionBusy === 'sso'" @click="panelLogin" />
+          <Button v-else label="Login to hosting panel" size="sm" variant="subtle" disabled :title="ssoDisabledReason()" />
           <Button v-if="detail.capabilities.can_change_password" label="Change password" size="sm" @click="showPw = true" />
           <Button v-if="detail.capabilities.can_upgrade" label="Upgrade / Downgrade" size="sm" variant="subtle" @click="showUpgrade = true" />
           <Button v-if="detail.capabilities.can_cancel" label="Request cancellation" size="sm" variant="subtle" @click="showCancel = true" />
           <Button v-if="detail.service.cancellation_requested && detail.service.status === 'Active'" label="Withdraw cancellation" size="sm" variant="subtle" :loading="actionBusy === 'withdraw'" @click="withdrawCancellation" />
         </div>
         <p v-if="detail.service.cancellation_requested" class="mt-2 text-xs text-ink-gray-5">Cancellation {{ detail.service.cancellation_mode || 'requested' }} — {{ detail.service.status === 'Active' ? 'service stays active until it executes. Withdraw above to keep it.' : 'executed.' }}</p>
+        <p v-if="!detail.capabilities.can_sso" class="mt-2 text-xs text-ink-gray-5">{{ ssoDisabledReason() }}.</p>
         <p v-if="actionMsg" class="mt-2 text-xs text-ink-gray-6">{{ actionMsg }}</p>
       </div>
 

@@ -117,9 +117,74 @@ def create_from_order(order: str) -> dict:
             # WHMCS parity: the ordered domain (or free subdomain) names the
             # service for provisioning (cPanel account, hostname, zone).
             kwargs["primary_domain"] = attached
+        server = _pick_server_for_plan(plan.name)
+        if server:
+            kwargs["server"] = server
+        username = _make_username(attached)
+        if username and (plan.get("product_type") in ("Shared Hosting", "Reseller", "Email Hosting", "Website Builder")):
+            kwargs["svc_username"] = username
         svc = frappe.get_doc(kwargs).insert(ignore_permissions=True)
         made.append(svc.name)
     return {"services": made}
+
+
+def _pick_server_for_plan(plan_name: str | None) -> str | None:
+    """Server from the plan's group fill strategy. None when unassigned.
+
+    Prefers servers whose control_panel matches the plan's module so SSO
+    and password calls hit the right API. Falls back to any group server.
+    """
+    try:
+        group = frappe.db.get_value("Hosting Plan", plan_name, "server_group")
+        if not group or not frappe.db.exists("Server Group", group):
+            return None
+        panel = _module_panel(plan_name)
+        entries = frappe.get_all("Server Group Entry", {"parent": group}, pluck="server")
+        entries = [s for s in entries if s]
+        if not entries:
+            return None
+        if panel:
+            matching = [s for s in entries if frappe.db.get_value("Server", s, "control_panel") == panel]
+            if matching:
+                entries = matching
+        strategy = frappe.db.get_value("Server Group", group, "fill_strategy") or "Round Robin"
+        if strategy == "Least Full":
+            rows = frappe.get_all("Server", {"name": ["in", entries]}, ["name", "max_accounts", "active_accounts"])
+            rows.sort(key=lambda r: ((r.get("active_accounts") or 0) / max(r.get("max_accounts") or 1, 1), r.get("name") or ""))
+            return rows[0].get("name") if rows else entries[0]
+        if strategy == "Manual":
+            return sorted(entries)[0]
+        key = f"sg-rr:{group}:{panel or 'any'}"
+        idx = (frappe.cache().get_value(key) or 0) % len(entries)
+        frappe.cache().set_value(key, idx + 1)
+        return sorted(entries)[idx]
+    except Exception:
+        return None
+
+
+def _module_panel(plan_name: str | None) -> str | None:
+    """Control panel of the plan's provisioning module, if any."""
+    try:
+        module = frappe.db.get_value("Hosting Plan", plan_name, "provisioning_module")
+        if not module or not frappe.db.exists("Provisioning Module", module):
+            return None
+        return frappe.db.get_value("Provisioning Module", module, "control_panel") or None
+    except Exception:
+        return None
+
+
+def _make_username(domain: str | None) -> str | None:
+    """Panel-safe username from the domain label, else random. Max 8 chars."""
+    import random
+    import re
+    import string
+
+    label = re.sub(r"[^a-z0-9]", "", (domain or "").split(".")[0].lower())
+    label = re.sub(r"^[0-9]+", "", label)
+    if len(label) >= 3:
+        return label[:8]
+    suffix = "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
+    return f"u{suffix}"[:8]
 
 
 @frappe.whitelist(methods=["POST"])
