@@ -1,27 +1,137 @@
 {
-  "name": "Provisioning Adapter",
-  "module": "Lube Provisioning",
-  "doctype": "DocType",
-  "engine": "InnoDB",
-  "autoname": "field:adapter_name",
-  "naming_rule": "By fieldname",
-  "track_changes": 1,
-  "fields": [
-    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Adapter Details"},
-    {"fieldname": "adapter_name", "fieldtype": "Data", "label": "Adapter Name", "reqd": 1, "unique": 1},
-    {"fieldname": "vendor_name", "fieldtype": "Select", "label": "Vendor Name", "options": "cPanel\nPlesk\nDirectAdmin\nVirtualizor\nProxmox\nHetzner\nAWS\nCloudflare\nCustom", "reqd": 1},
-    {"fieldname": "class_path", "fieldtype": "Data", "label": "Class Path", "description": "Leave empty for known vendors, it fills on save. Enter a path only for custom code.", "depends_on": "eval:doc.vendor_name=='Custom'||!doc.class_path"},
-    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
-    {"fieldname": "api_mode", "fieldtype": "Select", "label": "API Mode", "options": "\nREST\nXML API\nJSON API\nHTTP API\nWHM API\nEPP\nCustom", "description": "Protocol the vendor panel API speaks."},
-    {"fieldname": "section_break_1", "fieldtype": "Section Break", "label": "Lifecycle Methods"},
-    {"fieldname": "lifecycle_methods", "fieldtype": "Small Text", "label": "Lifecycle Methods", "description": "Auto-filled from the adapter code on save.", "read_only": 1},
-    {"fieldname": "section_break_2", "fieldtype": "Section Break", "label": "Capabilities and Status"},
-    {"fieldname": "supports_usage", "fieldtype": "Check", "label": "Supports Usage", "default": "0"},
-    {"fieldname": "supports_resize", "fieldtype": "Check", "label": "Supports Resize", "default": "0"},
-    {"fieldname": "supports_sso", "fieldtype": "Check", "label": "Supports SSO", "default": "0"},
-    {"fieldname": "supports_change_plan", "fieldtype": "Check", "label": "Supports Change Plan", "default": "0"},
-    {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "0"}
-  ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}],
-  "modified": "2026-10-10 17:30:00.000000"
+ "actions": [],
+ "autoname": "field:adapter_name",
+ "creation": "2026-10-10 16:50:32.112505",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_0",
+  "adapter_name",
+  "vendor_name",
+  "column_break_0",
+  "class_path",
+  "api_mode",
+  "section_break_1",
+  "lifecycle_methods",
+  "section_break_2",
+  "active",
+  "supports_sso",
+  "column_break_opcg",
+  "supports_usage",
+  "supports_resize",
+  "supports_change_plan"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_0",
+   "fieldtype": "Section Break",
+   "label": "Adapter Details"
+  },
+  {
+   "fieldname": "adapter_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Adapter Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "vendor_name",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Vendor Name",
+   "options": "cPanel\nPlesk\nDirectAdmin\nVirtualizor\nProxmox\nHetzner\nAWS\nCloudflare\nCustom",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.vendor_name=='Custom'||!doc.class_path",
+   "description": "Leave empty for known vendors, it fills on save. Enter a path only for custom code.",
+   "fieldname": "class_path",
+   "fieldtype": "Data",
+   "label": "Class Path"
+  },
+  {
+   "fieldname": "column_break_0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Protocol the vendor panel API speaks.",
+   "fieldname": "api_mode",
+   "fieldtype": "Select",
+   "label": "API Mode",
+   "options": "\nREST\nXML API\nJSON API\nHTTP API\nWHM API\nEPP\nCustom"
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break",
+   "label": "Lifecycle Methods"
+  },
+  {
+   "description": "Auto-filled from the adapter code on save.",
+   "fieldname": "lifecycle_methods",
+   "fieldtype": "Small Text",
+   "label": "Lifecycle Methods",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break",
+   "label": "Capabilities and Status"
+  },
+  {
+   "default": "0",
+   "fieldname": "supports_usage",
+   "fieldtype": "Check",
+   "label": "Supports Usage"
+  },
+  {
+   "default": "0",
+   "fieldname": "supports_resize",
+   "fieldtype": "Check",
+   "label": "Supports Resize"
+  },
+  {
+   "default": "0",
+   "fieldname": "supports_sso",
+   "fieldtype": "Check",
+   "label": "Supports SSO"
+  },
+  {
+   "default": "0",
+   "fieldname": "supports_change_plan",
+   "fieldtype": "Check",
+   "label": "Supports Change Plan"
+  },
+  {
+   "default": "0",
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "label": "Active"
+  },
+  {
+   "fieldname": "column_break_opcg",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-10 17:16:19.867941",
+ "modified_by": "Administrator",
+ "module": "Lube Provisioning",
+ "name": "Provisioning Adapter",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
 }

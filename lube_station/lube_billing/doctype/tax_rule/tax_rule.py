@@ -15,6 +15,7 @@ class TaxRule(Document):
         active: DF.Check
         country: DF.Link | None
         eligible_groups: DF.Table[TaxEligibleGroup]
+        level: DF.Literal["1", "2"]
         percentage: DF.Float
         state: DF.Data | None
         tax_name: DF.Data

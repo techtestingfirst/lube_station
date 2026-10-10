@@ -4,6 +4,27 @@ from frappe.utils import add_to_date, now_datetime, today
 
 
 class RegisteredDomain(Document):
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
+
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        from frappe.types import DF
+
+        auto_renew: DF.Check
+        customer: DF.Link | None
+        domain_name: DF.Data
+        expiry_date: DF.Date | None
+        last_checked: DF.Datetime | None
+        nameservers: DF.SmallText | None
+        premium_price: DF.Currency
+        registrar: DF.Link | None
+        registration_date: DF.Date | None
+        status: DF.Literal["Available", "Taken", "Premium", "Unknown", "Registered", "Expired", "Transferred"]
+        whois_privacy: DF.Check
+    # end: auto-generated types
+
     pass
 
 

@@ -22,6 +22,7 @@ class HostingPlan(Document):
         qty_available: DF.Int
         server_group: DF.Link | None
         stock_control: DF.Check
+        taxable: DF.Check
         welcome_email_template: DF.Link | None
     # end: auto-generated types
 

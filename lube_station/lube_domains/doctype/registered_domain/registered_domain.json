@@ -1,27 +1,134 @@
 {
-  "name": "Registered Domain",
-  "module": "Lube Domains",
-  "doctype": "DocType",
-  "engine": "InnoDB",
-  "autoname": "field:domain_name",
-  "naming_rule": "By fieldname",
-  "track_changes": 1,
-  "modified": "2026-10-10 17:30:00.000000",
-  "fields": [
-    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Domain Details"},
-    {"fieldname": "domain_name", "fieldtype": "Data", "label": "Domain Name", "reqd": 1, "unique": 1},
-    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer"},
-    {"fieldname": "registrar", "fieldtype": "Link", "label": "Registrar", "options": "Registrar Adapter"},
-    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
-    {"fieldname": "registration_date", "fieldtype": "Date", "label": "Registration Date"},
-    {"fieldname": "expiry_date", "fieldtype": "Date", "label": "Expiry Date"},
-    {"fieldname": "auto_renew", "fieldtype": "Check", "label": "Auto Renew", "default": "0"},
-    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Available\nTaken\nPremium\nUnknown\nRegistered\nExpired\nTransferred", "default": "Unknown"},
-    {"fieldname": "section_break_1", "fieldtype": "Section Break", "label": "Nameservers & Settings"},
-    {"fieldname": "nameservers", "fieldtype": "Small Text", "label": "Nameservers"},
-    {"fieldname": "whois_privacy", "fieldtype": "Check", "label": "WHOIS Privacy", "default": "0"},
-    {"fieldname": "last_checked", "fieldtype": "Datetime", "label": "Last Checked"},
-    {"fieldname": "premium_price", "fieldtype": "Currency", "label": "Premium Price", "default": "0"}
-  ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}, {"role": "Customer", "read": 1}]
+ "actions": [],
+ "autoname": "field:domain_name",
+ "creation": "2026-10-10 16:50:25.648224",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_0",
+  "domain_name",
+  "customer",
+  "registrar",
+  "column_break_0",
+  "registration_date",
+  "expiry_date",
+  "auto_renew",
+  "status",
+  "section_break_1",
+  "whois_privacy",
+  "nameservers",
+  "column_break_wjdm",
+  "last_checked",
+  "premium_price"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_0",
+   "fieldtype": "Section Break",
+   "label": "Domain Details"
+  },
+  {
+   "fieldname": "domain_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Domain Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Hosting Customer"
+  },
+  {
+   "fieldname": "registrar",
+   "fieldtype": "Link",
+   "label": "Registrar",
+   "options": "Registrar Adapter"
+  },
+  {
+   "fieldname": "column_break_0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "registration_date",
+   "fieldtype": "Date",
+   "label": "Registration Date"
+  },
+  {
+   "fieldname": "expiry_date",
+   "fieldtype": "Date",
+   "label": "Expiry Date"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_renew",
+   "fieldtype": "Check",
+   "label": "Auto Renew"
+  },
+  {
+   "default": "Unknown",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Available\nTaken\nPremium\nUnknown\nRegistered\nExpired\nTransferred"
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break",
+   "label": "Nameservers & Settings"
+  },
+  {
+   "fieldname": "nameservers",
+   "fieldtype": "Small Text",
+   "label": "Nameservers"
+  },
+  {
+   "default": "0",
+   "fieldname": "whois_privacy",
+   "fieldtype": "Check",
+   "label": "WHOIS Privacy"
+  },
+  {
+   "fieldname": "last_checked",
+   "fieldtype": "Datetime",
+   "label": "Last Checked"
+  },
+  {
+   "default": "0",
+   "fieldname": "premium_price",
+   "fieldtype": "Currency",
+   "label": "Premium Price"
+  },
+  {
+   "fieldname": "column_break_wjdm",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-10 17:05:45.390195",
+ "modified_by": "Administrator",
+ "module": "Lube Domains",
+ "name": "Registered Domain",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Customer"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
 }

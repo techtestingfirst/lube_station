@@ -3,6 +3,27 @@ from frappe.model.document import Document
 
 
 class DownloadableAsset(Document):
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
+
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        from frappe.types import DF
+        from lube_station.lube_catalog.doctype.download_allowed_product.download_allowed_product import DownloadAllowedProduct
+
+        access_policy: DF.Literal["Public", "Logged-in Customers", "Purchased Product", "Active Service"]
+        active: DF.Check
+        allowed_products: DF.Table[DownloadAllowedProduct]
+        category: DF.Link | None
+        download_count: DF.Int
+        file: DF.Attach | None
+        remote_url: DF.Data | None
+        storage_type: DF.Literal["Frappe File", "Private Object Storage", "Remote URL"]
+        title: DF.Data
+        version: DF.Data | None
+    # end: auto-generated types
+
     def validate(self):
         if self.storage_type == "Frappe File" and not self.file:
             frappe.throw("Frappe File storage needs file")

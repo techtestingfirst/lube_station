@@ -1,31 +1,151 @@
 {
-  "name": "Dedicated Server Inventory",
-  "module": "Lube Provisioning",
-  "doctype": "DocType",
-  "engine": "InnoDB",
-  "autoname": "format:DSRV-{####}",
-  "naming_rule": "Expression",
-  "track_changes": 1,
-  "fields": [
-    {"fieldname": "section_break_0", "fieldtype": "Section Break", "label": "Inventory Details"},
-    {"fieldname": "provider", "fieldtype": "Link", "label": "Provider", "options": "Infrastructure Provider"},
-    {"fieldname": "asset_id", "fieldtype": "Data", "label": "Asset ID", "unique": 1},
-    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
-    {"fieldname": "cpu", "fieldtype": "Data", "label": "CPU"},
-    {"fieldname": "ram_gb", "fieldtype": "Int", "label": "RAM GB", "default": "0"},
-    {"fieldname": "section_break_1", "fieldtype": "Section Break", "label": "Storage and Location"},
-    {"fieldname": "storage_json", "fieldtype": "Code", "label": "Storage JSON"},
-    {"fieldname": "location", "fieldtype": "Data", "label": "Location"},
-    {"fieldname": "section_break_2", "fieldtype": "Section Break", "label": "Network and Assignment"},
-    {"fieldname": "ip_pool", "fieldtype": "Small Text", "label": "IP Pool"},
-    {"fieldname": "bandwidth_mbps", "fieldtype": "Int", "label": "Bandwidth Mbps", "default": "0"},
-    {"fieldname": "column_break_1", "fieldtype": "Column Break"},
-    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Available\nReserved\nAssigned\nWipe Pending\nTerminated", "default": "Available", "reqd": 1},
-    {"fieldname": "assigned_service", "fieldtype": "Data", "label": "Assigned Service"},
-    {"fieldname": "section_break_3", "fieldtype": "Section Break", "label": "Lease"},
-    {"fieldname": "lease_key", "fieldtype": "Data", "label": "Lease Key"},
-    {"fieldname": "lease_expiry", "fieldtype": "Datetime", "label": "Lease Expiry"}
-  ],
-  "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}],
-  "modified": "2026-10-10 17:30:00.000000"
+ "actions": [],
+ "autoname": "format:DSRV-{####}",
+ "creation": "2026-10-10 16:50:31.152975",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_0",
+  "provider",
+  "asset_id",
+  "column_break_0",
+  "cpu",
+  "ram_gb",
+  "section_break_1",
+  "storage_json",
+  "location",
+  "section_break_2",
+  "ip_pool",
+  "column_break_1",
+  "bandwidth_mbps",
+  "status",
+  "assigned_service",
+  "section_break_3",
+  "lease_key",
+  "column_break_suia",
+  "lease_expiry"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_0",
+   "fieldtype": "Section Break",
+   "label": "Inventory Details"
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Link",
+   "label": "Provider",
+   "options": "Infrastructure Provider"
+  },
+  {
+   "fieldname": "asset_id",
+   "fieldtype": "Data",
+   "label": "Asset ID",
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cpu",
+   "fieldtype": "Data",
+   "label": "CPU"
+  },
+  {
+   "default": "0",
+   "fieldname": "ram_gb",
+   "fieldtype": "Int",
+   "label": "RAM GB"
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break",
+   "label": "Storage and Location"
+  },
+  {
+   "fieldname": "storage_json",
+   "fieldtype": "Code",
+   "label": "Storage JSON"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "label": "Location"
+  },
+  {
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break",
+   "label": "Network and Assignment"
+  },
+  {
+   "fieldname": "ip_pool",
+   "fieldtype": "Small Text",
+   "label": "IP Pool"
+  },
+  {
+   "default": "0",
+   "fieldname": "bandwidth_mbps",
+   "fieldtype": "Int",
+   "label": "Bandwidth Mbps"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Available",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Available\nReserved\nAssigned\nWipe Pending\nTerminated",
+   "reqd": 1
+  },
+  {
+   "fieldname": "assigned_service",
+   "fieldtype": "Data",
+   "label": "Assigned Service"
+  },
+  {
+   "fieldname": "section_break_3",
+   "fieldtype": "Section Break",
+   "label": "Lease"
+  },
+  {
+   "fieldname": "lease_key",
+   "fieldtype": "Data",
+   "label": "Lease Key"
+  },
+  {
+   "fieldname": "lease_expiry",
+   "fieldtype": "Datetime",
+   "label": "Lease Expiry"
+  },
+  {
+   "fieldname": "column_break_suia",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-10 17:19:07.197028",
+ "modified_by": "Administrator",
+ "module": "Lube Provisioning",
+ "name": "Dedicated Server Inventory",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
 }
