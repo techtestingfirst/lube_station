@@ -81,6 +81,36 @@ def churn_rate() -> float:
     return churn()["rate"]
 
 
+@frappe.whitelist()
+def total_sales() -> float:
+    """Scalar for Custom Number Card: lifetime revenue on Paid invoices."""
+    _require_staff()
+    row = frappe.db.sql("select sum(total_due) t from `tabHosting Invoice` where status='Paid'", as_dict=True)
+    return round(float((row and row[0].t) or 0), 2)
+
+
+@frappe.whitelist()
+def total_customers() -> int:
+    """Scalar for Custom Number Card: count of hosting customers."""
+    _require_staff()
+    return int(frappe.db.count("Hosting Customer"))
+
+
+@frappe.whitelist()
+def unpaid_invoices() -> int:
+    """Scalar for Custom Number Card: count of Unpaid + Overdue invoices."""
+    _require_staff()
+    return int(frappe.db.count("Hosting Invoice", {"status": ["in", ["Unpaid", "Overdue"]]}))
+
+
+@frappe.whitelist()
+def unpaid_value() -> float:
+    """Scalar for Custom Number Card: amount due on Unpaid + Overdue invoices."""
+    _require_staff()
+    row = frappe.db.sql("select sum(total_due) t from `tabHosting Invoice` where status in ('Unpaid', 'Overdue')", as_dict=True)
+    return round(float((row and row[0].t) or 0), 2)
+
+
 @frappe.whitelist(methods=["POST"])
 def credit_affiliate(affiliate: str, invoice: str) -> dict:
     inv = frappe.get_doc("Hosting Invoice", invoice)
