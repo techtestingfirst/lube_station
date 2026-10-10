@@ -3,7 +3,7 @@ import frappe
 
 def sync_record(record: str) -> dict:
     rec = frappe.get_doc("DNS Record", record)
-    dom = frappe.get_doc("Domain", rec.domain)
+    dom = frappe.get_doc("Registered Domain", rec.domain)
     if not dom.registrar:
         return {"synced": False, "reason": "no registrar"}
     from lube_station.lube_station.adapters.registry import get_registrar_adapter

@@ -94,7 +94,7 @@ def _fulfill_domains(order_name: str, customer: str):
     """Register/transfer ordered domains, link owned ones to the customer."""
     import json
 
-    from lube_station.lube_domains.doctype.domain.domain import register_domain, transfer_domain
+    from lube_station.lube_domains.doctype.registered_domain.registered_domain import register_domain, transfer_domain
 
     order = frappe.get_doc("Order", order_name)
     for item in order.items:
@@ -126,9 +126,9 @@ def _fulfill_domains(order_name: str, customer: str):
                         register_domain(config["_domain"], customer, None, config.get("domain_years") or 1)
                 except Exception:
                     pass
-            elif action == "own" and config.get("_domain") and not frappe.db.exists("Domain", config["_domain"]):
+            elif action == "own" and config.get("_domain") and not frappe.db.exists("Registered Domain", config["_domain"]):
                 try:
-                    frappe.get_doc({"doctype": "Domain", "domain_name": config["_domain"], "customer": customer, "status": "Active"}).insert(ignore_permissions=True)
+                    frappe.get_doc({"doctype": "Registered Domain", "domain_name": config["_domain"], "customer": customer, "status": "Active"}).insert(ignore_permissions=True)
                 except Exception:
                     pass
             # subdomain: seller-zone name, no registrar call and no Domain row

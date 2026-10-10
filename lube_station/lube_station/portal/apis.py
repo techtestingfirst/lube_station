@@ -235,7 +235,7 @@ def dashboard():
     return {
         "services": frappe.db.count("Service", {"customer": customer}),
         "unpaid": frappe.db.count("Hosting Invoice", {"customer": customer, "status": "Unpaid"}),
-        "domains": frappe.db.count("Domain", {"customer": customer}),
+        "domains": frappe.db.count("Registered Domain", {"customer": customer}),
         "tickets": frappe.db.count("Ticket Hosting Reference", {"customer": customer}),
     }
 
@@ -611,12 +611,12 @@ def request_upgrade(service: str, new_plan: str) -> dict:
 @frappe.whitelist(methods=["GET"])
 def my_domains():
     customer = my_customer()
-    return frappe.get_all("Domain", {"customer": customer}, ["domain_name", "status", "expiry_date"])
+    return frappe.get_all("Registered Domain", {"customer": customer}, ["domain_name", "status", "expiry_date"])
 
 
 @frappe.whitelist(methods=["GET"])
 def dns_list(domain: str):
-    dom = frappe.get_doc("Domain", domain)
+    dom = frappe.get_doc("Registered Domain", domain)
     assert_owns(dom.customer)
     return frappe.get_all("DNS Record", {"domain": domain}, ["name", "record_type", "hostname", "record_value", "ttl"])
 
@@ -783,7 +783,7 @@ def my_dedicated():
 
 @frappe.whitelist(methods=["POST"])
 def dns_add(domain: str, record_type: str, hostname: str, value: str, ttl: int = 3600):
-    dom = frappe.get_doc("Domain", domain)
+    dom = frappe.get_doc("Registered Domain", domain)
     assert_owns(dom.customer)
     rec = frappe.get_doc({"doctype": "DNS Record", "domain": domain, "record_type": record_type, "hostname": hostname, "record_value": value, "ttl": ttl}).insert()
     return {"record": rec.name}
@@ -868,7 +868,7 @@ def cart_add(hosting_plan: str, billing_cycle: str = "Monthly", quantity: int = 
 @frappe.whitelist(methods=["GET", "POST"], allow_guest=True)
 def domain_check(domain: str) -> dict:
     """Guest-safe availability lookup (rate-limited server-side)."""
-    from lube_station.lube_domains.doctype.domain.domain import check_availability
+    from lube_station.lube_domains.doctype.registered_domain.registered_domain import check_availability
 
     return check_availability(domain)
 
@@ -882,7 +882,7 @@ def _premium_for(domain: str, domain_action: str) -> float:
     """
     if domain_action != "register":
         return 0
-    from lube_station.lube_domains.doctype.domain.domain import check_availability
+    from lube_station.lube_domains.doctype.registered_domain.registered_domain import check_availability
 
     out = check_availability((domain or "").strip().lower())
     if out.get("status") == "Premium":
@@ -896,7 +896,7 @@ def _premium_for(domain: str, domain_action: str) -> float:
 @frappe.whitelist(methods=["GET", "POST"], allow_guest=True)
 def subdomain_suffixes() -> list:
     """Offered free-subdomain suffixes (guest-safe: seller-published config)."""
-    from lube_station.lube_domains.doctype.domain.domain import subdomain_suffixes as _suffixes
+    from lube_station.lube_domains.doctype.registered_domain.registered_domain import subdomain_suffixes as _suffixes
 
     return _suffixes()
 
@@ -936,7 +936,7 @@ def cart_set_domain(cart: str, row: str, domain: str | None = None, domain_actio
     """
     import json
 
-    from lube_station.lube_domains.doctype.domain.domain import validate_subdomain
+    from lube_station.lube_domains.doctype.registered_domain.registered_domain import validate_subdomain
 
     cart_doc = frappe.get_doc("Cart", cart)
     _assert_cart_access(cart_doc)

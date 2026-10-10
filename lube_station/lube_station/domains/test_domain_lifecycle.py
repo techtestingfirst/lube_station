@@ -3,7 +3,7 @@ from frappe.tests import IntegrationTestCase
 from unittest.mock import patch
 
 from lube_station.lube_station.adapters.seed import seed
-from lube_station.lube_domains.doctype.domain.domain import register_domain, renew_domain, update_nameservers
+from lube_station.lube_domains.doctype.registered_domain.registered_domain import register_domain, renew_domain, update_nameservers
 
 
 def _fake_call(self, action, obj, attributes=None, transport=None):
@@ -19,9 +19,9 @@ class TestDomainLifecycle(IntegrationTestCase):
             "lube_station.lube_station.adapters.registrar.opensrs.OpenSrsAdapter._call", _fake_call
         ):
             register_domain("lifecycletest.com", customer=cust.name, registrar="OpenSRS")
-            self.assertEqual(frappe.db.get_value("Domain", "lifecycletest.com", "status"), "Registered")
+            self.assertEqual(frappe.db.get_value("Registered Domain", "lifecycletest.com", "status"), "Registered")
             update_nameservers("lifecycletest.com", ["ns1.test", "ns2.test"])
-            self.assertIn("ns1", frappe.db.get_value("Domain", "lifecycletest.com", "nameservers"))
+            self.assertIn("ns1", frappe.db.get_value("Registered Domain", "lifecycletest.com", "nameservers"))
             renew_domain("lifecycletest.com", years=1)
             self.assertTrue(frappe.db.exists("Hosting Invoice", {"customer": cust.name}))
         rec = frappe.get_doc({"doctype": "DNS Record", "domain": "lifecycletest.com", "record_type": "A", "hostname": "@", "record_value": "1.2.3.4"}).insert()

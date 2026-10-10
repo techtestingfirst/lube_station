@@ -3,7 +3,7 @@ import uuid
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from lube_station.lube_domains.doctype.domain.domain import subdomain_suffixes, validate_subdomain
+from lube_station.lube_domains.doctype.registered_domain.registered_domain import subdomain_suffixes, validate_subdomain
 
 
 def _portal_customer():
@@ -42,7 +42,7 @@ class TestSubdomain(IntegrationTestCase):
         plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"Taken Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
         frappe.get_doc({"doctype": "Service", "customer": cust.name, "hosting_plan": plan.name, "status": "Active", "primary_domain": "gone.cust.test", "recurring_amount": 5}).insert()
         self.assertRaises(frappe.ValidationError, validate_subdomain, "gone.cust.test")
-        frappe.get_doc({"doctype": "Domain", "domain_name": "reg.cust.test", "customer": cust.name, "status": "Registered"}).insert(ignore_permissions=True)
+        frappe.get_doc({"doctype": "Registered Domain", "domain_name": "reg.cust.test", "customer": cust.name, "status": "Registered"}).insert(ignore_permissions=True)
         self.assertRaises(frappe.ValidationError, validate_subdomain, "reg.cust.test")
 
     def test_subdomain_order_flow(self):

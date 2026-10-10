@@ -74,7 +74,7 @@ class TestTLDPricing(IntegrationTestCase):
 
     def test_renew_uses_renew_price(self):
         from lube_station.lube_station.adapters.seed import seed
-        from lube_station.lube_domains.doctype.domain.domain import renew_domain
+        from lube_station.lube_domains.doctype.registered_domain.registered_domain import renew_domain
 
         seed()
         _ensure_tld(".com", 12, 13, 11)
@@ -82,7 +82,7 @@ class TestTLDPricing(IntegrationTestCase):
         user = frappe.get_doc({"doctype": "User", "email": email, "first_name": "Tld", "enabled": 1}).insert(ignore_permissions=True)
         cust = frappe.get_doc({"doctype": "Hosting Customer", "user": user.name, "status": "Active"}).insert()
         name = f"renew-{uuid.uuid4().hex[:6]}.com"
-        frappe.get_doc({"doctype": "Domain", "domain_name": name, "customer": cust.name, "status": "Registered"}).insert(ignore_permissions=True)
+        frappe.get_doc({"doctype": "Registered Domain", "domain_name": name, "customer": cust.name, "status": "Registered"}).insert(ignore_permissions=True)
         mock = MagicMock()
         mock.renew_domain.return_value = {"renewed": name}
         with patch("lube_station.lube_station.adapters.registry.get_registrar_adapter", return_value=mock):
@@ -94,7 +94,7 @@ class TestTLDPricing(IntegrationTestCase):
 def _premium_availability(premium_price: float = 999):
     mock = MagicMock()
     mock.return_value = {"domain": "vip.test", "status": "Premium", "premium_price": premium_price}
-    return patch("lube_station.lube_domains.doctype.domain.domain.check_availability", mock)
+    return patch("lube_station.lube_domains.doctype.registered_domain.registered_domain.check_availability", mock)
 
 
 def _portal_customer():
