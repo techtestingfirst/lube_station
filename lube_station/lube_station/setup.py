@@ -153,6 +153,7 @@ DASHBOARD_CHARTS = [
         "value_based_on": "total_due",
         "timespan": "Last Week",
         "time_interval": "Daily",
+        "timeseries": 1,
         "type": "Line",
         "filters_json": "[]",
         "module": "Lube Station",
@@ -165,6 +166,7 @@ DASHBOARD_CHARTS = [
         "based_on": "creation",
         "timespan": "Last Week",
         "time_interval": "Daily",
+        "timeseries": 1,
         "type": "Bar",
         "filters_json": "[]",
         "module": "Lube Station",
@@ -177,6 +179,7 @@ DASHBOARD_CHARTS = [
         "based_on": "creation",
         "timespan": "Last Week",
         "time_interval": "Daily",
+        "timeseries": 1,
         "type": "Bar",
         "filters_json": "[]",
         "module": "Lube Station",
@@ -189,6 +192,7 @@ DASHBOARD_CHARTS = [
         "based_on": "creation",
         "timespan": "Last Week",
         "time_interval": "Daily",
+        "timeseries": 1,
         "type": "Bar",
         "filters_json": "[]",
         "module": "Lube Station",
@@ -208,7 +212,7 @@ def ensure_dashboard():
         if frappe.db.exists("Dashboard Chart", name):
             doc = frappe.get_doc("Dashboard Chart", name)
             updated = False
-            for key in ("timespan", "time_interval", "type", "chart_type", "based_on", "value_based_on",
+            for key in ("timespan", "time_interval", "timeseries", "type", "chart_type", "based_on", "value_based_on",
                         "group_by_based_on", "group_by_type", "filters_json", "module"):
                 if doc.get(key) != chart.get(key):
                     doc.set(key, chart.get(key))
