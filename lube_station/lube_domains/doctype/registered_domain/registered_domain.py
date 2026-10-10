@@ -108,6 +108,18 @@ def _adapter_for(domain_name: str, registrar: str | None = None):
     return get_registrar_adapter(name), name
 
 
+def _notify_domain(customer: str | None, event_type: str, domain: str, extra: dict | None = None):
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        ctx = {"domain": domain}
+        if extra:
+            ctx.update(extra)
+        notify_customer(customer, event_type, domain, ctx)
+    except Exception:
+        pass
+
+
 @frappe.whitelist(methods=["POST"])
 def register_domain(domain: str, customer: str | None = None, registrar: str | None = None, years: int = 1) -> dict:
     if not customer or not frappe.db.exists("Hosting Customer", customer):
@@ -118,6 +130,7 @@ def register_domain(domain: str, customer: str | None = None, registrar: str | N
         frappe.get_doc({"doctype": "Registered Domain", "domain_name": domain, "customer": customer, "registrar": name, "registration_date": today(), "expiry_date": add_to_date(today(), years=years), "status": "Registered"}).insert(ignore_permissions=True)
     else:
         frappe.db.set_value("Registered Domain", domain, {"status": "Registered", "registrar": name, "expiry_date": add_to_date(today(), years=years)})
+    _notify_domain(customer, "domain_registered", domain, {"registrar": name, "years": years})
     return {"registered": domain, "vendor": out}
 
 
@@ -134,7 +147,12 @@ def renew_domain(domain: str, years: int = 1) -> dict:
         dom.save(ignore_permissions=True)
         if dom.customer:
             rate = domain_price(domain, "renew")
-            frappe.get_doc({"doctype": "Hosting Invoice", "customer": dom.customer, "invoice_items": [{"description": f"Domain renewal {domain} x{years}y", "service_ref": domain, "amount": rate * years}], "status": "Unpaid", "idempotency_key": f"domain-renew:{domain}:{dom.expiry_date}"}).insert(ignore_permissions=True)
+            try:
+                frappe.get_doc({"doctype": "Hosting Invoice", "customer": dom.customer, "invoice_items": [{"description": f"Domain renewal {domain} x{years}y", "service_ref": domain, "amount": rate * years}], "status": "Unpaid", "idempotency_key": f"domain-renew:{domain}:{dom.expiry_date}"}).insert(ignore_permissions=True)
+            except Exception:
+                pass
+            _notify_domain(dom.customer, "domain_renewal", f"{domain}:{dom.expiry_date}", {"expiry": str(dom.expiry_date), "years": years})
+            _notify_domain(dom.customer, "domain_renewed", f"{domain}:{dom.expiry_date}", {"expiry": str(dom.expiry_date), "years": years})
     return {"renewed": domain, "vendor": out}
 
 
@@ -143,9 +161,16 @@ def transfer_domain(domain: str, auth_code: str, registrar: str | None = None, c
     if not customer or not frappe.db.exists("Hosting Customer", customer):
         frappe.throw("Customer is required: order the domain through the cart so it is invoiced")
     adapter, name = _adapter_for(domain, registrar)
+    _notify_domain(customer, "domain_transfer_initiated", domain, {"registrar": name})
     out = adapter.transfer_domain(domain, auth_code)
     if frappe.db.exists("Registered Domain", domain):
         frappe.db.set_value("Registered Domain", domain, {"status": "Transferred", "registrar": name})
+    else:
+        try:
+            frappe.get_doc({"doctype": "Registered Domain", "domain_name": domain, "customer": customer, "registrar": name, "status": "Transferred"}).insert(ignore_permissions=True)
+        except Exception:
+            pass
+    _notify_domain(customer, "domain_transfer_completed", domain, {"registrar": name})
     return {"transferred": domain, "vendor": out}
 
 
@@ -155,9 +180,36 @@ def update_nameservers(domain: str, nameservers: list | str) -> dict:
     if isinstance(nameservers, str):
         nameservers = [n.strip() for n in nameservers.split(",")]
     out = adapter.update_nameservers(domain, nameservers)
+    customer = None
     if frappe.db.exists("Registered Domain", domain):
         frappe.db.set_value("Registered Domain", domain, "nameservers", ",".join(nameservers))
+        try:
+            customer = frappe.db.get_value("Registered Domain", domain, "customer")
+        except Exception:
+            pass
+    _notify_domain(customer, "domain_ns_update", f"{domain}:ns", {"nameservers": ",".join(nameservers)})
     return {"domain": domain, "vendor": out}
+
+
+def check_expiry_warnings(days_ahead: int = 30) -> dict:
+    """WHMCS expiry notices: warn for domains expiring within window."""
+    from frappe.utils import add_days as _add_days
+
+    try:
+        cutoff = _add_days(today(), days_ahead)
+        rows = frappe.get_all("Registered Domain", {"status": ["in", ["Registered", "Transferred"]], "expiry_date": ["<=", cutoff]}, ["name", "customer", "expiry_date"])
+    except Exception:
+        return {"warned": 0}
+    warned = 0
+    for r in rows:
+        try:
+            from lube_station.lube_station.notifications.events import notify_customer
+
+            notify_customer(r.customer, "domain_expiry_warning", f"{r.name}:{r.expiry_date}", {"domain": r.name, "expiry": str(r.expiry_date)})
+            warned += 1
+        except Exception:
+            continue
+    return {"warned": warned}
 
 
 def subdomain_suffixes() -> list:

@@ -159,7 +159,8 @@ has_permission = {
 
 scheduler_events = {
 	"daily": [
-		"lube_station.lube_station.usage.collect.daily"
+		"lube_station.lube_station.usage.collect.daily",
+		"lube_station.lube_station.notifications.dunning.daily"
 	],
 }
 

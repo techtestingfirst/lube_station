@@ -15,6 +15,12 @@ class CreditNote(Document):
 
     def on_submit(self):
         _adjust_balance(self.customer, self.amount)
+        try:
+            from lube_station.lube_station.notifications.events import notify_customer
+
+            notify_customer(self.customer, "credit", self.name, {"credit_note": self.name, "amount": self.amount, "invoice": self.get("reference_invoice") or ""})
+        except Exception:
+            pass
 
     def on_cancel(self):
         _adjust_balance(self.customer, -1 * self.amount)

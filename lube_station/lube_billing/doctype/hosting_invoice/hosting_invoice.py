@@ -51,21 +51,35 @@ class HostingInvoice(Document):
         return "/store/invoices"
 
 
+def _invoice_context(inv) -> dict:
+    return {"invoice": inv.name, "amount": inv.total_due, "customer": inv.customer, "order": inv.order_ref, "due": str(inv.due_date or "")}
+
+
+def _notify_invoice(doc, is_renewal: bool = False):
+    """Best-effort invoice + renewal + credit notices. Never breaks billing."""
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        ctx = _invoice_context(doc)
+        notify_customer(doc.customer, "invoice", doc.name, ctx)
+        if is_renewal:
+            notify_customer(doc.customer, "renewal", f"{doc.name}:renewal", ctx)
+        if (doc.credit_applied or 0) > 0:
+            notify_customer(doc.customer, "credit", f"{doc.name}:credit", ctx)
+    except Exception:
+        pass
+
+
 def _fulfill_order(inv):
     """WHMCS steps 9-10: services, domains, provisioning, welcome emails.
 
     Idempotent: create_from_order only adds missing hosting services,
     domain calls reuse existing Domain rows, notifications dedupe by key.
     """
-    from lube_station.lube_station.notifications.events import fire
+    from lube_station.lube_station.notifications.events import notify_customer
 
     order_name = inv.order_ref
-    email = None
-    try:
-        user = frappe.db.get_value("Hosting Customer", inv.customer, "user")
-        email = frappe.db.get_value("User", user, "email") if user else None
-    except Exception:
-        pass
+    ctx = _invoice_context(inv)
     if order_name and frappe.db.exists("Order", order_name):
         frappe.db.set_value("Order", order_name, "status", "Accepted")
         try:
@@ -84,11 +98,22 @@ def _fulfill_order(inv):
                 frappe.get_doc("Provisioning Module", module).create_account(svc.name)
         except Exception:
             pass
-    for event_type in ("payment", "credentials"):
-        try:
-            fire(event_type, inv.name, email)
-        except Exception:
-            pass
+    try:
+        notify_customer(inv.customer, "payment", inv.name, ctx)
+        notify_customer(inv.customer, "credentials", f"{inv.name}:creds", ctx)
+    except Exception:
+        pass
+
+
+def notify_payment_failed(invoice: str, reason: str = ""):
+    """WHMCS payment-failed notice. Safe to call from webhooks/auto-charge."""
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        inv = frappe.get_doc("Hosting Invoice", invoice)
+        notify_customer(inv.customer, "payment_failed", f"{invoice}:failed", {**_invoice_context(inv), "reason": reason})
+    except Exception:
+        pass
 
 
 def _fulfill_domains(order_name: str, customer: str):
@@ -216,6 +241,7 @@ def _from_order(order_name: str, key: str, gateway: str | None = None, include_s
             "idempotency_key": key,
         }
     ).insert(ignore_permissions=True)
+    _notify_invoice(doc, is_renewal=not include_setup)
     return doc
 
 
@@ -267,3 +293,28 @@ def generate_renewal(order: str, period: str, gateway: str | None = None) -> dic
         return {"invoice": doc.name, "total_due": doc.total_due, "reused": True}
     doc = _from_order(order, key, gateway, include_setup=False)
     return {"invoice": doc.name, "total_due": doc.total_due, "reused": False}
+
+
+@frappe.whitelist(methods=["POST"])
+def issue_refund(invoice: str, amount: float | None = None, reason: str = "") -> dict:
+    """WHMCS refund: credit customer balance + refund/credit emails."""
+    inv = frappe.get_doc("Hosting Invoice", invoice)
+    if inv.status != "Paid":
+        frappe.throw("Only Paid invoices can be refunded")
+    refund_amount = float(amount or inv.total_due or 0)
+    if refund_amount <= 0:
+        frappe.throw("Refund amount must be positive")
+    credit_note = frappe.get_doc({"doctype": "Credit Note", "customer": inv.customer, "amount": refund_amount, "reason": reason, "reference_invoice": inv.name}).insert(ignore_permissions=True)
+    try:
+        credit_note.submit()
+    except Exception:
+        pass
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        ctx = {**_invoice_context(inv), "refund": refund_amount, "reason": reason}
+        notify_customer(inv.customer, "refund", f"{invoice}:refund", ctx)
+        notify_customer(inv.customer, "credit", f"{invoice}:refund-credit", ctx)
+    except Exception:
+        pass
+    return {"refunded": refund_amount, "credit_note": credit_note.name}

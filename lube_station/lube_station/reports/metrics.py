@@ -123,4 +123,11 @@ def credit_affiliate(affiliate: str, invoice: str) -> dict:
     frappe.get_doc({"doctype": "Affiliate Earning", "affiliate": affiliate, "invoice": invoice, "amount": amount}).insert(ignore_permissions=True)
     aff.total_earned = (aff.total_earned or 0) + amount
     aff.save(ignore_permissions=True)
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        customer = frappe.db.get_value("Affiliate", affiliate, "customer")
+        notify_customer(customer, "affiliate_commission", f"{invoice}:{affiliate}", {"invoice": invoice, "amount": amount})
+    except Exception:
+        pass
     return {"credited": True, "amount": amount}

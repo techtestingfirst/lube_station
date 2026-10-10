@@ -336,6 +336,29 @@ def ensure_dashboard():
         )
 
 
+def ensure_email_templates():
+    """Seed default Lube Email Templates. Never overwrites seller edits."""
+    from lube_station.lube_station.notifications.events import TEMPLATES
+
+    if not frappe.db.exists("DocType", "Email Template"):
+        return
+    for event_type, subject in TEMPLATES.items():
+        name = f"Lube {event_type.replace('_', ' ').title()}"
+        if frappe.db.exists("Email Template", name):
+            continue
+        body = (
+            f"{subject}\n\nReference: {{{{ reference }}}}\n"
+            "Event: {{ event }}\n"
+            "Login to your client area for details."
+        )
+        # Domain/service/invoice specifics render when callers pass them.
+        body += "\n{% if service %}Service: {{ service }}{% endif %}{% if domain %}Domain: {{ domain }}{% endif %}{% if invoice %}Invoice: {{ invoice }}{% endif %}{% if amount %}Amount: {{ amount }}{% endif %}"
+        try:
+            frappe.get_doc({"doctype": "Email Template", "name": name, "subject": f"{subject} {{{{ reference }}}}", "response": body}).insert(ignore_permissions=True)
+        except Exception:
+            continue
+
+
 def ensure_all():
     from lube_station.lube_station.security.roles import ensure_roles
 
@@ -343,4 +366,5 @@ def ensure_all():
     ensure_settings()
     ensure_print_formats()
     ensure_product_schemas()
+    ensure_email_templates()
     ensure_dashboard()

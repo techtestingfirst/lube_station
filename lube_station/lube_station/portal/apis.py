@@ -559,6 +559,12 @@ def request_cancellation(service: str, reason: str, mode: str = "End of Billing 
         svc.add_comment("Comment", f"Cancellation requested via portal ({mode}): {reason}")
     except Exception:
         pass
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        notify_customer(svc.get("customer"), "cancellation_request", f"{service}:cancel", {"service": service, "mode": mode, "reason": reason})
+    except Exception:
+        pass
     return {"requested": True, "mode": mode}
 
 
@@ -603,6 +609,12 @@ def request_upgrade(service: str, new_plan: str) -> dict:
     ).insert(ignore_permissions=True)
     try:
         svc.add_comment("Comment", f"Upgrade requested via portal to {new_plan} (order {order.name}).")
+    except Exception:
+        pass
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        notify_customer(svc.get("customer"), "upgrade", f"{service}:{order.name}", {"service": service, "from": svc.get("hosting_plan"), "to": new_plan, "order": order.name})
     except Exception:
         pass
     return {"order": order.name, "status": order.status}
@@ -1230,5 +1242,13 @@ def pincode_lookup(postcode: str, country: str | None = None) -> dict:
 def forgot_password(email: str) -> dict:
     from frappe.core.doctype.user.user import reset_password
 
-    reset_password(email.strip().lower())
+    clean = email.strip().lower()
+    reset_password(clean)
+    try:
+        from lube_station.lube_station.notifications.events import fire
+
+        # Core already sent reset link; audit only, no duplicate mail.
+        fire("password_reset", clean, clean, send_mail=False)
+    except Exception:
+        pass
     return {"sent": True}

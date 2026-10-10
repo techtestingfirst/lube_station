@@ -79,3 +79,30 @@ def check_entitlement(asset: str, user: str | None = None) -> dict:
     if doc.access_policy == "Active Service":
         return {"allowed": _active_service_access(doc, user)}
     return {"allowed": False}
+
+
+@frappe.whitelist(methods=["POST"])
+def log_download(asset: str) -> dict:
+    """WHMCS download notice: log + fire once per user/asset/day."""
+    from frappe.utils import today
+
+    out = check_entitlement(asset)
+    if not out.get("allowed"):
+        frappe.throw("Not entitled to this download", frappe.PermissionError)
+    user = frappe.session.user
+    try:
+        customer = frappe.db.get_value("Hosting Customer", {"user": user}, "name")
+    except Exception:
+        customer = None
+    try:
+        if frappe.db.exists("DocType", "Download Log"):
+            frappe.get_doc({"doctype": "Download Log", "asset": asset, "user_id": user, "customer": customer}).insert(ignore_permissions=True)
+    except Exception:
+        pass
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        notify_customer(customer, "download", f"{asset}:{user}:{today()}", {"asset": asset})
+    except Exception:
+        pass
+    return {"logged": True}

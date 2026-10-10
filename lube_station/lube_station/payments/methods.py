@@ -49,6 +49,12 @@ def auto_charge_invoice(invoice: str) -> dict:
         out["action"] = "charged"
         return out
     except Exception as e:
+        try:
+            from lube_station.lube_billing.doctype.hosting_invoice.hosting_invoice import notify_payment_failed
+
+            notify_payment_failed(invoice, str(e))
+        except Exception:
+            pass
         return {"action": "dunning", "reason": str(e)}
 
 

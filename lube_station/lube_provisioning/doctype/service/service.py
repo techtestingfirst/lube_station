@@ -9,13 +9,42 @@ def _log(doc, msg: str):
     doc.save(ignore_permissions=True)
 
 
+def _notify(doc, event_type: str, context: dict | None = None, template: str | None = None):
+    """Best-effort customer email; lifecycle never fails on mail errors."""
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        ctx = {"service": doc.name, "plan": doc.get("hosting_plan"), "domain": doc.get("primary_domain")}
+        if context:
+            ctx.update(context)
+        notify_customer(doc.get("customer"), event_type, doc.name, ctx, template)
+    except Exception:
+        pass
+
+
+def _welcome_template(plan: str | None) -> str | None:
+    if not plan or not frappe.db.exists("Hosting Plan", plan):
+        return None
+    try:
+        tpl = frappe.db.get_value("Hosting Plan", plan, "welcome_email_template")
+        return tpl or None
+    except Exception:
+        return None
+
+
 class Service(Document):
     def activate(self):
         if self.status == "Terminated":
             frappe.throw("Terminated services stay terminated")
+        was = self.status
         self.status = "Active"
         self.save(ignore_permissions=True)
         _log(self, "activated")
+        if was == "Pending":
+            _notify(self, "welcome", template=_welcome_template(self.get("hosting_plan")))
+            _notify(self, "credentials", {"note": "Login via portal vault, no password in email"})
+        elif was == "Suspended":
+            _notify(self, "unsuspension")
 
     def suspend(self, reason: str = ""):
         if self.status != "Active":
@@ -23,6 +52,7 @@ class Service(Document):
         self.status = "Suspended"
         self.save(ignore_permissions=True)
         _log(self, f"suspended {reason}")
+        _notify(self, "suspension", {"reason": reason})
         _cascade(self, "suspend", reason)
 
     def unsuspend(self):
@@ -31,6 +61,7 @@ class Service(Document):
         self.status = "Active"
         self.save(ignore_permissions=True)
         _log(self, "unsuspended")
+        _notify(self, "unsuspension")
         # No cascade: add-ons suspended for their own overdue invoices must
         # reactivate via their own payment, not the parent's.
 
@@ -40,6 +71,8 @@ class Service(Document):
         self.status = "Terminated"
         self.save(ignore_permissions=True)
         _log(self, f"terminated: {approval_note}")
+        _notify(self, "termination", {"reason": approval_note})
+        _notify(self, "cancellation_confirm", {"reason": approval_note})
         _cascade(self, "terminate", approval_note)
 
 
@@ -104,6 +137,15 @@ def on_invoice_paid(invoice: str) -> dict:
             elif doc.status == "Suspended":
                 doc.unsuspend()
                 out.append(doc.name)
+    if not out and inv.order_ref:
+        # Renewal payment: services already Active, confirm renewal.
+        try:
+            from lube_station.lube_station.notifications.events import notify_customer
+
+            for svc in frappe.get_all("Service", {"order_ref": inv.order_ref}, ["name", "customer", "next_due_date"]):
+                notify_customer(svc.customer, "renewal_confirm", invoice, {"service": svc.name, "next_due": str(svc.get("next_due_date") or "")})
+        except Exception:
+            pass
     return {"action": "activated", "services": out}
 
 
@@ -113,6 +155,18 @@ def apply_dunning(invoice: str) -> dict:
 
     result = evaluate_invoice(invoice)
     inv = frappe.get_doc("Hosting Invoice", invoice)
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        ctx = {"invoice": invoice, "overdue_days": result.get("overdue_days", 0)}
+        if result["action"] == "notify":
+            notify_customer(inv.customer, "invoice_reminder", f"{invoice}:reminder", ctx)
+        elif result["action"] == "suspend":
+            notify_customer(inv.customer, "overdue_first", f"{invoice}:overdue1", ctx)
+        elif result["action"] == "queue_termination":
+            notify_customer(inv.customer, "overdue_third", f"{invoice}:overdue3", ctx)
+    except Exception:
+        pass
     if not inv.order_ref:
         return result
     if result["action"] == "suspend":

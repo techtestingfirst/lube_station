@@ -63,4 +63,11 @@ def handle_webhook(gateway: str, payload: dict | str, signature: str | None = No
     ).insert(ignore_permissions=True)
     if status == "Success":
         _mark_paid(invoice)
+    else:
+        try:
+            from lube_station.lube_billing.doctype.hosting_invoice.hosting_invoice import notify_payment_failed
+
+            notify_payment_failed(invoice, f"{gateway} webhook {event_id or txn_id}")
+        except Exception:
+            pass
     return {"transaction": txn.name, "reused": False, "key": key}
