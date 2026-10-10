@@ -14,16 +14,17 @@ class TestPaymentLink(IntegrationTestCase):
         inv = frappe.get_doc(
             {"doctype": "Hosting Invoice", "customer": cust.name, "invoice_items": [{"description": "t", "amount": 100}], "status": "Unpaid"}
         ).insert()
-        settings = frappe.get_doc(
-            {
-                "doctype": "Stripe Settings",
-                "gateway_name": "Test",
-                "publishable_key": "pk_test_bridge",
-                "secret_key": "sk_test_bridge",
-            }
-        )
-        settings.flags.ignore_mandatory = True
-        settings.insert(ignore_permissions=True)
+        if not frappe.db.exists("Stripe Settings", "Test"):
+            settings = frappe.get_doc(
+                {
+                    "doctype": "Stripe Settings",
+                    "gateway_name": "Test",
+                    "publishable_key": "pk_test_bridge",
+                    "secret_key": "sk_test_bridge",
+                }
+            )
+            settings.flags.ignore_mandatory = True
+            settings.insert(ignore_permissions=True)
         out = payment_link(inv.name, gateway="Stripe")
         self.assertIn(inv.name, out["url"])
         self.assertIn("stripe_checkout", out["url"])
