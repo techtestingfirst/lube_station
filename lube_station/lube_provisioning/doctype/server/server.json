@@ -16,7 +16,13 @@
     {"fieldname": "max_accounts", "fieldtype": "Int", "label": "Max Accounts", "default": "0"},
     {"fieldname": "active_accounts", "fieldtype": "Int", "label": "Active Accounts", "default": "0"},
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nMaintenance\nDisabled", "default": "Active"},
-    {"fieldname": "server_group", "fieldtype": "Link", "label": "Server Group", "options": "Server Group"}
+    {"fieldname": "server_group", "fieldtype": "Link", "label": "Server Group", "options": "Server Group"},
+    {"fieldname": "section_break_conn", "fieldtype": "Section Break", "label": "Connection Status"},
+    {"fieldname": "connection_status", "fieldtype": "Select", "label": "Connection Status", "options": "Not Checked\nOnline\nFailed", "default": "Not Checked", "read_only": 1},
+    {"fieldname": "last_checked_on", "fieldtype": "Datetime", "label": "Last Checked On", "read_only": 1},
+    {"fieldname": "column_break_conn", "fieldtype": "Column Break"},
+    {"fieldname": "response_time_ms", "fieldtype": "Int", "label": "Response Time (ms)", "read_only": 1},
+    {"fieldname": "last_check_message", "fieldtype": "Small Text", "label": "Last Check Message", "read_only": 1}
   ],
   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}],
   "modified": "2026-10-10 17:30:00.000000"
