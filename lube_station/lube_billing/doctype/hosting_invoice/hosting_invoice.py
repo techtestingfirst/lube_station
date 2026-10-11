@@ -401,7 +401,7 @@ def print_context(invoice_name: str) -> dict:
         d.setdefault("domain", "")
         d["qty"] = _qty_value(d.get("description") or "")
         d["start"], d["end"] = _line_period_paid(inv, d.get("service_ref") or "")
-    payment = {"gateway": inv.gateway or "", "txn_id": ""}
+    payment = {"gateway": inv.gateway or "", "txn_id": "", "show": inv.status == "Paid"}
     try:
         txn = frappe.db.get_value(
             "Payment Transaction",
@@ -414,6 +414,7 @@ def print_context(invoice_name: str) -> dict:
             payment = {
                 "gateway": txn.get("gateway") or inv.gateway or "",
                 "txn_id": txn.get("gateway_txn_id") or "",
+                "show": True,
             }
     except Exception:
         pass
