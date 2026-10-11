@@ -39,6 +39,9 @@ class TestInvoicePdf(IntegrationTestCase):
         html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
         self.assertIn(inv.name, html)
         self.assertIn("Total due", html)
+        from frappe.utils import formatdate, getdate
+
+        self.assertIn(formatdate(getdate(inv.creation)), html)
         # Billing identity, never the raw customer ID.
         self.assertIn("Acme Ltd", html)
         self.assertIn("1 Main St", html)
