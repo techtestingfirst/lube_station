@@ -1687,7 +1687,12 @@ def signup_customer(
     country = normalize_country(country) or None
     if country and not frappe.db.exists("Country", country):
         frappe.throw("Select a valid country")
-    user = frappe.get_doc({"doctype": "User", "email": email, "first_name": full_name, "enabled": 1, "new_password": password, "roles": [{"role": "Customer"}]}).insert(ignore_permissions=True)
+    # HD Customer role unlocks the Helpdesk customer portal (/helpdesk/my-tickets),
+    # where Lube tickets are viewed in full. Guarded: role ships with helpdesk app.
+    roles = [{"role": "Customer"}]
+    if frappe.db.exists("Role", "HD Customer"):
+        roles.append({"role": "HD Customer"})
+    user = frappe.get_doc({"doctype": "User", "email": email, "first_name": full_name, "enabled": 1, "new_password": password, "roles": roles}).insert(ignore_permissions=True)
     customer = frappe.get_doc(
         {
             "doctype": "Hosting Customer",

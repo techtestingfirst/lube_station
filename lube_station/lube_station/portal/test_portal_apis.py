@@ -160,7 +160,8 @@ class TestPortalApis(IntegrationTestCase):
         frappe.set_user("Guest")
         self.assertRaises(frappe.PermissionError, apis.my_order_detail, order.name)
 
-    def test_my_invoice_detail(self):        cust_name, user_name = _make_customer()
+    def test_my_invoice_detail(self):
+        cust_name, user_name = _make_customer()
         frappe.db.set_value(
             "Hosting Customer",
             cust_name,
