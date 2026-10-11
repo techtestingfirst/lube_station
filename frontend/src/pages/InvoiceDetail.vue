@@ -42,6 +42,7 @@ const inv = ref<Invoice | null>(null)
 const customer = ref<Customer | null>(null)
 const loading = ref(true)
 const error = ref('')
+const walletBalance = ref(0)
 const moving = ref(false)
 const moveMsg = ref('')
 
@@ -49,9 +50,13 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const out = await call<{ invoice: Invoice; customer: Customer }>('lube_station.lube_station.portal.apis.my_invoice_detail', { invoice: name }, 'GET')
+    const [out, w] = await Promise.all([
+      call<{ invoice: Invoice; customer: Customer }>('lube_station.lube_station.portal.apis.my_invoice_detail', { invoice: name }, 'GET'),
+      call<{ balance: number }>('lube_station.lube_station.wallet.wallet.my_wallet', {}, 'GET').catch(() => null),
+    ])
     inv.value = out.invoice
     customer.value = out.customer
+    walletBalance.value = w?.balance || 0
   } catch (e) {
     error.value = friendlyError(e)
   } finally {
@@ -105,7 +110,7 @@ onMounted(load)
           <StatusBadge :status="inv.status" />
           <a :href="pdfUrl(inv.name)" target="_blank" rel="noopener"><Button label="PDF" size="sm" /></a>
           <Button
-            v-if="inv.status === 'Unpaid' || inv.status === 'Overdue'"
+            v-if="(inv.status === 'Unpaid' || inv.status === 'Overdue') && walletBalance > 0"
             label="Use wallet here"
             size="sm"
             :loading="moving"
