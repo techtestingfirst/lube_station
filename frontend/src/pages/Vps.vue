@@ -9,7 +9,8 @@ import LoadingBlock from '../components/LoadingBlock.vue'
 import EmptyState from '../components/EmptyState.vue'
 import ErrorState from '../components/ErrorState.vue'
 
-const instances = ref<{ name: string; status?: string }[]>([])
+interface VpsInst { name: string; status?: string; ipv4?: string; location?: string }
+const instances = ref<VpsInst[]>([])
 const target = ref('')
 const action = ref('reboot')
 const out = ref('')
@@ -50,7 +51,7 @@ async function loadInstances() {
   loading.value = true
   listError.value = ''
   try {
-    instances.value = await call('frappe.client.get_list', { doctype: 'VPS Instance', fields: ['name', 'status'] })
+    instances.value = await call('frappe.client.get_list', { doctype: 'VPS Instance', fields: ['name', 'status', 'ipv4', 'location'] })
     if (!tabs.value.some((t) => t.label === tab.value)) tab.value = 'All'
   } catch (e) {
     instances.value = []
@@ -61,6 +62,10 @@ async function loadInstances() {
 }
 
 onMounted(loadInstances)
+
+function pick(name: string) {
+  target.value = name
+}
 </script>
 
 <template>
@@ -68,7 +73,7 @@ onMounted(loadInstances)
     <div class="flex items-start justify-between gap-4">
       <div>
         <h1 class="text-xl font-semibold tracking-tight text-ink-gray-8">VPS controls</h1>
-        <p class="mt-1 text-sm text-ink-gray-5">Audited power operations for your instances.</p>
+        <p class="mt-1 text-sm text-ink-gray-5">Click an instance below to select it, pick an action, then Run.</p>
       </div>
       <Button label="Run (audited)" variant="solid" size="sm" @click="send" />
     </div>
@@ -85,20 +90,24 @@ onMounted(loadInstances)
     <template v-if="!loading && !listError">
       <StatusTabs v-if="instances.length" v-model="tab" :tabs="tabs" />
       <div v-if="filtered.length" class="space-y-2">
-        <div
+        <button
           v-for="inst in filtered"
           :key="inst.name"
-          class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3 sm:flex-nowrap"
+          class="flex w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-4 py-3 text-left sm:flex-nowrap"
+          :class="target === inst.name
+            ? 'border-ink-gray-8 bg-surface-gray-1'
+            : 'border-outline-gray-1 bg-surface-white hover:bg-surface-gray-1'"
+          @click="pick(inst.name)"
         >
           <div class="min-w-0 flex-1">
             <div class="truncate text-sm font-medium text-ink-gray-8">{{ inst.name }}</div>
-            <div class="mt-0.5 truncate text-sm text-ink-gray-5">VPS instance</div>
+            <div class="mt-0.5 truncate text-sm text-ink-gray-5">
+              {{ [inst.ipv4, inst.location].filter(Boolean).join(' · ') || 'VPS instance' }}
+            </div>
           </div>
           <div class="w-28 shrink-0"><StatusBadge :status="inst.status || 'Unknown'" /></div>
-          <div class="shrink-0">
-            <Button label="Use" size="sm" @click="target = inst.name" />
-          </div>
-        </div>
+          <div class="shrink-0 text-xs text-ink-gray-5">{{ target === inst.name ? 'Selected ✓' : 'Click to select' }}</div>
+        </button>
       </div>
       <EmptyState
         v-else
