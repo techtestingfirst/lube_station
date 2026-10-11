@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Button, ErrorMessage, TextInput, Textarea } from 'frappe-ui'
+import { Button, Checkbox, ErrorMessage, Select, TextInput, Textarea } from 'frappe-ui'
 import { call, friendlyError, logout } from '../api'
 import { formatMoney } from '../format'
 import StatusBadge from '../components/StatusBadge.vue'
 import StatCard from '../components/StatCard.vue'
+import EmptyState from '../components/EmptyState.vue'
 import LoadingBlock from '../components/LoadingBlock.vue'
 import ErrorState from '../components/ErrorState.vue'
 
@@ -58,15 +59,123 @@ async function saveProfile() {
   }
 }
 
+interface Addr {
+  name: string
+  address_title: string
+  address_type: string
+  address_line1: string
+  address_line2?: string | null
+  city: string
+  state?: string | null
+  country: string
+  pincode?: string | null
+  phone?: string | null
+  is_primary_address?: number
+  is_shipping_address?: number
+}
+
+const addrList = ref<Addr[]>([])
+const addrEdit = ref<string | null>(null)
+const addrBusy = ref(false)
+const addrMsg = ref('')
+const addrError = ref('')
+const aform = ref({ title: '', type: 'Billing', line1: '', line2: '', city: '', state: '', country: '', pincode: '', phone: '', primary: false, shipping: false })
+
+const ADDR_TYPES = ['Billing', 'Shipping', 'Office', 'Personal', 'Other']
+
 async function refresh() {
   loading.value = true
   loadError.value = ''
   try {
-    account.value = await call('lube_station.lube_station.portal.apis.my_account', {}, 'GET')
+    const [acc, addrs] = await Promise.all([
+      call('lube_station.lube_station.portal.apis.my_account', {}, 'GET'),
+      call<Addr[]>('lube_station.lube_station.customers.addresses.my_addresses', {}, 'GET').catch(() => [] as Addr[]),
+    ])
+    account.value = acc as Record<string, unknown>
+    addrList.value = addrs
   } catch (e) {
     loadError.value = friendlyError(e)
   } finally {
     loading.value = false
+  }
+}
+
+function addrLines(a: Addr): string {
+  return [a.address_line1, a.address_line2, [a.city, a.state].filter(Boolean).join(', '), [a.pincode, a.country].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+}
+
+function startAddrAdd() {
+  aform.value = { title: '', type: 'Billing', line1: '', line2: '', city: '', state: '', country: '', pincode: '', phone: '', primary: addrList.value.length === 0, shipping: addrList.value.length === 0 }
+  addrMsg.value = ''
+  addrError.value = ''
+  addrEdit.value = 'new'
+}
+
+function startAddrEdit(a: Addr) {
+  aform.value = {
+    title: a.address_title || '', type: a.address_type || 'Billing', line1: a.address_line1 || '',
+    line2: a.address_line2 || '', city: a.city || '', state: a.state || '', country: a.country || '',
+    pincode: a.pincode || '', phone: a.phone || '', primary: !!a.is_primary_address, shipping: !!a.is_shipping_address,
+  }
+  addrMsg.value = ''
+  addrError.value = ''
+  addrEdit.value = a.name
+}
+
+async function saveAddr() {
+  addrMsg.value = ''
+  addrError.value = ''
+  addrBusy.value = true
+  try {
+    const API = 'lube_station.lube_station.customers.addresses'
+    if (addrEdit.value === 'new') {
+      await call(`${API}.add_address`, {
+        address_title: aform.value.title, address_type: aform.value.type, address_line1: aform.value.line1,
+        address_line2: aform.value.line2 || undefined, city: aform.value.city, state: aform.value.state || undefined,
+        country: aform.value.country, pincode: aform.value.pincode || undefined, phone: aform.value.phone || undefined,
+        is_primary: aform.value.primary, is_shipping: aform.value.shipping,
+      })
+      addrMsg.value = 'Address added.'
+    } else {
+      await call(`${API}.update_address`, {
+        name: addrEdit.value, address_title: aform.value.title, address_type: aform.value.type,
+        address_line1: aform.value.line1, address_line2: aform.value.line2, city: aform.value.city,
+        state: aform.value.state, country: aform.value.country, pincode: aform.value.pincode,
+        phone: aform.value.phone, is_primary: aform.value.primary, is_shipping: aform.value.shipping,
+      })
+      addrMsg.value = 'Address updated.'
+    }
+    addrEdit.value = null
+    await refresh()
+  } catch (e) {
+    addrError.value = friendlyError(e)
+  } finally {
+    addrBusy.value = false
+  }
+}
+
+async function addrDefault(name: string, kind: string) {
+  addrBusy.value = true
+  try {
+    await call('lube_station.lube_station.customers.addresses.set_default_address', { name, kind })
+    await refresh()
+  } catch (e) {
+    addrError.value = friendlyError(e)
+  } finally {
+    addrBusy.value = false
+  }
+}
+
+async function addrRemove(name: string) {
+  addrBusy.value = true
+  try {
+    await call('lube_station.lube_station.customers.addresses.delete_address', { name })
+    addrMsg.value = 'Address removed.'
+    await refresh()
+  } catch (e) {
+    addrError.value = friendlyError(e)
+  } finally {
+    addrBusy.value = false
   }
 }
 
@@ -148,6 +257,54 @@ async function save() {
           <ErrorMessage v-if="profileError" :message="profileError" />
         </div>
         <p v-if="profileMsg && !editing" class="mt-2 text-sm text-ink-gray-8">{{ profileMsg }}</p>
+      </div>
+
+      <div class="rounded-lg border border-outline-gray-1 bg-surface-white p-4">
+        <div class="flex items-center justify-between gap-3">
+          <div class="text-sm font-medium text-ink-gray-8">Addresses ({{ addrList.length }})</div>
+          <Button v-if="!addrEdit" label="Add" variant="subtle" size="sm" @click="startAddrAdd" />
+        </div>
+        <div v-if="addrList.length" class="mt-2 divide-y divide-outline-gray-1">
+          <div v-for="a in addrList" :key="a.name" class="py-2">
+            <div class="flex flex-wrap items-center gap-2 text-sm">
+              <span class="font-medium text-ink-gray-8">{{ a.address_title }}</span>
+              <StatusBadge :status="a.address_type" />
+              <StatusBadge v-if="a.is_primary_address" status="Default billing" />
+              <StatusBadge v-if="a.is_shipping_address" status="Default shipping" />
+            </div>
+            <div class="mt-0.5 text-sm text-ink-gray-5">{{ addrLines(a) }}</div>
+            <div class="mt-1 flex flex-wrap gap-2">
+              <Button v-if="!a.is_primary_address" label="Default billing" variant="ghost" size="sm" :loading="addrBusy" @click="addrDefault(a.name, 'billing')" />
+              <Button v-if="!a.is_shipping_address" label="Default shipping" variant="ghost" size="sm" :loading="addrBusy" @click="addrDefault(a.name, 'shipping')" />
+              <Button label="Edit" variant="ghost" size="sm" @click="startAddrEdit(a)" />
+              <Button label="Remove" variant="ghost" size="sm" @click="addrRemove(a.name)" />
+            </div>
+          </div>
+        </div>
+        <EmptyState v-else-if="!addrEdit" title="No saved addresses" hint="Add your billing and shipping addresses." />
+        <div v-if="addrEdit" class="mt-3 space-y-3 border-t border-outline-gray-1 pt-3">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <TextInput v-model="aform.title" label="Label *" placeholder="Home" />
+            <Select v-model="aform.type" label="Type" :options="ADDR_TYPES.map((t) => ({ label: t, value: t }))" />
+            <TextInput v-model="aform.line1" label="Address line 1 *" class="sm:col-span-2" />
+            <TextInput v-model="aform.line2" label="Address line 2" class="sm:col-span-2" />
+            <TextInput v-model="aform.city" label="City *" />
+            <TextInput v-model="aform.state" label="State" />
+            <TextInput v-model="aform.country" label="Country *" placeholder="India" />
+            <TextInput v-model="aform.pincode" label="Pincode" />
+            <TextInput v-model="aform.phone" label="Phone" class="sm:col-span-2" />
+          </div>
+          <div class="flex flex-wrap gap-4">
+            <Checkbox v-model="aform.primary" label="Default billing" />
+            <Checkbox v-model="aform.shipping" label="Default shipping" />
+          </div>
+          <div class="flex gap-2">
+            <Button label="Save" variant="solid" size="sm" :loading="addrBusy" @click="saveAddr" />
+            <Button label="Cancel" variant="subtle" size="sm" @click="addrEdit = null" />
+          </div>
+          <ErrorMessage v-if="addrError" :message="addrError" />
+        </div>
+        <p v-if="addrMsg && !addrEdit" class="mt-2 text-sm text-ink-gray-8">{{ addrMsg }}</p>
       </div>
     </template>
 
