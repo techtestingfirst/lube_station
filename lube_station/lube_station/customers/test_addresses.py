@@ -45,6 +45,34 @@ class TestAddresses(IntegrationTestCase):
         self.assertRaises(frappe.ValidationError, addresses.add_address,
                           address_title="X", address_line1="Y", city="Z", country="No Such Country")
 
+    def test_billing_address_prefers_default(self):
+        from lube_station.lube_station.portal import apis as portal_apis
+
+        cust_name, user = self._customer("addrbill")
+        frappe.set_user(user)
+        inv = frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": cust_name,
+                "status": "Unpaid",
+                "invoice_items": [{"description": "Hosting", "amount": 10}],
+            }
+        ).insert(ignore_permissions=True)
+        # Legacy fallback first.
+        frappe.db.set_value("Hosting Customer", cust_name, "city", "Springfield")
+        detail = portal_apis.my_invoice_detail(inv.name)
+        self.assertIn("Springfield", detail["customer"]["address"])
+        # Default book address wins.
+        addresses.add_address(
+            address_title="HQ",
+            address_line1="99 Billing Rd",
+            city="Mumbai",
+            country="India",
+        )
+        detail = portal_apis.my_invoice_detail(inv.name)
+        self.assertIn("99 Billing Rd", detail["customer"]["address"])
+        self.assertIn("Mumbai", detail["customer"]["address"])
+
     def test_isolation(self):
         cust_a, user_a = self._customer("addra")
         cust_b, user_b = self._customer("addrb")

@@ -437,9 +437,7 @@ def my_invoice_detail(invoice: str):
     assert_owns(inv.customer)
     cust = frappe.get_doc("Hosting Customer", inv.customer)
     contact = frappe.db.get_value("User", cust.user, ["full_name", "email"], as_dict=True) or {}
-    address = cust.billing_address or ", ".join(
-        p for p in (cust.address_line1, cust.city, cust.state, cust.postcode, cust.country) if p
-    )
+    address = _billing_address_for(inv.customer, cust)
     data = inv.as_dict()
     data["invoice_items"] = _enriched_items(inv)
     return {
@@ -453,6 +451,21 @@ def my_invoice_detail(invoice: str):
             "address": address,
         },
     }
+
+
+def _billing_address_for(customer: str, cust) -> str:
+    """Default billing Address book entry wins; legacy fields are fallback."""
+    try:
+        from lube_station.lube_station.customers.addresses import billing_address_text
+
+        text = billing_address_text(customer)
+        if text:
+            return text
+    except Exception:
+        pass
+    return cust.billing_address or ", ".join(
+        p for p in (cust.address_line1, cust.city, cust.state, cust.postcode, cust.country) if p
+    )
 
 
 def _enriched_items(inv):

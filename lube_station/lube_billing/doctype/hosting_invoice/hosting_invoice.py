@@ -402,7 +402,9 @@ def print_context(invoice_name: str) -> dict:
     try:
         cust = frappe.get_doc("Hosting Customer", inv.customer)
         contact = frappe.db.get_value("User", cust.user, ["full_name", "email"], as_dict=True) or {}
-        address = cust.billing_address or ", ".join(
+        from lube_station.lube_station.customers.addresses import billing_address_text
+
+        address = billing_address_text(inv.customer) or cust.billing_address or ", ".join(
             p for p in (cust.address_line1, cust.city, cust.state, cust.postcode, cust.country) if p
         )
         billing = {

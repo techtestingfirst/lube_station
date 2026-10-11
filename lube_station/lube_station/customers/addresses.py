@@ -222,3 +222,37 @@ def delete_address(name: str) -> dict:
         if was_shipping:
             frappe.db.set_value("Address", remaining[0]["name"], "is_shipping_address", 1)
     return {"deleted": name}
+
+
+def billing_address_text(customer: str) -> str | None:
+    """Default billing Address rendered, or None when the customer has none.
+
+    Used for invoice 'Billed to' blocks; callers fall back to the legacy
+    single-address fields on Hosting Customer.
+    """
+    try:
+        from frappe.contacts.doctype.address.address import get_default_address
+
+        name = get_default_address("Hosting Customer", customer)
+        if not name:
+            return None
+        a = frappe.db.get_value(
+            "Address",
+            name,
+            ["address_line1", "address_line2", "city", "state", "pincode", "country", "phone"],
+            as_dict=True,
+        )
+        if not a:
+            return None
+        lines = [
+            a.get("address_line1") or "",
+            a.get("address_line2") or "",
+            ", ".join(p for p in (a.get("city"), a.get("state")) if p),
+            " ".join(p for p in (a.get("pincode"), a.get("country")) if p),
+        ]
+        text = "\n".join(line.strip() for line in lines if line.strip())
+        if a.get("phone"):
+            text += f"\n{a['phone']}"
+        return text or None
+    except Exception:
+        return None
