@@ -142,6 +142,36 @@ class TestWallet(IntegrationTestCase):
         execute()
         self.assertEqual(frappe.db.get_value("Hosting Customer", cust_name, "credit_balance"), 50)
 
+    def test_transfer_wallet_to(self):
+        cust_name, user = self._customer("walletmove")
+        cn = frappe.get_doc(
+            {"doctype": "Credit Note", "customer": cust_name, "amount": 50, "reason": "refund"}
+        ).insert()
+        cn.submit()
+        old = self._invoice(cust_name, 30)
+        new = self._invoice(cust_name, 0)
+        frappe.set_user(user)
+        out = wallet.transfer_wallet_to(new.name)
+        self.assertEqual(out["credit_applied"], 50)
+        self.assertEqual(out["total_due"], 50)
+        self.assertIn(old.name, out["released"])
+        # Balance untouched until payment; old invoice lost its discount.
+        self.assertEqual(frappe.db.get_value("Hosting Customer", cust_name, "credit_balance"), 50)
+        self.assertEqual(frappe.db.get_value("Hosting Invoice", old.name, "credit_applied"), 0)
+        self.assertEqual(frappe.db.get_value("Hosting Invoice", old.name, "total_due"), 100)
+
+    def test_transfer_guards(self):
+        cust_a, user_a = self._customer("walletguarda")
+        cust_b, user_b = self._customer("walletguardb")
+        inv = self._invoice(cust_a, 0)
+        frappe.set_user(user_b)
+        self.assertRaises(frappe.PermissionError, wallet.transfer_wallet_to, inv.name)
+        frappe.set_user(user_a)
+        frappe.db.set_value("Hosting Invoice", inv.name, "status", "Paid")
+        self.assertRaises(frappe.ValidationError, wallet.transfer_wallet_to, inv.name)
+        frappe.set_user("Guest")
+        self.assertRaises(frappe.PermissionError, wallet.transfer_wallet_to, inv.name)
+
     def test_wallet_isolation(self):
         cust_a, user_a = self._customer("walleta")
         cust_b, user_b = self._customer("walletb")

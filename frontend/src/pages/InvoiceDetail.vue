@@ -42,6 +42,8 @@ const inv = ref<Invoice | null>(null)
 const customer = ref<Customer | null>(null)
 const loading = ref(true)
 const error = ref('')
+const moving = ref(false)
+const moveMsg = ref('')
 
 async function load() {
   loading.value = true
@@ -60,6 +62,26 @@ async function load() {
 function pdfUrl(invName: string): string {
   const q = new URLSearchParams({ doctype: 'Hosting Invoice', name: invName, format: 'Hosting Invoice' })
   return `/api/method/frappe.utils.print_format.download_pdf?${q.toString()}`
+}
+
+async function useWalletHere() {
+  moving.value = true
+  moveMsg.value = ''
+  try {
+    const r = await call<{ credit_applied: number; total_due: number; released: string[] }>(
+      'lube_station.lube_station.wallet.wallet.transfer_wallet_to',
+      { invoice: name },
+      'POST',
+    )
+    moveMsg.value = r.released.length
+      ? `Wallet moved here from ${r.released.join(', ')}.`
+      : 'Wallet already applied here.'
+    await load()
+  } catch (e) {
+    moveMsg.value = friendlyError(e)
+  } finally {
+    moving.value = false
+  }
 }
 
 onMounted(load)
@@ -82,9 +104,17 @@ onMounted(load)
         <div class="flex items-center gap-2">
           <StatusBadge :status="inv.status" />
           <a :href="pdfUrl(inv.name)" target="_blank" rel="noopener"><Button label="PDF" size="sm" /></a>
+          <Button
+            v-if="inv.status === 'Unpaid' || inv.status === 'Overdue'"
+            label="Use wallet here"
+            size="sm"
+            :loading="moving"
+            @click="useWalletHere"
+          />
           <RouterLink v-if="inv.status !== 'Paid'" :to="`/pay/${inv.name}`"><Button label="Pay now" variant="solid" size="sm" /></RouterLink>
         </div>
       </div>
+      <div v-if="moveMsg" class="text-sm text-ink-gray-5">{{ moveMsg }}</div>
 
       <div v-if="customer" class="rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3">
         <div class="mb-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5">Billed to — verify before paying</div>
