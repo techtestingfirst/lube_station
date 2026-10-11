@@ -346,3 +346,70 @@ def issue_refund(invoice: str, amount: float | None = None, reason: str = "") ->
     except Exception:
         pass
     return {"refunded": refund_amount, "credit_note": credit_note.name}
+
+
+def print_context(invoice_name: str) -> dict:
+    """Enriched context for the 'Hosting Invoice' print format.
+
+    Billing identity (name + address, never the raw customer ID),
+    customer-facing line labels, purchased domain, and service period.
+    Never raises: falls back to raw values on any miss.
+    """
+    from lube_station.lube_station.portal.apis import _enriched_items
+
+    inv = frappe.get_doc("Hosting Invoice", invoice_name)
+    try:
+        cust = frappe.get_doc("Hosting Customer", inv.customer)
+        contact = frappe.db.get_value("User", cust.user, ["full_name", "email"], as_dict=True) or {}
+        address = cust.billing_address or ", ".join(
+            p for p in (cust.address_line1, cust.city, cust.state, cust.postcode, cust.country) if p
+        )
+        billing = {
+            "name": contact.get("full_name") or cust.user,
+            "email": contact.get("email") or cust.user,
+            "company": cust.company or "",
+            "phone": cust.phone or "",
+            "tax_id": cust.tax_id or "",
+            "address": address or "",
+        }
+    except Exception:
+        billing = {"name": inv.customer, "email": "", "company": "", "phone": "", "tax_id": "", "address": ""}
+    try:
+        items = _enriched_items(inv)
+    except Exception:
+        items = [i.as_dict() for i in inv.invoice_items]
+    for d in items:
+        d.setdefault("title", d.get("description"))
+        d.setdefault("meta", "")
+        d.setdefault("domain", "")
+        start, end = _line_period(inv, d.get("service_ref") or "")
+        d["start"] = start
+        d["end"] = end
+    return {"billing": billing, "lines": items}
+
+
+def _line_period(inv, ref):
+    """(start, end) display dates for one line.
+
+    Service-linked lines span service creation to next due date;
+    anything else spans invoice creation to due date.
+    """
+    try:
+        if ref and frappe.db.exists("Service", ref):
+            svc = frappe.db.get_value("Service", ref, ["creation", "next_due_date"], as_dict=True)
+            if svc:
+                return _fmt_date(svc.get("creation")), _fmt_date(svc.get("next_due_date"))
+    except Exception:
+        pass
+    return _fmt_date(inv.creation), _fmt_date(inv.due_date)
+
+
+def _fmt_date(d):
+    if not d:
+        return ""
+    try:
+        from frappe.utils import formatdate
+
+        return formatdate(d)
+    except Exception:
+        return str(d)

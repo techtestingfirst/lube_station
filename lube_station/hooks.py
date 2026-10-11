@@ -77,10 +77,11 @@ add_to_apps_screen = [
 # ----------
 
 # add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "lube_station.utils.jinja_methods",
-# 	"filters": "lube_station.utils.jinja_filters"
-# }
+jinja = {
+    "methods": [
+        "lube_station.lube_billing.doctype.hosting_invoice.hosting_invoice.print_context",
+    ]
+}
 
 # Installation
 # ------------

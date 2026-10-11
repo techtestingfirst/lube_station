@@ -1,3 +1,5 @@
+import uuid
+
 import frappe
 from frappe.tests import IntegrationTestCase
 
@@ -18,17 +20,37 @@ class TestInvoicePdf(IntegrationTestCase):
     def test_format_renders(self):
         self.assertTrue(frappe.db.exists("Print Format", "Hosting Invoice"))
         cust = _customer()
+        frappe.db.set_value(
+            "Hosting Customer",
+            cust.name,
+            {"company": "Acme Ltd", "tax_id": "VAT123", "address_line1": "1 Main St", "city": "Springfield", "country": "India"},
+        )
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": f"PDF Group {uuid.uuid4().hex[:6]}"}).insert()
+        plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"PDF Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
+        svc = frappe.get_doc({"doctype": "Service", "customer": cust.name, "hosting_plan": plan.name, "status": "Active", "recurring_amount": 10, "primary_domain": "example.com"}).insert()
         inv = frappe.get_doc(
             {
                 "doctype": "Hosting Invoice",
                 "customer": cust.name,
-                "invoice_items": [{"description": "Test line", "service_ref": "SVC-1", "amount": 25}],
+                "invoice_items": [{"description": f"Hosting Plan: {plan.name} x1", "service_ref": svc.name, "amount": 25}],
                 "status": "Unpaid",
             }
         ).insert(ignore_permissions=True)
         html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
         self.assertIn(inv.name, html)
         self.assertIn("Total due", html)
+        # Billing identity, never the raw customer ID.
+        self.assertIn("Acme Ltd", html)
+        self.assertIn("1 Main St", html)
+        self.assertIn("VAT123", html)
+        self.assertNotIn(cust.name, html.replace(inv.name, ""))
+        # Plan group + name, purchased domain, service period.
+        self.assertIn(plan.plan_name, html)
+        self.assertIn("example.com", html)
+        self.assertIn("Start", html)
+        self.assertIn("End", html)
+        self.assertNotIn(plan.name, html)
+        self.assertNotIn(svc.name, html)
 
     def test_owner_can_print_stranger_cannot(self):
         cust = _customer()
