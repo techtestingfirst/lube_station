@@ -7,3 +7,4 @@ lube_station.patches.rename_domain_doctype
 # Patches added in this section will be executed after doctypes are migrated
 lube_station.patches.grant_hd_customer_role
 lube_station.patches.restore_wallet_credit_on_unpaid
+lube_station.patches.migrate_tax_code_masters

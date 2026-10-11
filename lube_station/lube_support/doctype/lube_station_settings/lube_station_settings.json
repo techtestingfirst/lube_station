@@ -33,8 +33,9 @@
     },
     {
       "fieldname": "default_tax_code",
-      "fieldtype": "Data",
-      "label": "Default Tax Code (SAC/HSN)"
+      "fieldtype": "Link",
+      "label": "Default Tax Code (SAC/HSN)",
+      "options": "Tax Code"
     },
     {
       "fieldname": "support_email",

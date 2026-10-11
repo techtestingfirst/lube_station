@@ -120,8 +120,9 @@
     },
     {
       "fieldname": "tax_code",
-      "fieldtype": "Data",
-      "label": "Tax Code (SAC/HSN)"
+      "fieldtype": "Link",
+      "label": "Tax Code (SAC/HSN)",
+      "options": "Tax Code"
     }
   ],
   "links": [],

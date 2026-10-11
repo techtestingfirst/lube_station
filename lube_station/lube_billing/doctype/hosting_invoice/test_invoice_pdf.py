@@ -108,6 +108,7 @@ class TestInvoicePdf(IntegrationTestCase):
 
     def test_tax_code_column_and_seller_tax_id(self):
         cust = _customer()
+        frappe.get_doc({"doctype": "Tax Code", "code": "9984", "description": "Hosting"}).insert(ignore_permissions=True)
         group = frappe.get_doc({"doctype": "Product Group", "group_name": f"PDF Tax Group {uuid.uuid4().hex[:6]}"}).insert()
         plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"PDF Tax Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1, "tax_code": "9984"}).insert()
         svc = frappe.get_doc({"doctype": "Service", "customer": cust.name, "hosting_plan": plan.name, "status": "Active", "recurring_amount": 10}).insert()

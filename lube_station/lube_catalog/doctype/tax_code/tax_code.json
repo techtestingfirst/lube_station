@@ -1,0 +1,54 @@
+{
+  "name": "Tax Code",
+  "module": "Lube Catalog",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "autoname": "field:code",
+  "naming_rule": "By fieldname",
+  "modified": "2026-10-12 00:00:00.000000",
+  "fields": [
+    {
+      "fieldname": "code",
+      "fieldtype": "Data",
+      "label": "Code",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "column_break_0",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "country",
+      "fieldtype": "Link",
+      "label": "Country",
+      "options": "Country"
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Active",
+      "default": "1"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    }
+  ],
+  "sort_field": "code",
+  "sort_order": "ASC",
+  "title_field": "code",
+  "search_fields": "code,description"
+}
