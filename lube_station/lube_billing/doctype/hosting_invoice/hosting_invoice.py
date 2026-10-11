@@ -493,27 +493,29 @@ def print_context(invoice_name: str) -> dict:
         "logo": frappe.db.get_single_value("Lube Station Settings", "company_logo") or "",
     }
     payment = {"gateway": inv.gateway or "", "txn_id": "", "show": inv.status == "Paid"}
+    transactions = []
     try:
-        txn = frappe.db.get_value(
+        transactions = frappe.db.get_all(
             "Payment Transaction",
             {"invoice": inv.name, "status": "Success"},
-            ["gateway", "gateway_txn_id"],
-            order_by="creation desc",
-            as_dict=True,
-        )
-        if txn:
+            ["gateway", "gateway_txn_id", "amount", "creation"],
+            order_by="creation asc",
+        ) or []
+        if transactions:
+            last = transactions[-1]
             payment = {
-                "gateway": txn.get("gateway") or inv.gateway or "",
-                "txn_id": txn.get("gateway_txn_id") or "",
+                "gateway": last.get("gateway") or inv.gateway or "",
+                "txn_id": last.get("gateway_txn_id") or "",
                 "show": True,
             }
     except Exception:
-        pass
+        transactions = []
     return {
         "billing": billing,
         "seller": seller,
         "tax_code_label": label,
         "lines": items,
+        "transactions": transactions,
         "payment": payment,
         "status_color": STATUS_COLORS.get(inv.status, "#6b7280"),
     }

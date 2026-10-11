@@ -79,9 +79,12 @@ class TestInvoicePdf(IntegrationTestCase):
         html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
         self.assertIn(formatdate(getdate(today())), html)
         self.assertIn(formatdate(add_months(getdate(today()), 1)), html)
-        # Colored status pill and gateway transaction reference.
+        # Colored status pill and transactions table.
         self.assertIn("#16a34a", html)
-        self.assertIn("Paid via Stripe · Transaction: txn_test_123.", html)
+        self.assertIn("Transactions", html)
+        self.assertIn("txn_test_123", html)
+        self.assertIn("Stripe", html)
+        self.assertNotIn("Paid via", html)
 
     def test_owner_can_print_stranger_cannot(self):
         cust = _customer()
