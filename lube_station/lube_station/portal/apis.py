@@ -404,6 +404,7 @@ def dashboard():
         "unpaid": frappe.db.count("Hosting Invoice", {"customer": customer, "status": "Unpaid"}),
         "domains": frappe.db.count("Registered Domain", {"customer": customer}),
         "tickets": frappe.db.count("Ticket Hosting Reference", {"customer": customer}),
+        "wallet": float(frappe.db.get_value("Hosting Customer", customer, "credit_balance") or 0),
     }
 
 

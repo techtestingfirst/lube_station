@@ -43,6 +43,7 @@ onMounted(load)
         <StatCard :value="data.unpaid ?? 0" label="Unpaid invoices" to="/invoices" />
         <StatCard :value="data.domains ?? 0" label="Domains" to="/domains" />
         <StatCard :value="data.tickets ?? 0" label="Tickets" to="/support" />
+        <StatCard :value="data.wallet ?? 0" label="Wallet balance" to="/wallet" />
       </div>
       <div
         class="flex flex-wrap gap-x-5 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3 text-sm"
