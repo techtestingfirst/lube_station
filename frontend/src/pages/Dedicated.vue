@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { call, friendlyError } from '../api'
 import StatusBadge from '../components/StatusBadge.vue'
+import StatusTabs from '../components/StatusTabs.vue'
 import LoadingBlock from '../components/LoadingBlock.vue'
 import EmptyState from '../components/EmptyState.vue'
 import ErrorState from '../components/ErrorState.vue'
@@ -13,12 +14,26 @@ const list = ref<D[]>([])
 const loading = ref(true)
 const error = ref('')
 const router = useRouter()
+const tab = ref('All')
+
+const ORDER = ['Assigned', 'Reserved', 'Wipe Pending', 'Available', 'Terminated']
+
+const tabs = computed(() => {
+  const counts = new Map<string, number>()
+  for (const d of list.value) counts.set(d.status, (counts.get(d.status) || 0) + 1)
+  const present = ORDER.filter((s) => counts.has(s))
+  for (const s of counts.keys()) if (!present.includes(s)) present.push(s)
+  return [{ label: 'All', count: list.value.length }, ...present.map((s) => ({ label: s, count: counts.get(s) || 0 }))]
+})
+
+const filtered = computed(() => tab.value === 'All' ? list.value : list.value.filter((d) => d.status === tab.value))
 
 async function load() {
   loading.value = true
   error.value = ''
   try {
     list.value = await call('lube_station.lube_station.portal.apis.my_dedicated', {}, 'GET')
+    if (!tabs.value.some((t) => t.label === tab.value)) tab.value = 'All'
   } catch (e) {
     error.value = friendlyError(e)
   } finally {
@@ -44,9 +59,10 @@ onMounted(load)
     <ErrorState v-if="error && !loading" :message="error" @retry="load" />
     <LoadingBlock v-if="loading" :lines="3" />
     <template v-if="!loading && !error">
-      <div v-if="list.length" class="space-y-2">
+      <StatusTabs v-if="list.length" v-model="tab" :tabs="tabs" />
+      <div v-if="filtered.length" class="space-y-2">
         <div
-          v-for="d in list"
+          v-for="d in filtered"
           :key="d.name"
           class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3 sm:flex-nowrap"
         >

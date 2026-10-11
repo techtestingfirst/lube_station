@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Button, ErrorMessage, TextInput } from 'frappe-ui'
 import { useRouter } from 'vue-router'
 import { call, friendlyError } from '../api'
 import { formatDate } from '../format'
 import StatusBadge from '../components/StatusBadge.vue'
+import StatusTabs from '../components/StatusTabs.vue'
 import StatCard from '../components/StatCard.vue'
 import LoadingBlock from '../components/LoadingBlock.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -12,6 +13,19 @@ import ErrorState from '../components/ErrorState.vue'
 
 interface D { domain_name: string; status: string; expiry_date: string }
 const list = ref<D[]>([])
+const tab = ref('All')
+
+const ORDER = ['Registered', 'Expired', 'Taken', 'Premium', 'Transferred', 'Available', 'Unknown']
+
+const tabs = computed(() => {
+  const counts = new Map<string, number>()
+  for (const d of list.value) counts.set(d.status, (counts.get(d.status) || 0) + 1)
+  const present = ORDER.filter((s) => counts.has(s))
+  for (const s of counts.keys()) if (!present.includes(s)) present.push(s)
+  return [{ label: 'All', count: list.value.length }, ...present.map((s) => ({ label: s, count: counts.get(s) || 0 }))]
+})
+
+const filtered = computed(() => tab.value === 'All' ? list.value : list.value.filter((d) => d.status === tab.value))
 const name = ref('')
 const error = ref('')
 const loading = ref(true)
@@ -24,6 +38,7 @@ async function refresh() {
   loadError.value = ''
   try {
     list.value = await call('lube_station.lube_station.portal.apis.my_domains', {}, 'GET')
+    if (!tabs.value.some((t) => t.label === tab.value)) tab.value = 'All'
   } catch (e) {
     loadError.value = friendlyError(e)
   } finally {
@@ -80,9 +95,11 @@ onMounted(refresh)
       title="No domains yet"
       hint="Register your first domain with the form above."
     />
-    <div v-else class="overflow-hidden rounded-lg border border-outline-gray-1 bg-surface-white">
+    <template v-else>
+      <StatusTabs v-if="list.length" v-model="tab" :tabs="tabs" />
+      <div v-if="filtered.length" class="overflow-hidden rounded-lg border border-outline-gray-1 bg-surface-white">
       <div
-        v-for="d in list"
+        v-for="d in filtered"
         :key="d.domain_name"
         class="flex items-center justify-between gap-3 border-t border-outline-gray-1 px-4 py-3 first:border-t-0"
       >
@@ -95,6 +112,7 @@ onMounted(refresh)
         </div>
         <Button label="DNS" variant="ghost" size="sm" :route="`/dns/${d.domain_name}`" class="shrink-0" />
       </div>
-    </div>
+      </div>
+    </template>
   </div>
 </template>

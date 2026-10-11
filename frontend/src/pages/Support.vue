@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { Button, ErrorMessage } from 'frappe-ui'
 import { call, friendlyError } from '../api'
 import StatusBadge from '../components/StatusBadge.vue'
+import StatusTabs from '../components/StatusTabs.vue'
 import EmptyState from '../components/EmptyState.vue'
 
 interface TicketRow {
@@ -23,6 +24,19 @@ const service = ref('')
 const tickets = ref<TicketRow[]>([])
 const loading = ref(false)
 const listError = ref('')
+const tab = ref('All')
+
+const ORDER = ['Open', 'Replied', 'Resolved', 'Closed']
+
+const tabs = computed(() => {
+  const counts = new Map<string, number>()
+  for (const t of tickets.value) counts.set(t.status, (counts.get(t.status) || 0) + 1)
+  const present = ORDER.filter((s) => counts.has(s))
+  for (const s of counts.keys()) if (!present.includes(s)) present.push(s)
+  return [{ label: 'All', count: tickets.value.length }, ...present.map((s) => ({ label: s, count: counts.get(s) || 0 }))]
+})
+
+const filtered = computed(() => tab.value === 'All' ? tickets.value : tickets.value.filter((t) => t.status === tab.value))
 
 /** Helpdesk SPA lives on backend origin (:8000). Dev Vite runs :8080. */
 function backendOrigin(): string {
@@ -56,6 +70,7 @@ async function load() {
       {},
       'GET',
     )
+    if (!tabs.value.some((t) => t.label === tab.value)) tab.value = 'All'
   } catch (e) {
     listError.value = friendlyError(e)
   } finally {
@@ -90,9 +105,10 @@ async function load() {
       <div class="text-sm font-medium text-ink-gray-8">My tickets</div>
       <div v-if="loading" class="mt-2 text-sm text-ink-gray-5">Loading tickets…</div>
       <ErrorMessage v-else-if="listError" class="mt-2" :message="listError" />
-      <div v-else-if="tickets.length" class="mt-2 divide-y divide-outline-gray-1">
+      <StatusTabs v-else-if="tickets.length" v-model="tab" :tabs="tabs" class="mt-2" />
+      <div v-if="!loading && !listError && filtered.length" class="mt-2 divide-y divide-outline-gray-1">
         <a
-          v-for="t in tickets"
+          v-for="t in filtered"
           :key="t.name"
           :href="ticketUrl(t.name)"
           target="_blank"

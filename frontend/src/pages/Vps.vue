@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button, ErrorMessage, Select, TextInput } from 'frappe-ui'
 import { call, friendlyError } from '../api'
+import StatusBadge from '../components/StatusBadge.vue'
+import StatusTabs from '../components/StatusTabs.vue'
 import LoadingBlock from '../components/LoadingBlock.vue'
 import EmptyState from '../components/EmptyState.vue'
 import ErrorState from '../components/ErrorState.vue'
 
-const instances = ref<{ name: string }[]>([])
+const instances = ref<{ name: string; status?: string }[]>([])
 const target = ref('')
 const action = ref('reboot')
 const out = ref('')
@@ -15,6 +17,19 @@ const error = ref('')
 const loading = ref(true)
 const listError = ref('')
 const router = useRouter()
+const tab = ref('All')
+
+const ORDER = ['Active', 'Suspended', 'Provisioning', 'Terminated']
+
+const tabs = computed(() => {
+  const counts = new Map<string, number>()
+  for (const i of instances.value) counts.set(i.status || 'Unknown', (counts.get(i.status || 'Unknown') || 0) + 1)
+  const present = ORDER.filter((s) => counts.has(s))
+  for (const s of counts.keys()) if (!present.includes(s)) present.push(s)
+  return [{ label: 'All', count: instances.value.length }, ...present.map((s) => ({ label: s, count: counts.get(s) || 0 }))]
+})
+
+const filtered = computed(() => tab.value === 'All' ? instances.value : instances.value.filter((i) => (i.status || 'Unknown') === tab.value))
 
 const actionOptions = ['reboot', 'start', 'stop', 'snapshot', 'console', 'usage'].map((a) => ({
   label: a,
@@ -35,7 +50,8 @@ async function loadInstances() {
   loading.value = true
   listError.value = ''
   try {
-    instances.value = await call('frappe.client.get_list', { doctype: 'VPS Instance', fields: ['name'] })
+    instances.value = await call('frappe.client.get_list', { doctype: 'VPS Instance', fields: ['name', 'status'] })
+    if (!tabs.value.some((t) => t.label === tab.value)) tab.value = 'All'
   } catch (e) {
     instances.value = []
     listError.value = friendlyError(e)
@@ -67,9 +83,10 @@ onMounted(loadInstances)
     <ErrorState v-if="listError && !loading" :message="listError" @retry="loadInstances" />
     <LoadingBlock v-if="loading" :lines="3" />
     <template v-if="!loading && !listError">
-      <div v-if="instances.length" class="space-y-2">
+      <StatusTabs v-if="instances.length" v-model="tab" :tabs="tabs" />
+      <div v-if="filtered.length" class="space-y-2">
         <div
-          v-for="inst in instances"
+          v-for="inst in filtered"
           :key="inst.name"
           class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3 sm:flex-nowrap"
         >
@@ -77,6 +94,7 @@ onMounted(loadInstances)
             <div class="truncate text-sm font-medium text-ink-gray-8">{{ inst.name }}</div>
             <div class="mt-0.5 truncate text-sm text-ink-gray-5">VPS instance</div>
           </div>
+          <div class="w-28 shrink-0"><StatusBadge :status="inst.status || 'Unknown'" /></div>
           <div class="shrink-0">
             <Button label="Use" size="sm" @click="target = inst.name" />
           </div>
