@@ -131,6 +131,7 @@ class TestInvoicePdf(IntegrationTestCase):
 
     def test_company_logo_slot(self):
         cust = _customer()
+        frappe.db.set_single_value("Lube Station Settings", "company_logo", "")
         inv = frappe.get_doc(
             {
                 "doctype": "Hosting Invoice",
