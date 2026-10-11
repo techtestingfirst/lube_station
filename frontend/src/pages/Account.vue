@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { Button, Checkbox, ErrorMessage, Select, TextInput, Textarea } from 'frappe-ui'
 import { call, friendlyError, logout } from '../api'
 import { formatMoney } from '../format'
@@ -82,6 +82,17 @@ const addrError = ref('')
 const aform = ref({ title: '', type: 'Billing', line1: '', line2: '', city: '', state: '', country: '', pincode: '', phone: '', primary: false, shipping: false })
 
 const ADDR_TYPES = ['Billing', 'Shipping', 'Office', 'Personal', 'Other']
+
+// Postcode/city/state belong to a country: changing it clears all three
+// so a stale PIN can't fill (or fail) against the new country.
+let suppressCountryWatch = false
+watch(() => aform.value.country, (next, prev) => {
+  if (suppressCountryWatch || next === prev) return
+  aform.value.pincode = ''
+  aform.value.city = ''
+  aform.value.state = ''
+  addrLookupHint.value = ''
+})
 const addrCountries = ref<{ label: string; value: string }[]>([])
 const addrLookingUp = ref(false)
 const addrLookupHint = ref('')
@@ -135,13 +146,16 @@ function addrLines(a: Addr): string {
 }
 
 function startAddrAdd() {
+  suppressCountryWatch = true
   aform.value = { title: '', type: 'Billing', line1: '', line2: '', city: '', state: '', country: '', pincode: '', phone: '', primary: addrList.value.length === 0, shipping: addrList.value.length === 0 }
   addrMsg.value = ''
   addrError.value = ''
   addrEdit.value = 'new'
+  nextTick(() => { suppressCountryWatch = false })
 }
 
 function startAddrEdit(a: Addr) {
+  suppressCountryWatch = true
   aform.value = {
     title: a.address_title || '', type: a.address_type || 'Billing', line1: a.address_line1 || '',
     line2: a.address_line2 || '', city: a.city || '', state: a.state || '', country: a.country || '',
@@ -150,6 +164,7 @@ function startAddrEdit(a: Addr) {
   addrMsg.value = ''
   addrError.value = ''
   addrEdit.value = a.name
+  nextTick(() => { suppressCountryWatch = false })
 }
 
 async function saveAddr() {
