@@ -25,6 +25,7 @@ const routes = [
   { path: '/dns/:domain', component: () => import('./pages/Dns.vue') },
   { path: '/downloads', component: () => import('./pages/Downloads.vue') },
   { path: '/support', component: () => import('./pages/Support.vue') },
+  { path: '/kb', component: () => import('./pages/Kb.vue') },
   { path: '/account', component: () => import('./pages/Account.vue') },
   { path: '/:path(.*)*', component: () => import('./pages/NotFound.vue') },
 ]

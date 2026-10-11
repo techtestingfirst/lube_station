@@ -48,6 +48,7 @@ async function signOut() {
             <SidebarItem label="Domains" route="/domains" />
             <SidebarItem label="Downloads" route="/downloads" />
             <SidebarItem label="Support" route="/support" />
+            <SidebarItem label="Knowledge Base" route="/kb" />
           </SidebarSection>
           <SidebarSection>
             <SidebarLabel>Billing</SidebarLabel>
