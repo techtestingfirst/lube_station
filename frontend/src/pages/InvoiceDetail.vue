@@ -8,7 +8,7 @@ import StatusBadge from '../components/StatusBadge.vue'
 import LoadingBlock from '../components/LoadingBlock.vue'
 import ErrorState from '../components/ErrorState.vue'
 
-interface Item { description: string; service_ref: string; amount: number; plan_name: string; domain: string }
+interface Item { description: string; amount: number; plan_name: string; domain: string; title: string; meta: string }
 interface Invoice {
   name: string
   status: string
@@ -104,9 +104,9 @@ onMounted(load)
         </div>
         <div v-for="item in inv.invoice_items" :key="item.description + item.amount" class="flex items-center justify-between gap-4 border-b border-outline-gray-1 px-4 py-3 last:border-0">
           <div class="min-w-0">
-            <div class="text-sm font-medium text-ink-gray-8">{{ item.plan_name || item.description }}</div>
+            <div class="text-sm font-medium text-ink-gray-8">{{ item.title || item.description }}</div>
             <div v-if="item.domain" class="mt-0.5 text-sm text-ink-gray-5">{{ item.domain }}</div>
-            <div v-if="item.plan_name && item.description !== item.plan_name" class="mt-0.5 text-xs text-ink-gray-5">{{ item.description }}</div>
+            <div v-if="item.meta" class="mt-0.5 text-xs text-ink-gray-5">{{ item.meta }}</div>
           </div>
           <div class="shrink-0 text-sm font-medium text-ink-gray-8">{{ formatMoney(item.amount) }}</div>
         </div>

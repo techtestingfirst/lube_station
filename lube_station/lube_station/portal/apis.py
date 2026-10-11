@@ -472,31 +472,60 @@ def _enriched_items(inv):
     out = []
     for it in inv.invoice_items:
         ref = (it.service_ref or "").strip()
-        plan_name, domain = "", ""
+        plan_name, domain, group, item_type = "", "", "", ""
         try:
             if ref and frappe.db.exists("Service", ref):
                 svc = frappe.db.get_value("Service", ref, ["hosting_plan", "primary_domain"], as_dict=True)
                 if svc:
                     domain = svc.get("primary_domain") or ""
                     if svc.get("hosting_plan"):
-                        plan_name = frappe.db.get_value("Hosting Plan", svc["hosting_plan"], "plan_name") or ""
+                        plan_name, group = _plan_label(svc["hosting_plan"])
             if not plan_name and ref and frappe.db.exists("Hosting Plan", ref):
-                plan_name = frappe.db.get_value("Hosting Plan", ref, "plan_name") or ""
+                plan_name, group = _plan_label(ref)
             entry = order_map.get(ref)
             if entry:
+                item_type = entry.get("item_type") or ""
                 domain = domain or entry.get("domain") or ""
-                if not plan_name and entry.get("item_type") == "Domain":
-                    plan_name = "Domain"
             if not domain and ref and frappe.db.exists("Registered Domain", {"domain_name": ref}):
                 domain = ref
-                plan_name = plan_name or "Domain"
+                item_type = item_type or "Domain"
         except Exception:
             pass
+        title, meta = _line_display(it.description or "", plan_name, domain, group, item_type)
         d = it.as_dict()
         d["plan_name"] = plan_name
         d["domain"] = domain
+        d["title"] = title
+        d["meta"] = meta
         out.append(d)
     return out
+
+
+def _plan_label(plan):
+    """(plan_name, group label) for a Hosting Plan. Empty strings on miss."""
+    try:
+        row = frappe.db.get_value("Hosting Plan", plan, ["plan_name", "product_group", "product_type"], as_dict=True)
+    except Exception:
+        row = None
+    if not row:
+        return "", ""
+    return row.get("plan_name") or "", row.get("product_group") or row.get("product_type") or ""
+
+
+def _line_display(description, plan_name, domain, group, item_type):
+    """Customer-facing (title, meta) lines. Raw IDs never shown when resolved."""
+    if plan_name and description.startswith("Setup fee"):
+        return plan_name, f"Setup fee · {group}" if group else "Setup fee"
+    if plan_name and description.startswith("Upgrade"):
+        return f"Upgrade to {plan_name}", "Plan upgrade"
+    if description.startswith("Overage"):
+        title = f"Usage overage · {plan_name}" if plan_name else "Usage overage"
+        return title, group or description
+    if plan_name:
+        return plan_name, f"Hosting Plan · {group}" if group else "Hosting Plan"
+    if domain and item_type == "Domain":
+        return domain, "Domain"
+    return description, ""
 
 
 @frappe.whitelist(methods=["GET"])

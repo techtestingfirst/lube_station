@@ -154,9 +154,13 @@ class TestPortalApis(IntegrationTestCase):
         first, second = detail["invoice"]["invoice_items"]
         self.assertEqual(first["plan_name"], plan.plan_name)
         self.assertEqual(first["domain"], "example.com")
-        self.assertNotIn(svc.name, (first["plan_name"], first["domain"]))
+        self.assertEqual(first["title"], plan.plan_name)
+        self.assertEqual(first["meta"], f"Hosting Plan · {group.name}")
+        self.assertNotIn(svc.name, (first["title"], first["meta"], first["domain"]))
+        self.assertNotIn(plan.name, (first["title"], first["meta"]))
         # Bare plan ref resolves to plan name.
         self.assertEqual(second["plan_name"], plan.plan_name)
+        self.assertEqual(second["title"], plan.plan_name)
         # Billing identity for pre-payment verification.
         billing = detail["customer"]
         self.assertTrue(billing["name"])
