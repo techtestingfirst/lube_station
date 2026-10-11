@@ -73,6 +73,30 @@ def _ensure_hd_customer_role(user: str | None) -> None:
         frappe.set_user(original)
 
 
+def auto_link_helpdesk_ticket(doc, method=None) -> None:
+    """Link Helpdesk-created tickets back to the Hosting Customer.
+
+    Wired as HD Ticket after_insert (hooks.py). Covers tickets customers open
+    directly in the Helpdesk portal (/helpdesk/my-tickets/new), which bypass
+    create_ticket and would otherwise vanish from the Lube My-tickets list
+    and dashboard count. Idempotent: skips when a reference already exists
+    (e.g. create_ticket inserts its own richer row right after).
+    No service/invoice context here — customer linkage only.
+    """
+    if frappe.db.exists("Ticket Hosting Reference", {"ticket": doc.name}):
+        return
+    email = (getattr(doc, "raised_by", None) or "").strip()
+    user = email if email and frappe.db.exists("User", email) else None
+    if not user and getattr(doc, "contact", None):
+        user = frappe.db.get_value("Contact", doc.contact, "user") or None
+    customer = frappe.db.get_value("Hosting Customer", {"user": user}, "name") if user else None
+    if not customer:
+        return
+    frappe.get_doc(
+        {"doctype": "Ticket Hosting Reference", "ticket": doc.name, "customer": customer}
+    ).insert(ignore_permissions=True)
+
+
 def _ref_for_ticket_or_throw(ticket: str) -> dict:
     rows = frappe.db.get_all(
         "Ticket Hosting Reference",
@@ -116,7 +140,17 @@ def create_ticket(subject: str, description: str, customer: str | None = None, s
             "via_customer_portal": 1,
         }
     ).insert(ignore_permissions=True)
-    frappe.get_doc({"doctype": "Ticket Hosting Reference", "ticket": ticket.name, "customer": customer, "service": service, "invoice": invoice}).insert(ignore_permissions=True)
+    # The after_insert hook above may have already linked this ticket (it runs
+    # before this line). Enrich that row instead of colliding on unique ticket.
+    existing = frappe.db.get_value("Ticket Hosting Reference", {"ticket": ticket.name}, "name")
+    if existing:
+        frappe.db.set_value(
+            "Ticket Hosting Reference",
+            existing,
+            {"customer": customer, "service": service, "invoice": invoice},
+        )
+    else:
+        frappe.get_doc({"doctype": "Ticket Hosting Reference", "ticket": ticket.name, "customer": customer, "service": service, "invoice": invoice}).insert(ignore_permissions=True)
     try:
         from lube_station.lube_station.notifications.events import notify_customer
 

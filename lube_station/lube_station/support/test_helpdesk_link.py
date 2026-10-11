@@ -54,6 +54,27 @@ class TestHelpdeskLink(IntegrationTestCase):
         bodies = [c.get("content") or "" for c in detail2["communications"]]
         self.assertTrue(any("Customer follow-up" in b for b in bodies))
 
+    def test_helpdesk_created_ticket_auto_links(self):
+        """Tickets opened directly in Helpdesk portal still land in My tickets."""
+        user = make_user("autolink")
+        cust = frappe.get_doc({"doctype": "Hosting Customer", "user": user, "status": "Active"}).insert()
+        t = frappe.get_doc(
+            {
+                "doctype": "HD Ticket",
+                "subject": "Helpdesk direct",
+                "description": "opened in portal",
+                "raised_by": user,
+                "via_customer_portal": 1,
+            }
+        ).insert(ignore_permissions=True)
+        ref = frappe.db.get_value("Ticket Hosting Reference", {"ticket": t.name}, ["customer", "service"], as_dict=True)
+        self.assertIsNotNone(ref)
+        self.assertEqual(ref["customer"], cust.name)
+        self.assertIsNone(ref["service"])
+        frappe.set_user(user)
+        rows = tickets.my_tickets()
+        self.assertTrue(any(r["name"] == t.name for r in rows))
+
     def test_ticket_guards(self):
         user_a = make_user("guarda")
         cust_a = frappe.get_doc({"doctype": "Hosting Customer", "user": user_a, "status": "Active"}).insert()

@@ -147,13 +147,11 @@ has_permission = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"HD Ticket": {
+		"after_insert": "lube_station.lube_station.support.tickets.auto_link_helpdesk_ticket",
+	}
+}
 
 # Scheduled Tasks
 # ---------------
