@@ -479,6 +479,7 @@ def print_context(invoice_name: str) -> dict:
     return {
         "billing": billing,
         "seller": seller,
+        "tax_code_label": frappe.db.get_single_value("Lube Station Settings", "tax_code_label") or "Tax code",
         "lines": items,
         "payment": payment,
         "status_color": STATUS_COLORS.get(inv.status, "#6b7280"),

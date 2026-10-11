@@ -113,6 +113,7 @@ class TestInvoicePdf(IntegrationTestCase):
         plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"PDF Tax Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1, "tax_code": "9984"}).insert()
         svc = frappe.get_doc({"doctype": "Service", "customer": cust.name, "hosting_plan": plan.name, "status": "Active", "recurring_amount": 10}).insert()
         frappe.db.set_single_value("Lube Station Settings", "company_tax_id", "29TEST1234F1Z5")
+        frappe.db.set_single_value("Lube Station Settings", "tax_code_label", "SAC")
         inv = frappe.get_doc(
             {
                 "doctype": "Hosting Invoice",
@@ -122,11 +123,11 @@ class TestInvoicePdf(IntegrationTestCase):
             }
         ).insert(ignore_permissions=True)
         html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
-        # Seller-entered code resolved via service -> plan; neutral labels.
-        self.assertIn("Tax code", html)
+        # Seller-entered code resolved via service -> plan; seller label.
+        self.assertIn("SAC", html)
         self.assertIn("9984", html)
         self.assertIn("Tax ID: 29TEST1234F1Z5", html)
-        self.assertNotIn("SAC", html)
+        self.assertNotIn("Tax code</th>", html)
 
     def test_tax_code_column_hidden_when_empty(self):
         cust = _customer()
