@@ -493,6 +493,8 @@ def _enriched_items(inv):
         except Exception:
             pass
         title, meta = _line_display(it.description or "", plan_name, domain, group, item_type)
+        if (it.description or "").startswith("Upgrade"):
+            title, meta, domain = _upgrade_display(it.description or "", plan_name, domain)
         d = it.as_dict()
         d["plan_name"] = plan_name
         d["domain"] = domain
@@ -519,8 +521,6 @@ def _line_display(description, plan_name, domain, group, item_type):
     if plan_name and description.startswith("Setup fee"):
         meta = f"Setup fee: {group} {plan_name}{qty}" if group else f"Setup fee: {plan_name}{qty}"
         return plan_name, meta
-    if plan_name and description.startswith("Upgrade"):
-        return f"Upgrade to {plan_name}", "Plan upgrade"
     if description.startswith("Overage"):
         title = f"Usage overage · {plan_name}" if plan_name else "Usage overage"
         return title, group or description
@@ -536,6 +536,31 @@ def _qty_suffix(description):
     """Trailing ' xN' kept from the stored line (e.g. ' x1'). Empty when absent."""
     m = re.search(r" x(\d+)$", description or "")
     return f" x{m.group(1)}" if m else ""
+
+
+def _upgrade_display(description, new_name, domain):
+    """'Upgrade: <old plan> → <new plan>' with the service domain.
+
+    Stored lines look like 'Upgrade SVC-1: PLAN-OLD -> PLAN-NEW (5/30 days)'.
+    IDs may contain spaces, so split on fixed delimiters, never whitespace.
+    Falls back to new-plan-only label on any miss.
+    """
+    try:
+        body = description[len("Upgrade"):].strip()
+        if " -> " in body:
+            left, right = body.split(" -> ", 1)
+            new_ref = right.split(" (", 1)[0].strip()
+            if ": " in left:
+                svc_ref, old_ref = (p.strip() for p in left.split(": ", 1))
+                old_name, _ = _plan_label(old_ref)
+                if not domain and svc_ref and frappe.db.exists("Service", svc_ref):
+                    domain = frappe.db.get_value("Service", svc_ref, "primary_domain") or ""
+                new_name = new_name or _plan_label(new_ref)[0]
+                if old_name and new_name:
+                    return f"Upgrade: {old_name} → {new_name}", "Plan upgrade", domain
+    except Exception:
+        pass
+    return (f"Upgrade to {new_name}", "Plan upgrade", domain) if new_name else (description, "", domain)
 
 
 @frappe.whitelist(methods=["GET"])

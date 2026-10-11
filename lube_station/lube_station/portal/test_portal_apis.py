@@ -134,6 +134,7 @@ class TestPortalApis(IntegrationTestCase):
         )
         group = frappe.get_doc({"doctype": "Product Group", "group_name": f"Portal Inv Group {uuid.uuid4().hex[:6]}"}).insert()
         plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"Portal Inv Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
+        old_plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"Portal Old Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
         svc = frappe.get_doc({"doctype": "Service", "customer": cust_name, "hosting_plan": plan.name, "status": "Active", "recurring_amount": 10, "primary_domain": "example.com"}).insert()
         inv = frappe.get_doc(
             {
@@ -142,6 +143,7 @@ class TestPortalApis(IntegrationTestCase):
                 "invoice_items": [
                     {"description": f"Hosting Plan: {plan.name} x1", "service_ref": svc.name, "amount": 100},
                     {"description": f"Setup fee: {plan.name} x1", "service_ref": plan.name, "amount": 20},
+                    {"description": f"Upgrade {svc.name}: {old_plan.name} -> {plan.name} (5/30 days)", "service_ref": plan.name, "amount": 30},
                 ],
                 "status": "Unpaid",
             }
@@ -149,9 +151,9 @@ class TestPortalApis(IntegrationTestCase):
         frappe.set_user(user_name)
         detail = apis.my_invoice_detail(inv.name)
         self.assertEqual(detail["invoice"]["name"], inv.name)
-        self.assertEqual(len(detail["invoice"]["invoice_items"]), 2)
+        self.assertEqual(len(detail["invoice"]["invoice_items"]), 3)
         # Service ref resolves to plan name + purchased domain, never raw IDs.
-        first, second = detail["invoice"]["invoice_items"]
+        first, second, third = detail["invoice"]["invoice_items"]
         self.assertEqual(first["plan_name"], plan.plan_name)
         self.assertEqual(first["domain"], "example.com")
         self.assertEqual(first["title"], plan.plan_name)
@@ -161,6 +163,11 @@ class TestPortalApis(IntegrationTestCase):
         # Setup line keeps its kind with group + plan name.
         self.assertEqual(second["title"], plan.plan_name)
         self.assertEqual(second["meta"], f"Setup fee: {group.name} {plan.plan_name} x1")
+        # Upgrade line names both old and new plans plus the domain.
+        self.assertEqual(third["title"], f"Upgrade: {old_plan.plan_name} → {plan.plan_name}")
+        self.assertEqual(third["meta"], "Plan upgrade")
+        self.assertEqual(third["domain"], "example.com")
+        self.assertNotIn(old_plan.name, (third["title"], third["meta"]))
         # Billing identity for pre-payment verification.
         billing = detail["customer"]
         self.assertTrue(billing["name"])
