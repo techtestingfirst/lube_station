@@ -48,6 +48,35 @@ class TestWallet(IntegrationTestCase):
         dates = [str(r["date"]) for r in rows]
         self.assertEqual(dates, sorted(dates, reverse=True))
 
+    def test_debit_shows_plan_group_and_name(self):
+        cust_name, user = self._customer("walletplan")
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": "Wallet Group"}).insert()
+        plan = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": "Wallet Basic",
+                "product_group": group.name,
+                "product_type": "Shared Hosting",
+                "is_active": 1,
+            }
+        ).insert()
+        inv = frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": cust_name,
+                "status": "Unpaid",
+                "credit_applied": 5,
+                "total_due": 5,
+                "invoice_items": [{"description": "Hosting", "service_ref": plan.name, "amount": 10}],
+            }
+        ).insert(ignore_permissions=True)
+        frappe.set_user(user)
+        rows = wallet.my_wallet_transactions()
+        row = next(r for r in rows if r["ref"] == inv.name)
+        self.assertIn("Wallet Basic", row["plans"][0])
+        self.assertIn("Wallet Group", row["plans"][0])
+        self.assertNotIn(plan.name, row["plans"][0])
+
     def test_wallet_isolation(self):
         cust_a, user_a = self._customer("walleta")
         cust_b, user_b = self._customer("walletb")

@@ -10,7 +10,36 @@ same pattern as portal my_invoices and support my_tickets.
 
 import frappe
 
+from lube_station.lube_station.portal.apis import _plan_label
 from lube_station.lube_station.portal.guards import my_customer
+
+
+def _invoice_plan_labels(invoice: str) -> list:
+    """Distinct 'Group PlanName' labels for an invoice. Never raises."""
+    labels = []
+    try:
+        items = frappe.db.get_all("Invoice Item", {"parent": invoice}, ["service_ref"])
+    except Exception:
+        return labels
+    for it in items:
+        ref = (it.get("service_ref") or "").strip()
+        if not ref:
+            continue
+        plan = None
+        try:
+            if frappe.db.exists("Service", ref):
+                plan = frappe.db.get_value("Service", ref, "hosting_plan")
+            elif frappe.db.exists("Hosting Plan", ref):
+                plan = ref
+        except Exception:
+            continue
+        if not plan:
+            continue
+        name, group = _plan_label(plan)
+        label = f"{group} {name}".strip() if group else name
+        if label and label not in labels:
+            labels.append(label)
+    return labels
 
 
 @frappe.whitelist(methods=["GET"])
@@ -48,12 +77,16 @@ def my_wallet_transactions(limit: int = 50) -> list:
         {"customer": customer, "credit_applied": [">", 0]},
         ["name", "credit_applied", "creation", "status"],
     ):
+        plans = _invoice_plan_labels(inv["name"])
+        detail = f" · {', '.join(plans)}" if plans else ""
         rows.append(
             {
                 "date": inv["creation"],
                 "kind": "debit",
                 "amount": -float(inv["credit_applied"] or 0),
                 "description": f"Applied to invoice {inv['name']} ({inv['status']})",
+                "plans": plans,
+                "plan_line": detail.strip(" ·"),
                 "ref": inv["name"],
                 "ref_type": "Hosting Invoice",
             }

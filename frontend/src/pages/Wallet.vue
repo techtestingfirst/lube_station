@@ -11,6 +11,7 @@ interface Txn {
   kind: 'credit' | 'debit'
   amount: number
   description: string
+  plans?: string[]
   ref: string
   ref_type: string
 }
@@ -76,6 +77,9 @@ onMounted(load)
           <div v-for="t in txns" :key="`${t.ref_type}-${t.ref}`" class="flex items-center justify-between gap-3 px-1 py-2">
             <div class="min-w-0">
               <div class="truncate text-sm font-medium text-ink-gray-8">{{ t.description }}</div>
+              <div v-if="t.plans && t.plans.length" class="mt-0.5 truncate text-xs font-medium text-ink-gray-8">
+                {{ t.plans.join(', ') }}
+              </div>
               <div class="mt-0.5 text-xs text-ink-gray-5">
                 {{ new Date(t.date).toLocaleDateString() }} ·
                 <RouterLink v-if="invoiceLink(t)" :to="invoiceLink(t)!" class="hover:underline">{{ t.ref }}</RouterLink>
