@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import { call, friendlyError } from '../api'
@@ -14,12 +14,26 @@ const list = ref<Svc[]>([])
 const loading = ref(true)
 const error = ref('')
 const router = useRouter()
+const tab = ref('All')
+
+const ORDER = ['Active', 'Pending', 'Suspended', 'Terminated', 'Cancelled']
+
+const tabs = computed(() => {
+  const counts = new Map<string, number>()
+  for (const s of list.value) counts.set(s.status, (counts.get(s.status) || 0) + 1)
+  const present = ORDER.filter((s) => counts.has(s))
+  for (const s of counts.keys()) if (!present.includes(s)) present.push(s)
+  return [{ label: 'All', count: list.value.length }, ...present.map((s) => ({ label: s, count: counts.get(s) || 0 }))]
+})
+
+const filtered = computed(() => tab.value === 'All' ? list.value : list.value.filter((s) => s.status === tab.value))
 
 async function load() {
   loading.value = true
   error.value = ''
   try {
     list.value = await call('lube_station.lube_station.portal.apis.my_services', {}, 'GET')
+    if (!tabs.value.some((t) => t.label === tab.value)) tab.value = 'All'
   } catch (e) {
     error.value = friendlyError(e)
   } finally {
@@ -42,9 +56,22 @@ onMounted(load)
     <ErrorState v-if="error && !loading" :message="error" @retry="load" />
     <LoadingBlock v-if="loading" :lines="4" />
     <template v-if="!loading && !error">
-      <div v-if="list.length" class="space-y-2">
+      <div v-if="list.length" class="flex flex-wrap gap-2">
+        <button
+          v-for="t in tabs"
+          :key="t.label"
+          class="rounded-full border px-3 py-1 text-sm"
+          :class="tab === t.label
+            ? 'border-ink-gray-8 bg-ink-gray-8 text-surface-white'
+            : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-1'"
+          @click="tab = t.label"
+        >
+          {{ t.label }} ({{ t.count }})
+        </button>
+      </div>
+      <div v-if="filtered.length" class="space-y-2">
         <div
-          v-for="s in list"
+          v-for="s in filtered"
           :key="s.name"
           class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3 sm:flex-nowrap"
         >
