@@ -204,7 +204,6 @@ async function save() {
         <h1 class="text-xl font-semibold tracking-tight text-ink-gray-8">Account</h1>
         <p class="mt-1 text-sm text-ink-gray-5">Profile, credit balance and saved payment method.</p>
       </div>
-      <Button label="Save + default" variant="solid" size="sm" :loading="saving" @click="save" />
     </div>
 
     <LoadingBlock v-if="loading" :lines="3" />
@@ -314,6 +313,9 @@ async function save() {
         <TextInput v-model="gateway" label="Gateway" />
         <TextInput v-model="token" label="Provider token" type="password" />
         <TextInput v-model="last4" label="Last four" />
+        <div>
+          <Button label="Save + default" variant="solid" size="sm" :loading="saving" @click="save" />
+        </div>
         <ErrorMessage v-if="saveError" :message="saveError" />
         <p v-if="savedMsg" class="text-sm text-ink-gray-8">{{ savedMsg }}</p>
       </div>
