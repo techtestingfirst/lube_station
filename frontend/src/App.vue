@@ -4,7 +4,6 @@ import { RouterLink, useRouter } from 'vue-router'
 import {
   FrappeUIProvider,
   Sidebar,
-  SidebarCollapseToggle,
   SidebarHeader,
   SidebarItem,
   SidebarLabel,
@@ -18,6 +17,11 @@ useColorScheme()
 
 const router = useRouter()
 const user = ref<string | null>(bootUser())
+const sidebarCollapsed = ref<boolean | null>(null)
+
+function toggleSidebar() {
+  sidebarCollapsed.value = sidebarCollapsed.value == null ? false : !sidebarCollapsed.value
+}
 
 onMounted(async () => {
   if (!user.value) user.value = await sessionUser()
@@ -33,7 +37,7 @@ async function signOut() {
 <template>
   <FrappeUIProvider>
     <div class="flex h-screen overflow-hidden bg-surface-base text-ink-gray-8">
-      <Sidebar v-if="user">
+      <Sidebar v-if="user" v-model:collapsed="sidebarCollapsed" collapsible>
         <SidebarHeader title="Lube Station" subtitle="Client portal" />
         <div class="flex-1 overflow-y-auto">
           <SidebarSection>
@@ -65,7 +69,14 @@ async function signOut() {
 
       <div class="flex min-w-0 flex-1 flex-col">
         <header class="flex h-12 flex-shrink-0 items-center gap-2 border-b border-outline-gray-1 px-3">
-          <SidebarCollapseToggle v-if="user" />
+          <button
+            v-if="user"
+            class="rounded px-2 py-1 text-sm text-ink-gray-6 hover:bg-surface-gray-2"
+            :title="sidebarCollapsed ? 'Expand menu' : 'Collapse menu'"
+            @click="toggleSidebar"
+          >
+            ☰
+          </button>
           <RouterLink v-if="!user" to="/store" class="text-sm font-semibold">Lube Station</RouterLink>
           <div class="ml-auto flex items-center gap-2">
             <template v-if="!user">
