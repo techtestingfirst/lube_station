@@ -226,3 +226,34 @@ class TestPortalApis(IntegrationTestCase):
         self.assertRaises(frappe.ValidationError, apis.update_account, country="No Such Country")
         frappe.set_user("Guest")
         self.assertRaises(frappe.PermissionError, apis.update_account, company="X")
+
+    def test_pincode_lookup_timeout_safe(self):
+        import requests
+
+        from unittest.mock import patch
+
+        class Resp:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return [{"Status": "Success", "PostOffice": [{"District": "Mumbai", "State": "Maharashtra"}]}]
+
+        seen = {}
+
+        def fake_get(url, headers=None, timeout=None):
+            seen["timeout"] = timeout
+            seen["url"] = url
+            return Resp()
+
+        with patch.object(requests, "get", fake_get):
+            out = apis.pincode_lookup("400001", "India")
+        self.assertEqual(out["city"], "Mumbai")
+        # Never hang the UI spinner: an explicit timeout is mandatory.
+        self.assertTrue(seen["timeout"] and seen["timeout"] <= 15)
+
+        def slow_get(url, headers=None, timeout=None):
+            raise requests.ConnectTimeout()
+
+        with patch.object(requests, "get", slow_get):
+            self.assertRaises(frappe.ValidationError, apis.pincode_lookup, "400001", "India")

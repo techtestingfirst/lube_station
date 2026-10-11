@@ -1833,7 +1833,7 @@ def pincode_lookup(postcode: str, country: str | None = None) -> dict:
     """
     import re
 
-    from frappe.integrations.utils import make_get_request
+    import requests
 
     code = (postcode or "").strip().replace(" ", "")
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 \-]{2,9}", code or ""):
@@ -1848,11 +1848,17 @@ def pincode_lookup(postcode: str, country: str | None = None) -> dict:
     # NOTE: these free APIs reset connections presenting the default
     # python-requests UA — a browser UA is required from bench Python.
     _UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
+    # NOTE: explicit timeout. Framework make_get_request sends none, and a
+    # stalled socket then hangs the request (and the UI spinner) forever.
+    def _get(url: str):
+        resp = requests.get(url, headers=_UA, timeout=10)
+        resp.raise_for_status()
+        return resp.json()
     try:
         if indian():
             if not re.fullmatch(r"\d{6}", code):
                 frappe.throw("Indian PIN is 6 digits")
-            resp = make_get_request(f"https://api.postalpincode.in/pincode/{code}", headers=_UA)
+            resp = _get(f"https://api.postalpincode.in/pincode/{code}")
             offices = (resp[0].get("PostOffice") if isinstance(resp, list) and resp else None) or []
             if (resp[0].get("Status") if resp else "") != "Success" or not offices:
                 frappe.throw("No record for this PIN, enter city manually")
@@ -1861,7 +1867,7 @@ def pincode_lookup(postcode: str, country: str | None = None) -> dict:
         iso = frappe.db.get_value("Country", country_name, "code") if country_name else None
         if not iso:
             frappe.throw("Pick a country first, or enter city manually")
-        resp = make_get_request(f"https://api.zippopotam.us/{iso.lower()}/{code}", headers=_UA)
+        resp = _get(f"https://api.zippopotam.us/{iso.lower()}/{code}")
         places = resp.get("places") or []
         if not places:
             frappe.throw("No record for this postcode, enter city manually")
