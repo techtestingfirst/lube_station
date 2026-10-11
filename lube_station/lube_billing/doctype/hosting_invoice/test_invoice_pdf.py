@@ -122,11 +122,12 @@ class TestInvoicePdf(IntegrationTestCase):
             }
         ).insert(ignore_permissions=True)
         html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
-        # Seller-entered code resolved via service -> plan; seller label.
-        self.assertIn("SAC", html)
+        # Seller-entered code resolved via service -> plan; header line.
+        self.assertIn("SAC:", html)
         self.assertIn("9984", html)
+        thead = html.split("<thead>")[1].split("</thead>")[0]
+        self.assertNotIn("SAC", thead)
         self.assertIn("Tax ID: 29TEST1234F1Z5", html)
-        self.assertNotIn("Tax code</th>", html)
 
     def test_tax_code_column_hidden_when_empty(self):
         cust = _customer()
