@@ -74,7 +74,10 @@ class TestInvoicePdf(IntegrationTestCase):
         self.assertIn("Qty", html)
         self.assertIn(">2</td>", html)
         # Unpaid: service not started, no period shown, no payment line.
-        self.assertNotIn(formatdate(getdate(today())), html.replace(f"Due:</strong> {formatdate(inv.due_date)}", ""))
+        # (Header invoice date + due date are expected, strip both.)
+        scrubbed = html.replace(f"Due:</strong> {formatdate(inv.due_date)}", "")
+        scrubbed = scrubbed.replace(f"Date:</strong> {formatdate(getdate(inv.creation))}", "")
+        self.assertNotIn(formatdate(getdate(today())), scrubbed)
         self.assertNotIn("Paid via", html)
         frappe.get_doc({"doctype": "Payment Transaction", "invoice": inv.name, "gateway": "Stripe", "gateway_txn_id": "txn_test_123", "status": "Success", "amount": 200}).insert(ignore_permissions=True)
         inv.status = "Paid"
