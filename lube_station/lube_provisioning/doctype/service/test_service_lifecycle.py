@@ -91,3 +91,25 @@ class TestServiceLifecycle(IntegrationTestCase):
         frappe.get_doc("Service", addon_name).unsuspend()
         frappe.get_doc("Service", parent.name).terminate("parent closed, approved")
         self.assertEqual(frappe.db.get_value("Service", addon_name, "status"), "Terminated")
+
+    def test_backfill_next_due_from_paid_history(self):
+        from frappe.utils import add_to_date, getdate, today
+
+        from lube_station.patches.backfill_service_next_due import execute
+
+        cust = _unique_customer()
+        pgroup = frappe.get_doc({"doctype": "Product Group", "group_name": f"BF {uuid.uuid4().hex[:6]}"}).insert()
+        plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"BP {uuid.uuid4().hex[:6]}", "product_group": pgroup.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
+        order = frappe.get_doc({"doctype": "Order", "customer": cust.name, "status": "Accepted"}).insert()
+        svc = frappe.get_doc(
+            {"doctype": "Service", "customer": cust.name, "hosting_plan": plan.name, "order_ref": order.name,
+             "billing_cycle": "Monthly", "status": "Active", "recurring_amount": 10}
+        ).insert(ignore_permissions=True)
+        inv = frappe.get_doc(
+            {"doctype": "Hosting Invoice", "customer": cust.name, "order_ref": order.name,
+             "invoice_items": [{"description": "x", "amount": 10}], "status": "Paid"}
+        ).insert(ignore_permissions=True)
+        frappe.db.set_value("Service", svc.name, "next_due_date", add_to_date(today(), months=-6))
+        execute()
+        expect = getdate(add_to_date(getdate(inv.modified), months=1))
+        self.assertEqual(str(frappe.db.get_value("Service", svc.name, "next_due_date")), str(expect))
