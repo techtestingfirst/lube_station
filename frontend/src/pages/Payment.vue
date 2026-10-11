@@ -18,18 +18,30 @@ const paying = ref(false)
 const methods = ref<{ name: string; gateway: string; last_four: string }[]>([])
 const savedMethod = ref('')
 const payingSaved = ref(false)
+const walletCredit = ref(0)
+const walletAvailable = ref(0)
+const walletTotal = ref(0)
+const movingWallet = ref(false)
+const walletMsg = ref('')
 
 async function load() {
   fetching.value = true
   error.value = ''
   try {
-    const [m, g, invs] = await Promise.all([
+    const [m, g, invs, detail, w] = await Promise.all([
       call('lube_station.lube_station.portal.apis.my_methods', {}, 'GET'),
       call<{ name: string }[]>('lube_station.lube_station.portal.apis.payment_gateways', {}, 'GET'),
       call<{ name: string; gateway: string }[]>('lube_station.lube_station.portal.apis.my_invoices', {}, 'GET'),
+      call<{ invoice: { credit_applied: number; total_due: number } }>(
+        'lube_station.lube_station.portal.apis.my_invoice_detail', { invoice }, 'GET'),
+      call<{ balance: number; reserved: number; available: number }>(
+        'lube_station.lube_station.wallet.wallet.my_wallet', {}, 'GET'),
     ])
     methods.value = m as typeof methods.value
     savedMethod.value = methods.value[0]?.name || ''
+    walletCredit.value = (detail as { invoice: { credit_applied: number } }).invoice.credit_applied || 0
+    walletAvailable.value = (w as { available: number }).available || 0
+    walletTotal.value = (w as { balance: number }).balance || 0
     gateways.value = g.map((x) => ({ label: x.name, value: x.name }))
     // Preselect the gateway chosen at checkout, if any.
     const current = (invs as { name: string; gateway: string }[]).find((i) => i.name === invoice)
@@ -40,6 +52,24 @@ async function load() {
     error.value = friendlyError(e)
   } finally {
     fetching.value = false
+  }
+}
+
+async function useWalletHere() {
+  movingWallet.value = true
+  walletMsg.value = ''
+  try {
+    const r = await call<{ credit_applied: number; released: string[] }>(
+      'lube_station.lube_station.wallet.wallet.transfer_wallet_to', { invoice }, 'POST')
+    walletCredit.value = r.credit_applied
+    walletMsg.value = r.released.length
+      ? `Wallet moved here from ${r.released.join(', ')}. Pay less now.`
+      : 'Wallet already applied here.'
+    await load()
+  } catch (e) {
+    walletMsg.value = friendlyError(e)
+  } finally {
+    movingWallet.value = false
   }
 }
 
@@ -153,6 +183,26 @@ async function verify() {
           </div>
           <div v-if="methods.length" class="border-t border-outline-gray-1 pt-2 text-sm text-ink-gray-5">
             Saved: {{ methods.map((m) => `${m.gateway} ••${m.last_four}`).join(', ') }}
+          </div>
+          <div class="border-t border-outline-gray-1 pt-2 text-sm">
+            <div class="flex justify-between text-ink-gray-5">
+              <span>Wallet on this invoice</span>
+              <span class="text-ink-gray-8">−{{ walletCredit.toFixed(2) }}</span>
+            </div>
+            <div class="mt-1 flex justify-between text-ink-gray-5">
+              <span>Wallet balance</span>
+              <span class="text-ink-gray-8">{{ walletTotal.toFixed(2) }}</span>
+            </div>
+            <Button
+              v-if="walletTotal > walletCredit"
+              class="mt-2"
+              label="Use wallet here"
+              variant="subtle"
+              size="sm"
+              :loading="movingWallet"
+              @click="useWalletHere"
+            />
+            <p v-if="walletMsg" class="mt-1 text-ink-gray-8">{{ walletMsg }}</p>
           </div>
         </div>
       </div>
