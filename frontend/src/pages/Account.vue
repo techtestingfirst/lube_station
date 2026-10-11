@@ -230,7 +230,6 @@ async function save() {
             <div class="truncate text-sm font-medium text-ink-gray-8">{{ account.company }}</div>
             <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-ink-gray-5">
               <StatusBadge :status="String(account.status ?? '')" />
-              <span>Credit {{ formatMoney(account.credit_balance as number | string | null) }}</span>
             </div>
             <div v-if="addressBlock" class="mt-2 whitespace-pre-line text-sm text-ink-gray-5">{{ addressBlock }}</div>
             <div v-if="account.phone" class="mt-1 text-sm text-ink-gray-5">{{ account.phone }}</div>
