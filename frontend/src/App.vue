@@ -41,28 +41,28 @@ async function signOut() {
         <SidebarHeader title="Lube Station" subtitle="Client portal" />
         <div class="flex-1 overflow-y-auto">
           <SidebarSection>
-            <SidebarItem label="Dashboard" route="/" icon="layout-dashboard" />
-            <SidebarItem label="Store" route="/store" icon="store" />
+            <SidebarItem label="Dashboard" route="/" icon="lucide-layout-dashboard" />
+            <SidebarItem label="Store" route="/store" icon="lucide-store" />
           </SidebarSection>
           <SidebarSection>
             <SidebarLabel>Manage</SidebarLabel>
-            <SidebarItem label="Services" route="/services" icon="server" />
-            <SidebarItem label="VPS" route="/vps" icon="cpu" />
-            <SidebarItem label="Dedicated" route="/dedicated" icon="hard-drive" />
-            <SidebarItem label="Domains" route="/domains" icon="globe" />
-            <SidebarItem label="Downloads" route="/downloads" icon="download" />
-            <SidebarItem label="Support" route="/support" icon="life-buoy" />
-            <SidebarItem label="Knowledge Base" route="/kb" icon="book-open" />
+            <SidebarItem label="Services" route="/services" icon="lucide-server" />
+            <SidebarItem label="VPS" route="/vps" icon="lucide-cpu" />
+            <SidebarItem label="Dedicated" route="/dedicated" icon="lucide-hard-drive" />
+            <SidebarItem label="Domains" route="/domains" icon="lucide-globe" />
+            <SidebarItem label="Downloads" route="/downloads" icon="lucide-download" />
+            <SidebarItem label="Support" route="/support" icon="lucide-life-buoy" />
+            <SidebarItem label="Knowledge Base" route="/kb" icon="lucide-book-open" />
           </SidebarSection>
           <SidebarSection>
             <SidebarLabel>Billing</SidebarLabel>
-            <SidebarItem label="Cart" route="/cart" icon="shopping-cart" />
-            <SidebarItem label="Orders" route="/orders" icon="package" />
-            <SidebarItem label="Invoices" route="/invoices" icon="receipt" />
-            <SidebarItem label="Wallet" route="/wallet" icon="wallet" />
+            <SidebarItem label="Cart" route="/cart" icon="lucide-shopping-cart" />
+            <SidebarItem label="Orders" route="/orders" icon="lucide-package" />
+            <SidebarItem label="Invoices" route="/invoices" icon="lucide-receipt" />
+            <SidebarItem label="Wallet" route="/wallet" icon="lucide-wallet" />
           </SidebarSection>
           <SidebarSection>
-            <SidebarItem label="Account" route="/account" icon="user" />
+            <SidebarItem label="Account" route="/account" icon="lucide-user" />
           </SidebarSection>
         </div>
       </Sidebar>
