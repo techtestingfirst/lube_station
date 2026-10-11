@@ -1,4 +1,5 @@
 import json
+import re
 
 import frappe
 
@@ -514,18 +515,27 @@ def _plan_label(plan):
 
 def _line_display(description, plan_name, domain, group, item_type):
     """Customer-facing (title, meta) lines. Raw IDs never shown when resolved."""
+    qty = _qty_suffix(description)
     if plan_name and description.startswith("Setup fee"):
-        return plan_name, f"Setup fee · {group}" if group else "Setup fee"
+        meta = f"Setup fee: {group} {plan_name}{qty}" if group else f"Setup fee: {plan_name}{qty}"
+        return plan_name, meta
     if plan_name and description.startswith("Upgrade"):
         return f"Upgrade to {plan_name}", "Plan upgrade"
     if description.startswith("Overage"):
         title = f"Usage overage · {plan_name}" if plan_name else "Usage overage"
         return title, group or description
     if plan_name:
-        return plan_name, f"Hosting Plan · {group}" if group else "Hosting Plan"
+        meta = f"Hosting Plan: {group} {plan_name}{qty}" if group else f"Hosting Plan: {plan_name}{qty}"
+        return plan_name, meta
     if domain and item_type == "Domain":
         return domain, "Domain"
     return description, ""
+
+
+def _qty_suffix(description):
+    """Trailing ' xN' kept from the stored line (e.g. ' x1'). Empty when absent."""
+    m = re.search(r" x(\d+)$", description or "")
+    return f" x{m.group(1)}" if m else ""
 
 
 @frappe.whitelist(methods=["GET"])

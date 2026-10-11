@@ -140,8 +140,8 @@ class TestPortalApis(IntegrationTestCase):
                 "doctype": "Hosting Invoice",
                 "customer": cust_name,
                 "invoice_items": [
-                    {"description": "Renewal", "service_ref": svc.name, "amount": 100},
-                    {"description": "Setup fee", "service_ref": plan.name, "amount": 20},
+                    {"description": f"Hosting Plan: {plan.name} x1", "service_ref": svc.name, "amount": 100},
+                    {"description": f"Setup fee: {plan.name} x1", "service_ref": plan.name, "amount": 20},
                 ],
                 "status": "Unpaid",
             }
@@ -155,12 +155,12 @@ class TestPortalApis(IntegrationTestCase):
         self.assertEqual(first["plan_name"], plan.plan_name)
         self.assertEqual(first["domain"], "example.com")
         self.assertEqual(first["title"], plan.plan_name)
-        self.assertEqual(first["meta"], f"Hosting Plan · {group.name}")
+        self.assertEqual(first["meta"], f"Hosting Plan: {group.name} {plan.plan_name} x1")
         self.assertNotIn(svc.name, (first["title"], first["meta"], first["domain"]))
         self.assertNotIn(plan.name, (first["title"], first["meta"]))
-        # Bare plan ref resolves to plan name.
-        self.assertEqual(second["plan_name"], plan.plan_name)
+        # Setup line keeps its kind with group + plan name.
         self.assertEqual(second["title"], plan.plan_name)
+        self.assertEqual(second["meta"], f"Setup fee: {group.name} {plan.plan_name} x1")
         # Billing identity for pre-payment verification.
         billing = detail["customer"]
         self.assertTrue(billing["name"])
