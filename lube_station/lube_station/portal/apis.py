@@ -571,7 +571,20 @@ def _upgrade_display(description, new_name, domain):
 @frappe.whitelist(methods=["GET"])
 def my_services():
     customer = my_customer()
-    return frappe.get_all("Service", {"customer": customer}, ["name", "hosting_plan", "status", "next_due_date"])
+    rows = frappe.get_all("Service", {"customer": customer}, ["name", "hosting_plan", "status", "next_due_date"])
+    plans = {}
+    ids = {r["hosting_plan"] for r in rows if r.get("hosting_plan")}
+    if ids:
+        for p in frappe.db.get_all(
+            "Hosting Plan", {"name": ["in", list(ids)]}, ["name", "plan_name", "product_group", "product_type"]
+        ):
+            plans[p["name"]] = p
+    for r in rows:
+        p = plans.get(r.get("hosting_plan") or {})
+        r["plan_name"] = p.get("plan_name") or r.get("hosting_plan") or ""
+        r["product_group"] = p.get("product_group") or p.get("product_type") or "Other"
+        r["product_type"] = p.get("product_type") or ""
+    return rows
 
 
 @frappe.whitelist(methods=["GET"])
