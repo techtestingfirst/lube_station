@@ -255,6 +255,7 @@ export_python_type_annotations = True
 # ignore_translatable_strings_from = []
 
 # Customer storefront SPA. Staff command-center lives in Desk (workspace Lube Station).
+home_page = "store"
 website_route_rules = [
 	{"from_route": "/store/<path:app_path>", "to_route": "store"},
 ]
