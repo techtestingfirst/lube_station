@@ -127,6 +127,11 @@ class TestPortalApis(IntegrationTestCase):
 
     def test_my_invoice_detail(self):
         cust_name, user_name = _make_customer()
+        frappe.db.set_value(
+            "Hosting Customer",
+            cust_name,
+            {"company": "Acme Ltd", "phone": "+100000000", "tax_id": "VAT123", "address_line1": "1 Main St", "city": "Springfield", "country": "India"},
+        )
         inv = frappe.get_doc(
             {
                 "doctype": "Hosting Invoice",
@@ -143,6 +148,13 @@ class TestPortalApis(IntegrationTestCase):
         self.assertEqual(detail["invoice"]["name"], inv.name)
         self.assertEqual(len(detail["invoice"]["invoice_items"]), 2)
         self.assertEqual(detail["invoice"]["invoice_items"][0]["description"], "Shared Hosting - example.com")
+        # Billing identity for pre-payment verification.
+        billing = detail["customer"]
+        self.assertTrue(billing["name"])
+        self.assertEqual(billing["company"], "Acme Ltd")
+        self.assertEqual(billing["tax_id"], "VAT123")
+        self.assertIn("1 Main St", billing["address"])
+        self.assertIn("Springfield", billing["address"])
         # Guest gets no invoice detail.
         frappe.set_user("Guest")
         self.assertRaises(frappe.PermissionError, apis.my_invoice_detail, inv.name)

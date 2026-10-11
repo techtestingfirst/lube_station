@@ -27,9 +27,19 @@ interface Invoice {
   total_due: number
 }
 
+interface Customer {
+  name: string
+  email: string
+  company: string
+  phone: string
+  tax_id: string
+  address: string
+}
+
 const route = useRoute()
 const name = route.params.invoice as string
 const inv = ref<Invoice | null>(null)
+const customer = ref<Customer | null>(null)
 const loading = ref(true)
 const error = ref('')
 
@@ -37,8 +47,9 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const out = await call<{ invoice: Invoice }>('lube_station.lube_station.portal.apis.my_invoice_detail', { invoice: name }, 'GET')
+    const out = await call<{ invoice: Invoice; customer: Customer }>('lube_station.lube_station.portal.apis.my_invoice_detail', { invoice: name }, 'GET')
     inv.value = out.invoice
+    customer.value = out.customer
   } catch (e) {
     error.value = friendlyError(e)
   } finally {
@@ -72,6 +83,18 @@ onMounted(load)
           <StatusBadge :status="inv.status" />
           <a :href="pdfUrl(inv.name)" target="_blank" rel="noopener"><Button label="PDF" size="sm" /></a>
           <RouterLink v-if="inv.status !== 'Paid'" :to="`/pay/${inv.name}`"><Button label="Pay now" variant="solid" size="sm" /></RouterLink>
+        </div>
+      </div>
+
+      <div v-if="customer" class="rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3">
+        <div class="mb-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5">Billed to — verify before paying</div>
+        <div class="text-sm font-medium text-ink-gray-8">{{ customer.name }}</div>
+        <div v-if="customer.company" class="text-sm text-ink-gray-5">{{ customer.company }}</div>
+        <div v-if="customer.address" class="mt-1 whitespace-pre-line text-sm text-ink-gray-5">{{ customer.address }}</div>
+        <div class="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-ink-gray-5">
+          <span v-if="customer.email">{{ customer.email }}</span>
+          <span v-if="customer.phone">{{ customer.phone }}</span>
+          <span v-if="customer.tax_id">Tax / VAT: {{ customer.tax_id }}</span>
         </div>
       </div>
 
