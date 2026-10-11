@@ -23,6 +23,7 @@
     {"fieldname": "ugst_amount", "fieldtype": "Currency", "label": "UGST", "default": "0"},
     {"fieldname": "igst_amount", "fieldtype": "Currency", "label": "IGST", "default": "0"},
     {"fieldname": "credit_applied", "fieldtype": "Currency", "label": "Credit", "default": "0"},
+    {"fieldname": "credit_consumed", "fieldtype": "Currency", "label": "Credit Consumed", "default": "0", "read_only": 1},
     {"fieldname": "total_due", "fieldtype": "Currency", "label": "Total Due", "default": "0"},
     {"fieldname": "section_break_3", "fieldtype": "Section Break", "label": "Status and Reference"},
     {"fieldname": "due_date", "fieldtype": "Date", "label": "Due Date"},

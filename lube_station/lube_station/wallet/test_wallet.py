@@ -15,6 +15,17 @@ class TestWallet(IntegrationTestCase):
         cust = frappe.get_doc({"doctype": "Hosting Customer", "user": user, "status": "Active"}).insert()
         return cust.name, user
 
+    def _invoice(self, cust: str, applied: float, status: str = "Unpaid"):
+        return frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": cust,
+                "status": status,
+                "credit_applied": applied,
+                "invoice_items": [{"description": "Hosting", "amount": 100}],
+            }
+        ).insert(ignore_permissions=True)
+
     def test_wallet_ledger(self):
         cust_name, user = self._customer("wallet")
         cn = frappe.get_doc(
@@ -25,24 +36,28 @@ class TestWallet(IntegrationTestCase):
         frappe.get_doc(
             {"doctype": "Credit Note", "customer": cust_name, "amount": 999, "reason": "draft"}
         ).insert()
-        inv = frappe.get_doc(
-            {
-                "doctype": "Hosting Invoice",
-                "customer": cust_name,
-                "status": "Unpaid",
-                "credit_applied": 20,
-                "total_due": 80,
-            }
-        ).insert(ignore_permissions=True)
+        unpaid = self._invoice(cust_name, 20)
+        paid = self._invoice(cust_name, 15)
+        doc = frappe.get_doc("Hosting Invoice", paid.name)
+        doc.status = "Paid"
+        doc.save()  # on_update consumes the reservation
+        cancelled = self._invoice(cust_name, 999)
+        frappe.db.set_value("Hosting Invoice", cancelled.name, "status", "Cancelled")
         frappe.set_user(user)
         w = wallet.my_wallet()
-        self.assertEqual(w["balance"], 50)
+        # 50 - 15 consumed; 20 still only reserved.
+        self.assertEqual(w["balance"], 35)
+        self.assertEqual(w["reserved"], 20)
+        self.assertEqual(w["available"], 15)
         rows = wallet.my_wallet_transactions()
         by_ref = {r["ref"]: r for r in rows}
         self.assertEqual(by_ref[cn.name]["kind"], "credit")
         self.assertEqual(by_ref[cn.name]["amount"], 50)
-        self.assertEqual(by_ref[inv.name]["kind"], "debit")
-        self.assertEqual(by_ref[inv.name]["amount"], -20)
+        self.assertEqual(by_ref[unpaid.name]["state"], "reserved")
+        self.assertEqual(by_ref[unpaid.name]["amount"], -20)
+        self.assertEqual(by_ref[paid.name]["state"], "consumed")
+        self.assertEqual(by_ref[paid.name]["amount"], -15)
+        self.assertNotIn(cancelled.name, by_ref)
         self.assertFalse(any(r["amount"] == 999 for r in rows))
         # Newest first.
         dates = [str(r["date"]) for r in rows]
@@ -111,6 +126,21 @@ class TestWallet(IntegrationTestCase):
         self.assertIn("Down Group", reason)
         self.assertNotIn(old.name, reason)
         self.assertNotIn(new.name, reason)
+
+    def test_migration_restores_unpaid_deductions(self):
+        """Old model deducted at generation: patch returns it to open invoices."""
+        from lube_station.patches.restore_wallet_credit_on_unpaid import execute
+
+        cust_name, _ = self._customer("walletmig")
+        cn = frappe.get_doc(
+            {"doctype": "Credit Note", "customer": cust_name, "amount": 50, "reason": "refund"}
+        ).insert()
+        cn.submit()
+        # Simulate old-model state: generation already took 20 for an Unpaid invoice.
+        frappe.db.set_value("Hosting Customer", cust_name, "credit_balance", 30)
+        self._invoice(cust_name, 20)
+        execute()
+        self.assertEqual(frappe.db.get_value("Hosting Customer", cust_name, "credit_balance"), 50)
 
     def test_wallet_isolation(self):
         cust_a, user_a = self._customer("walleta")

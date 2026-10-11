@@ -6,3 +6,4 @@ lube_station.patches.rename_domain_doctype
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
 lube_station.patches.grant_hd_customer_role
+lube_station.patches.restore_wallet_credit_on_unpaid

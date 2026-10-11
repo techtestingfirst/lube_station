@@ -26,6 +26,21 @@ class HostingInvoice(Document):
         subtotal = self.subtotal_amount if self.subtotal_amount else items_total
         self.total_due = max(subtotal + (self.tax_amount or 0) - (self.credit_applied or 0), 0)
 
+    def on_update(self):
+        try:
+            before = self.get_doc_before_save()
+        except Exception:
+            before = None
+        if before and before.status != "Paid" and self.status == "Paid":
+            # Wallet reservation settles exactly once, however Paid arrived
+            # (gateway callback, Desk edit, verification poll).
+            try:
+                from lube_station.lube_customers.doctype.credit_note.credit_note import consume_credit
+
+                consume_credit(self.name)
+            except Exception as e:
+                frappe.log_error(f"Wallet consume failed for {self.name}: {e}")
+
     def on_payment_authorized(self, payment_status):
         """Called by Payments app (Razorpay/Stripe) after checkout completes.
 
@@ -286,6 +301,11 @@ def _from_order(order_name: str, key: str, gateway: str | None = None, include_s
             "idempotency_key": key,
         }
     ).insert(ignore_permissions=True)
+    if doc.total_due == 0 and credit:
+        # Fully wallet-covered: no payment will arrive, settle reservation now.
+        from lube_station.lube_customers.doctype.credit_note.credit_note import consume_credit
+
+        consume_credit(doc.name, allow_unpaid_zero=True)
     _notify_invoice(doc, is_renewal=not include_setup)
     return doc
 
@@ -342,11 +362,15 @@ def generate_renewal(order: str, period: str, gateway: str | None = None) -> dic
 
 @frappe.whitelist(methods=["POST"])
 def issue_refund(invoice: str, amount: float | None = None, reason: str = "") -> dict:
-    """WHMCS refund: credit customer balance + refund/credit emails."""
+    """WHMCS refund: credit customer balance + refund/credit emails.
+
+    Restores both the gateway-charged total and any wallet credit consumed at
+    payment, so the customer is made whole either way.
+    """
     inv = frappe.get_doc("Hosting Invoice", invoice)
     if inv.status != "Paid":
         frappe.throw("Only Paid invoices can be refunded")
-    refund_amount = float(amount or inv.total_due or 0)
+    refund_amount = float(amount or inv.total_due or 0) + float(inv.get("credit_consumed") or 0)
     if refund_amount <= 0:
         frappe.throw("Refund amount must be positive")
     credit_note = frappe.get_doc({"doctype": "Credit Note", "customer": inv.customer, "amount": refund_amount, "reason": reason, "reference_invoice": inv.name}).insert(ignore_permissions=True)

@@ -1103,6 +1103,11 @@ def request_upgrade(service: str, new_plan: str) -> dict:
             "idempotency_key": key,
         }
     ).insert(ignore_permissions=True)
+    if inv.total_due == 0 and credit:
+        # Fully wallet-covered: no payment will arrive, settle reservation now.
+        from lube_station.lube_customers.doctype.credit_note.credit_note import consume_credit
+
+        consume_credit(inv.name, allow_unpaid_zero=True)
     try:
         from lube_station.lube_station.notifications.events import notify_customer
 

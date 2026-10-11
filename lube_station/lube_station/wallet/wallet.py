@@ -3,7 +3,8 @@
 No new DocType. Balance lives on Hosting Customer.credit_balance; movements
 are derived from existing records:
   credit in  <- submitted Credit Notes (refunds, downgrade credit, goodwill)
-  credit out -> Hosting Invoice.credit_applied (consumed at generation)
+  reserved   <- open invoice credit_applied (deducted only when Paid)
+  consumed   <- Paid invoice credit_consumed (actually left the wallet)
 Uses get_all (ignores perms, server-side logic) + my_customer ownership,
 same pattern as portal my_invoices and support my_tickets.
 """
@@ -44,10 +45,15 @@ def _invoice_plan_labels(invoice: str) -> list:
 
 @frappe.whitelist(methods=["GET"])
 def my_wallet() -> dict:
+    from lube_station.lube_customers.doctype.credit_note.credit_note import reserved_total
+
     customer = my_customer()
-    balance = frappe.db.get_value("Hosting Customer", customer, "credit_balance") or 0
+    balance = float(frappe.db.get_value("Hosting Customer", customer, "credit_balance") or 0)
+    reserved = reserved_total(customer)
     return {
-        "balance": float(balance),
+        "balance": balance,
+        "reserved": reserved,
+        "available": round(max(balance - reserved, 0), 2),
         "credits_in": frappe.db.count("Credit Note", {"customer": customer, "docstatus": 1}),
     }
 
@@ -75,18 +81,26 @@ def my_wallet_transactions(limit: int = 50) -> list:
     for inv in frappe.db.get_all(
         "Hosting Invoice",
         {"customer": customer, "credit_applied": [">", 0]},
-        ["name", "credit_applied", "creation", "status"],
+        ["name", "credit_applied", "credit_consumed", "creation", "status"],
     ):
         plans = _invoice_plan_labels(inv["name"])
-        detail = f" · {', '.join(plans)}" if plans else ""
+        consumed = float(inv.get("credit_consumed") or 0)
+        if inv["status"] == "Paid" and consumed > 0:
+            state, amount = "consumed", -consumed
+            desc = f"Wallet used on invoice {inv['name']} (Paid)"
+        elif inv["status"] == "Cancelled":
+            continue
+        else:
+            state, amount = "reserved", -float(inv["credit_applied"] or 0)
+            desc = f"Reserved for invoice {inv['name']} ({inv['status']})"
         rows.append(
             {
                 "date": inv["creation"],
                 "kind": "debit",
-                "amount": -float(inv["credit_applied"] or 0),
-                "description": f"Applied to invoice {inv['name']} ({inv['status']})",
+                "state": state,
+                "amount": amount,
+                "description": desc,
                 "plans": plans,
-                "plan_line": detail.strip(" ·"),
                 "ref": inv["name"],
                 "ref_type": "Hosting Invoice",
             }

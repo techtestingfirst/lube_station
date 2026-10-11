@@ -9,6 +9,7 @@ import ErrorState from '../components/ErrorState.vue'
 interface Txn {
   date: string
   kind: 'credit' | 'debit'
+  state?: 'reserved' | 'consumed'
   amount: number
   description: string
   plans?: string[]
@@ -18,6 +19,8 @@ interface Txn {
 
 const API = 'lube_station.lube_station.wallet.wallet'
 const balance = ref<number | null>(null)
+const reserved = ref(0)
+const available = ref<number | null>(null)
 const txns = ref<Txn[]>([])
 const loading = ref(true)
 const error = ref('')
@@ -36,10 +39,12 @@ async function load() {
   error.value = ''
   try {
     const [w, rows] = await Promise.all([
-      call<{ balance: number }>(`${API}.my_wallet`, {}, 'GET'),
+      call<{ balance: number; reserved: number; available: number }>(`${API}.my_wallet`, {}, 'GET'),
       call<Txn[]>(`${API}.my_wallet_transactions`, {}, 'GET'),
     ])
     balance.value = w.balance
+    reserved.value = w.reserved
+    available.value = w.available
     txns.value = rows
   } catch (e) {
     error.value = friendlyError(e)
@@ -64,10 +69,11 @@ onMounted(load)
       <div class="rounded-lg border border-outline-gray-1 bg-surface-white p-4">
         <div class="text-sm text-ink-gray-5">Available credit</div>
         <div class="mt-1 text-2xl font-semibold tracking-tight">
-          {{ balance !== null ? balance.toFixed(2) : '—' }}
+          {{ available !== null ? available.toFixed(2) : '—' }}
         </div>
         <div class="mt-1 text-xs text-ink-gray-5">
-          Auto-applied to your next invoices. Refunds and downgrade credits land here.
+          {{ (balance ?? 0).toFixed(2) }} total balance · {{ reserved.toFixed(2) }} reserved in unpaid invoices.
+          Reserved credit deducts only when each invoice is paid.
         </div>
       </div>
 
@@ -87,10 +93,13 @@ onMounted(load)
               </div>
             </div>
             <div
-              class="shrink-0 text-sm font-medium"
+              class="shrink-0 text-right text-sm font-medium"
               :class="t.kind === 'credit' ? 'text-green-700' : 'text-ink-gray-8'"
             >
-              {{ fmt(t.amount) }}
+              <div>{{ fmt(t.amount) }}</div>
+              <div v-if="t.state" class="text-xs font-normal text-ink-gray-5">
+                {{ t.state === 'reserved' ? 'Reserved' : 'Used' }}
+              </div>
             </div>
           </div>
         </div>
