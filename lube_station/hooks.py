@@ -160,7 +160,8 @@ scheduler_events = {
 	"daily": [
 		"lube_station.lube_station.usage.collect.daily",
 		"lube_station.lube_station.notifications.dunning.daily",
-		"lube_station.lube_station.portal.apis.process_scheduled_cancellations"
+		"lube_station.lube_station.portal.apis.process_scheduled_cancellations",
+		"lube_station.lube_provisioning.doctype.service.service.generate_upcoming_renewals"
 	],
 }
 

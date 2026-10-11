@@ -1,7 +1,16 @@
 import frappe
 import json
 from frappe.model.document import Document
-from frappe.utils import add_to_date, today
+from frappe.utils import add_to_date, getdate, today
+
+CYCLE_MONTHS = {
+    "Monthly": 1,
+    "Quarterly": 3,
+    "Semi-Annually": 6,
+    "Annually": 12,
+    "Biennially": 24,
+    "Triennially": 36,
+}
 
 
 def _log(doc, msg: str):
@@ -103,7 +112,7 @@ def create_from_order(order: str) -> dict:
             continue
         plan = frappe.get_doc("Hosting Plan", item.reference)
         price = frappe.db.get_value("Plan Pricing", {"hosting_plan": plan.name, "billing_cycle": item.billing_cycle}, "recurring_amount") or item.unit_price
-        kwargs = {"doctype": "Service", "customer": order_doc.customer, "hosting_plan": plan.name, "order_ref": order, "billing_cycle": item.billing_cycle, "status": "Pending", "next_due_date": add_to_date(today(), months=1), "recurring_amount": price}
+        kwargs = {"doctype": "Service", "customer": order_doc.customer, "hosting_plan": plan.name, "order_ref": order, "billing_cycle": item.billing_cycle, "status": "Pending", "next_due_date": add_to_date(today(), months=CYCLE_MONTHS.get(item.billing_cycle, 1)), "recurring_amount": price}
         if getattr(item, "parent_service", None):
             parent = frappe.get_doc("Service", item.parent_service)
             if parent.customer != order_doc.customer:
@@ -192,6 +201,8 @@ def on_invoice_paid(invoice: str) -> dict:
     inv = frappe.get_doc("Hosting Invoice", invoice)
     if inv.status != "Paid":
         return {"action": "none"}
+    if (inv.get("idempotency_key") or "").startswith("renew:"):
+        _advance_for_renewal(inv)
     # Upgrade invoices: swap plan automatically once balance is paid.
     # Idempotent: already-swapped services are skipped.
     upgraded = _apply_upgrade_for_invoice(inv)
@@ -221,6 +232,58 @@ def on_invoice_paid(invoice: str) -> dict:
         except Exception:
             pass
     return {"action": "activated", "services": out}
+
+
+def _advance_for_renewal(inv) -> None:
+    """WHMCS roll: renewal payment pushes each service's Next Due Date one
+    full cycle forward from its current value (arrears preserved)."""
+    if not inv.get("order_ref") or not frappe.db.exists("Order", inv.order_ref):
+        return
+    for svc in frappe.get_all("Service", {"order_ref": inv.order_ref}, ["name", "billing_cycle", "next_due_date"]):
+        try:
+            months = CYCLE_MONTHS.get(svc.get("billing_cycle"), 1)
+            base = getdate(svc.get("next_due_date")) if svc.get("next_due_date") else getdate(today())
+            frappe.db.set_value("Service", svc["name"], "next_due_date", add_to_date(base, months=months))
+        except Exception:
+            continue
+
+
+def generate_upcoming_renewals() -> dict:
+    """Daily cron: invoice renewals coming due within the advance window.
+
+    WHMCS advance generation: only services whose Next Due Date falls in
+    (today, today + renewal_advance_days]. Overdue services are skipped
+    (already invoiced) as are ones without an order. Idempotent via the
+    renew:{order}:{period} key.
+    """
+    from frappe.utils import add_days
+
+    from lube_station.lube_station.settings import get_setting
+
+    try:
+        advance = int(get_setting("renewal_advance_days") or 14)
+    except Exception:
+        advance = 14
+    from lube_station.lube_billing.doctype.hosting_invoice.hosting_invoice import generate_renewal
+
+    made = []
+    horizon = getdate(add_days(today(), advance))
+    for svc in frappe.get_all(
+        "Service", {"status": "Active", "next_due_date": ["is", "set"]}, ["name", "order_ref", "next_due_date"]
+    ):
+        try:
+            if not svc.get("order_ref") or not svc.get("next_due_date"):
+                continue
+            due = getdate(svc["next_due_date"])
+            if due <= getdate(today()) or due > horizon:
+                continue
+            period = due.isoformat()
+            out = generate_renewal(svc["order_ref"], period)
+            if not out.get("reused"):
+                made.append(out["invoice"])
+        except Exception:
+            continue
+    return {"invoices": made}
 
 
 def _apply_upgrade_for_invoice(inv) -> list:

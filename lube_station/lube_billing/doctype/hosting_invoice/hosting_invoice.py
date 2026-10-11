@@ -319,6 +319,8 @@ def _from_order(order_name: str, key: str, gateway: str | None = None, include_s
         credit = apply_credit(customer, items_total + tax)
     from lube_station.lube_station.settings import get_setting
 
+    due_date = _whmcs_due_date(order_name, include_setup)
+
     doc = frappe.get_doc(
         {
             "doctype": "Hosting Invoice",
@@ -333,7 +335,7 @@ def _from_order(order_name: str, key: str, gateway: str | None = None, include_s
             "ugst_amount": breakup["ugst"],
             "igst_amount": breakup["igst"],
             "credit_applied": credit,
-            "due_date": add_days(today(), get_setting("invoice_due_days") or 7),
+            "due_date": due_date,
             "status": "Unpaid",
             "gateway": gateway,
             "idempotency_key": key,
@@ -346,6 +348,30 @@ def _from_order(order_name: str, key: str, gateway: str | None = None, include_s
         consume_credit(doc.name, allow_unpaid_zero=True)
     _notify_invoice(doc, is_renewal=not include_setup)
     return doc
+
+
+def _whmcs_due_date(order_name: str, include_setup: bool) -> str:
+    """WHMCS due dates: initial invoices due on receipt (today); renewal
+    invoices due on the services' Next Due Date (period boundary). Falls back
+    to today + invoice_due_days when no service date exists (domain-only and
+    legacy orders)."""
+    from frappe.utils import getdate
+
+    from lube_station.lube_station.settings import get_setting
+
+    if include_setup:
+        return today()
+    try:
+        dates = [
+            getdate(r["next_due_date"])
+            for r in frappe.db.get_all("Service", {"order_ref": order_name, "next_due_date": ["is", "set"]}, ["next_due_date"])
+            if r.get("next_due_date")
+        ]
+    except Exception:
+        dates = []
+    if dates:
+        return str(min(dates))
+    return add_days(today(), get_setting("invoice_due_days") or 7)
 
 
 def _paypal_txn_for(invoice_name: str) -> str | None:

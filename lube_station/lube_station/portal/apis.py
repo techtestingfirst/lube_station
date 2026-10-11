@@ -1128,7 +1128,7 @@ def request_upgrade(service: str, new_plan: str) -> dict:
             "ugst_amount": breakup["ugst"],
             "igst_amount": breakup["igst"],
             "credit_applied": credit,
-            "due_date": add_days(today(), get_setting("invoice_due_days") or 7),
+            "due_date": today(),
             "status": "Unpaid",
             "idempotency_key": key,
         }

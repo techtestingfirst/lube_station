@@ -132,6 +132,12 @@
       "default": "7"
     },
     {
+      "fieldname": "renewal_advance_days",
+      "fieldtype": "Int",
+      "label": "Renewal Advance Days",
+      "default": "14"
+    },
+    {
       "fieldname": "fraud_section",
       "fieldtype": "Section Break",
       "label": "Fraud Screening (0 disables a rule)"
