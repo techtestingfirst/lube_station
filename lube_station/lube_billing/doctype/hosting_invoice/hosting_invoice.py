@@ -11,6 +11,14 @@ CYCLE_MONTHS = {
     "Triennially": 36,
 }
 
+STATUS_COLORS = {
+    "Paid": "#16a34a",
+    "Unpaid": "#d97706",
+    "Overdue": "#dc2626",
+    "Cancelled": "#6b7280",
+    "Draft": "#6b7280",
+}
+
 
 class HostingInvoice(Document):
     def validate(self):
@@ -393,7 +401,28 @@ def print_context(invoice_name: str) -> dict:
         d.setdefault("domain", "")
         d["qty"] = _qty_value(d.get("description") or "")
         d["start"], d["end"] = _line_period_paid(inv, d.get("service_ref") or "")
-    return {"billing": billing, "lines": items}
+    payment = {"gateway": inv.gateway or "", "txn_id": ""}
+    try:
+        txn = frappe.db.get_value(
+            "Payment Transaction",
+            {"invoice": inv.name, "status": "Success"},
+            ["gateway", "gateway_txn_id"],
+            order_by="creation desc",
+            as_dict=True,
+        )
+        if txn:
+            payment = {
+                "gateway": txn.get("gateway") or inv.gateway or "",
+                "txn_id": txn.get("gateway_txn_id") or "",
+            }
+    except Exception:
+        pass
+    return {
+        "billing": billing,
+        "lines": items,
+        "payment": payment,
+        "status_color": STATUS_COLORS.get(inv.status, "#6b7280"),
+    }
 
 
 def _line_period_paid(inv, ref):

@@ -72,12 +72,15 @@ class TestInvoicePdf(IntegrationTestCase):
         self.assertIn(">2</td>", html)
         # Unpaid: service not started, no period shown.
         self.assertNotIn(formatdate(getdate(today())), html.replace(f"Due:</strong> {formatdate(inv.due_date)}", ""))
-        frappe.get_doc({"doctype": "Payment Transaction", "invoice": inv.name, "gateway": "Stripe", "status": "Success", "amount": 200}).insert(ignore_permissions=True)
+        frappe.get_doc({"doctype": "Payment Transaction", "invoice": inv.name, "gateway": "Stripe", "gateway_txn_id": "txn_test_123", "status": "Success", "amount": 200}).insert(ignore_permissions=True)
         inv.status = "Paid"
         inv.save(ignore_permissions=True)
         html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
         self.assertIn(formatdate(getdate(today())), html)
         self.assertIn(formatdate(add_months(getdate(today()), 1)), html)
+        # Colored status pill and gateway transaction reference.
+        self.assertIn("#16a34a", html)
+        self.assertIn("Paid via Stripe · Transaction: txn_test_123.", html)
 
     def test_owner_can_print_stranger_cannot(self):
         cust = _customer()
