@@ -172,6 +172,21 @@ class TestWallet(IntegrationTestCase):
         frappe.set_user("Guest")
         self.assertRaises(frappe.PermissionError, wallet.transfer_wallet_to, inv.name)
 
+    def test_release_wallet_locks(self):
+        cust_name, user = self._customer("walletfree")
+        cn = frappe.get_doc(
+            {"doctype": "Credit Note", "customer": cust_name, "amount": 50, "reason": "refund"}
+        ).insert()
+        cn.submit()
+        a = self._invoice(cust_name, 20)
+        b = self._invoice(cust_name, 30)
+        frappe.set_user(user)
+        out = wallet.release_wallet_locks()
+        self.assertEqual(sorted(out["released"]), sorted([a.name, b.name]))
+        self.assertEqual(out["balance"], 50)
+        self.assertEqual(frappe.db.get_value("Hosting Invoice", a.name, "credit_applied"), 0)
+        self.assertEqual(frappe.db.get_value("Hosting Invoice", b.name, "total_due"), 100)
+
     def test_wallet_isolation(self):
         cust_a, user_a = self._customer("walleta")
         cust_b, user_b = self._customer("walletb")

@@ -107,6 +107,37 @@ def transfer_wallet_to(invoice: str) -> dict:
         "total_due": float(inv.total_due or 0),
         "released": released,
     }
+@frappe.whitelist(methods=["POST"])
+def release_wallet_locks() -> dict:
+    """Free wallet reservations parked on other open invoices (customer-initiated).
+
+    For the cart/checkout step, where no invoice exists yet to receive a
+    transfer: zeroes credit_applied on all open invoices (totals recompute
+    via validate) so the next generated invoice auto-reserves the full
+    balance. Balance untouched until payment per the model.
+    """
+    from lube_station.lube_customers.doctype.credit_note.credit_note import OPEN_STATUSES
+
+    customer = my_customer()
+    released = []
+    for row in frappe.db.get_all(
+        "Hosting Invoice",
+        {
+            "customer": customer,
+            "status": ["in", list(OPEN_STATUSES)],
+            "credit_applied": [">", 0],
+        },
+        ["name"],
+    ):
+        doc = frappe.get_doc("Hosting Invoice", row["name"])
+        assert_owns(doc.customer)
+        doc.credit_applied = 0
+        doc.save(ignore_permissions=True)
+        released.append(row["name"])
+    balance = float(frappe.db.get_value("Hosting Customer", customer, "credit_balance") or 0)
+    return {"released": released, "balance": balance}
+
+
 @frappe.whitelist(methods=["GET"])
 def my_wallet_transactions(limit: int = 50) -> list:
     customer = my_customer()

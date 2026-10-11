@@ -36,16 +36,25 @@ const error = ref('')
 const loading = ref(false)
 const fetching = ref(true)
 const router = useRouter()
+const walletBalance = ref(0)
+const walletLocked = ref(0)
+const freeing = ref(false)
+const walletMsg = ref('')
 
 async function refresh() {
   error.value = ''
   fetching.value = true
   try {
-    const [c, g] = await Promise.all([
+    const [c, g, w] = await Promise.all([
       call<CartView>('lube_station.lube_station.portal.apis.cart_current', {}, 'GET'),
       call<{ name: string }[]>('lube_station.lube_station.portal.apis.payment_gateways', {}, 'GET'),
+      call<{ balance: number; reserved: number }>('lube_station.lube_station.wallet.wallet.my_wallet', {}, 'GET').catch(() => null),
     ])
     cart.value = c
+    if (w) {
+      walletBalance.value = w.balance || 0
+      walletLocked.value = w.reserved || 0
+    }
     try {
       localStorage.setItem('lube-last-cart', c.cart)
     } catch {
@@ -107,6 +116,24 @@ async function order() {
     error.value = friendlyError(e)
   } finally {
     loading.value = false
+  }
+}
+
+async function freeWallet() {
+  freeing.value = true
+  walletMsg.value = ''
+  try {
+    const r = await call<{ released: string[]; balance: number }>(
+      'lube_station.lube_station.wallet.wallet.release_wallet_locks', {}, 'POST')
+    walletLocked.value = 0
+    walletBalance.value = r.balance
+    walletMsg.value = r.released.length
+      ? `Wallet freed from ${r.released.join(', ')} — discount applies when you place the order.`
+      : 'Nothing locked elsewhere.'
+  } catch (e) {
+    walletMsg.value = friendlyError(e)
+  } finally {
+    freeing.value = false
   }
 }
 
@@ -188,6 +215,26 @@ onMounted(refresh)
           <div class="flex justify-between border-t border-outline-gray-1 pt-2 text-sm font-medium text-ink-gray-8">
             <span>Total</span>
             <span>{{ formatMoney(cart.grand_total) }}</span>
+          </div>
+          <div class="border-t border-outline-gray-1 pt-2 text-sm">
+            <div class="flex justify-between text-ink-gray-5">
+              <span>Wallet balance</span>
+              <span class="text-ink-gray-8">{{ formatMoney(walletBalance) }}</span>
+            </div>
+            <div v-if="walletLocked > 0" class="mt-1 flex justify-between text-ink-gray-5">
+              <span>Locked on unpaid invoices</span>
+              <span class="text-ink-gray-8">{{ formatMoney(walletLocked) }}</span>
+            </div>
+            <Button
+              v-if="walletLocked > 0"
+              class="mt-2"
+              label="Use wallet here"
+              variant="subtle"
+              size="sm"
+              :loading="freeing"
+              @click="freeWallet"
+            />
+            <p v-if="walletMsg" class="mt-1 text-ink-gray-8">{{ walletMsg }}</p>
           </div>
         </div>
       </div>
