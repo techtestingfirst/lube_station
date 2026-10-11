@@ -15,6 +15,7 @@ const routes = [
   { path: '/order/:order', component: () => import('./pages/OrderSuccess.vue') },
   { path: '/orders', component: () => import('./pages/Orders.vue') },
   { path: '/invoices', component: () => import('./pages/Invoices.vue') },
+  { path: '/invoice/:invoice', component: () => import('./pages/InvoiceDetail.vue') },
   { path: '/pay/:invoice', component: () => import('./pages/Payment.vue') },
   { path: '/services', component: () => import('./pages/Services.vue') },
   { path: '/service/:service', component: () => import('./pages/ServiceDetail.vue') },

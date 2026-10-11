@@ -124,3 +124,25 @@ class TestPortalApis(IntegrationTestCase):
         self.assertNotIn("abc123", dumped)
         self.assertTrue(any(r["key"] == "hostname" for r in detail["custom_fields"]))
         self.assertGreaterEqual(detail["hidden_count"], 2)
+
+    def test_my_invoice_detail(self):
+        cust_name, user_name = _make_customer()
+        inv = frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": cust_name,
+                "invoice_items": [
+                    {"description": "Shared Hosting - example.com", "service_ref": "SVC-1", "amount": 100},
+                    {"description": "SSL Certificate", "amount": 20},
+                ],
+                "status": "Unpaid",
+            }
+        ).insert()
+        frappe.set_user(user_name)
+        detail = apis.my_invoice_detail(inv.name)
+        self.assertEqual(detail["invoice"]["name"], inv.name)
+        self.assertEqual(len(detail["invoice"]["invoice_items"]), 2)
+        self.assertEqual(detail["invoice"]["invoice_items"][0]["description"], "Shared Hosting - example.com")
+        # Guest gets no invoice detail.
+        frappe.set_user("Guest")
+        self.assertRaises(frappe.PermissionError, apis.my_invoice_detail, inv.name)

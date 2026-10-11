@@ -426,6 +426,13 @@ def my_invoices():
 
 
 @frappe.whitelist(methods=["GET"])
+def my_invoice_detail(invoice: str):
+    inv = frappe.get_doc("Hosting Invoice", invoice)
+    assert_owns(inv.customer)
+    return {"invoice": inv.as_dict()}
+
+
+@frappe.whitelist(methods=["GET"])
 def my_services():
     customer = my_customer()
     return frappe.get_all("Service", {"customer": customer}, ["name", "hosting_plan", "status", "next_due_date"])
