@@ -1604,10 +1604,35 @@ def my_order_detail(order: str):
     order_doc = frappe.get_doc("Order", order)
     assert_owns(order_doc.customer)
     invoices = frappe.get_all("Hosting Invoice", {"order_ref": order}, ["name", "status", "total_due", "gateway"])
+    data = order_doc.as_dict()
+    data["items"] = _enriched_order_items(order_doc)
     return {
-        "order": order_doc.as_dict(),
+        "order": data,
         "invoices": invoices,
     }
+
+
+def _enriched_order_items(order_doc):
+    """Customer-facing item rows: plan names instead of IDs, purchased domain."""
+    out = []
+    for oi in order_doc.items:
+        try:
+            snap = json.loads(oi.configuration_snapshot or "{}")
+        except Exception:
+            snap = {}
+        plan_name, domain = "", snap.get("_domain") or ""
+        try:
+            if oi.item_type == "Hosting Plan" and oi.reference and frappe.db.exists("Hosting Plan", oi.reference):
+                plan_name = frappe.db.get_value("Hosting Plan", oi.reference, "plan_name") or ""
+            elif oi.item_type == "Domain":
+                domain = domain or oi.reference or ""
+        except Exception:
+            pass
+        d = oi.as_dict()
+        d["plan_name"] = plan_name
+        d["domain"] = domain
+        out.append(d)
+    return out
 
 
 @frappe.whitelist(methods=["GET", "POST"])

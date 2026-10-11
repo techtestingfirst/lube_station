@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import frappe
@@ -125,8 +126,41 @@ class TestPortalApis(IntegrationTestCase):
         self.assertTrue(any(r["key"] == "hostname" for r in detail["custom_fields"]))
         self.assertGreaterEqual(detail["hidden_count"], 2)
 
-    def test_my_invoice_detail(self):
+    def test_my_order_detail(self):
         cust_name, user_name = _make_customer()
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": f"Portal Ord Group {uuid.uuid4().hex[:6]}"}).insert()
+        plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"Portal Ord Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
+        order = frappe.get_doc(
+            {
+                "doctype": "Order",
+                "customer": cust_name,
+                "status": "Pending Review",
+                "items": [
+                    {
+                        "item_type": "Hosting Plan",
+                        "reference": plan.name,
+                        "billing_cycle": "Monthly",
+                        "unit_price": 100,
+                        "quantity": 1,
+                        "configuration_snapshot": json.dumps({"_domain": "example.com"}),
+                    },
+                    {"item_type": "Domain", "reference": "example.org", "unit_price": 10, "quantity": 1},
+                ],
+                "total": 110,
+            }
+        ).insert()
+        frappe.set_user(user_name)
+        detail = apis.my_order_detail(order.name)
+        self.assertEqual(detail["order"]["name"], order.name)
+        first, second = detail["order"]["items"]
+        self.assertEqual(first["plan_name"], plan.plan_name)
+        self.assertEqual(first["domain"], "example.com")
+        self.assertEqual(second["domain"], "example.org")
+        self.assertIsInstance(detail["invoices"], list)
+        frappe.set_user("Guest")
+        self.assertRaises(frappe.PermissionError, apis.my_order_detail, order.name)
+
+    def test_my_invoice_detail(self):        cust_name, user_name = _make_customer()
         frappe.db.set_value(
             "Hosting Customer",
             cust_name,
