@@ -215,22 +215,22 @@ async function save() {
       </div>
 
       <div class="rounded-lg border border-outline-gray-1 bg-surface-white p-4">
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
           <div class="text-sm font-medium text-ink-gray-8">Profile</div>
-          <Button
-            v-if="!editing"
-            label="Edit"
-            variant="subtle"
-            size="sm"
-            @click="startEdit"
-          />
+          <StatusBadge :status="String(account.status ?? '')" />
+          <div class="ml-auto">
+            <Button
+              v-if="!editing"
+              label="Edit"
+              variant="subtle"
+              size="sm"
+              @click="startEdit"
+            />
+          </div>
         </div>
         <div v-if="!editing" class="mt-2 flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
             <div class="truncate text-sm font-medium text-ink-gray-8">{{ account.company }}</div>
-            <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-ink-gray-5">
-              <StatusBadge :status="String(account.status ?? '')" />
-            </div>
             <div v-if="addressBlock" class="mt-2 whitespace-pre-line text-sm text-ink-gray-5">{{ addressBlock }}</div>
             <div v-if="account.phone" class="mt-1 text-sm text-ink-gray-5">{{ account.phone }}</div>
             <div v-if="account.tax_id" class="mt-1 text-sm text-ink-gray-5">Tax / VAT: {{ account.tax_id }}</div>
