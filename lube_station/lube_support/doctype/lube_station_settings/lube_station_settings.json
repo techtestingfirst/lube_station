@@ -38,12 +38,6 @@
       "options": "Tax Code"
     },
     {
-      "fieldname": "tax_code_label",
-      "fieldtype": "Data",
-      "label": "Tax Code Label (e.g. SAC, HSN)",
-      "default": "Tax code"
-    },
-    {
       "fieldname": "support_email",
       "fieldtype": "Data",
       "label": "Support Email",

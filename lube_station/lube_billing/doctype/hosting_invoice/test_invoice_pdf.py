@@ -113,7 +113,7 @@ class TestInvoicePdf(IntegrationTestCase):
         plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"PDF Tax Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1, "tax_code": "9984"}).insert()
         svc = frappe.get_doc({"doctype": "Service", "customer": cust.name, "hosting_plan": plan.name, "status": "Active", "recurring_amount": 10}).insert()
         frappe.db.set_single_value("Lube Station Settings", "company_tax_id", "29TEST1234F1Z5")
-        frappe.db.set_single_value("Lube Station Settings", "tax_code_label", "SAC")
+        frappe.db.set_value("Hosting Plan", plan.name, "tax_code_label", "SAC")
         inv = frappe.get_doc(
             {
                 "doctype": "Hosting Invoice",

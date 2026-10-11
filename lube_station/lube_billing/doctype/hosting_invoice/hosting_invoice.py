@@ -90,6 +90,21 @@ def _invoice_context(inv) -> dict:
     return {"invoice": inv.name, "amount": inv.total_due, "customer": inv.customer, "order": inv.order_ref, "due": str(inv.due_date or "")}
 
 
+def _plan_tax_code_label(ref: str | None) -> str:
+    """Seller-entered header label from the line's plan. Blank when unknown."""
+    try:
+        plan = None
+        if ref and frappe.db.exists("Service", ref):
+            plan = frappe.db.get_value("Service", ref, "hosting_plan")
+        elif ref and frappe.db.exists("Hosting Plan", ref):
+            plan = ref
+        if plan:
+            return frappe.db.get_value("Hosting Plan", plan, "tax_code_label") or ""
+    except Exception:
+        pass
+    return ""
+
+
 def _plan_tax_code(ref: str | None) -> str:
     """Seller-entered tax code (SAC/HSN/...) for a line ref. Blank when unknown."""
     try:
@@ -448,6 +463,14 @@ def print_context(invoice_name: str) -> dict:
             d["tax_code"] = _plan_tax_code(d.get("service_ref")) or default_code
         d["qty"] = _qty_value(d.get("description") or "")
         d["start"], d["end"] = _line_period_paid(inv, d.get("service_ref") or "")
+    label = "Tax code"
+    for d in items:
+        if not d.get("tax_code"):
+            continue
+        lbl = _plan_tax_code_label(d.get("service_ref"))
+        if lbl:
+            label = lbl
+            break
     try:
         seller_tax = frappe.db.get_single_value("Lube Station Settings", "company_tax_id") or frappe.db.get_single_value(
             "GST Settings", "gstin"
@@ -479,7 +502,7 @@ def print_context(invoice_name: str) -> dict:
     return {
         "billing": billing,
         "seller": seller,
-        "tax_code_label": frappe.db.get_single_value("Lube Station Settings", "tax_code_label") or "Tax code",
+        "tax_code_label": label,
         "lines": items,
         "payment": payment,
         "status_color": STATUS_COLORS.get(inv.status, "#6b7280"),
