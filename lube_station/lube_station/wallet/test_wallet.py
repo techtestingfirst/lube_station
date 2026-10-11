@@ -77,6 +77,41 @@ class TestWallet(IntegrationTestCase):
         self.assertIn("Wallet Group", row["plans"][0])
         self.assertNotIn(plan.name, row["plans"][0])
 
+    def test_downgrade_reason_shows_names(self):
+        from lube_station.lube_station.portal import apis
+
+        cust_name, _ = self._customer("walletdown")
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": "Down Group"}).insert()
+        old = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": "Down Business",
+                "product_group": group.name,
+                "product_type": "Shared Hosting",
+                "is_active": 1,
+            }
+        ).insert()
+        new = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": "Down Lite",
+                "product_group": group.name,
+                "product_type": "Shared Hosting",
+                "is_active": 1,
+            }
+        ).insert()
+        svc = frappe.get_doc(
+            {"doctype": "Service", "customer": cust_name, "hosting_plan": old.name, "status": "Active", "recurring_amount": 100}
+        ).insert()
+        out = apis._apply_plan_swap(svc.name, new.name, credit_amount=10)
+        self.assertTrue(out.get("applied"))
+        reason = frappe.db.get_value("Credit Note", out["credit_note"], "reason")
+        self.assertIn("Down Business", reason)
+        self.assertIn("Down Lite", reason)
+        self.assertIn("Down Group", reason)
+        self.assertNotIn(old.name, reason)
+        self.assertNotIn(new.name, reason)
+
     def test_wallet_isolation(self):
         cust_a, user_a = self._customer("walleta")
         cust_b, user_b = self._customer("walletb")

@@ -269,12 +269,16 @@ def _apply_plan_swap(service_name: str, new_plan: str, credit_amount: float = 0,
     credit_note = None
     if (credit_amount or 0) > 0:
         try:
+            old_name, old_group = _plan_label(old_plan)
+            new_name, new_group = _plan_label(new_plan)
+            old_lbl = f"{old_group} {old_name}".strip() or old_plan
+            new_lbl = f"{new_group} {new_name}".strip() or new_plan
             cn = frappe.get_doc(
                 {
                     "doctype": "Credit Note",
                     "customer": svc.get("customer"),
                     "amount": round(float(credit_amount), 2),
-                    "reason": f"Downgrade credit: {service_name} {old_plan} -> {new_plan}",
+                    "reason": f"Downgrade credit: {service_name} {old_lbl} -> {new_lbl}",
                     "reference_invoice": invoice_name,
                 }
             ).insert(ignore_permissions=True)
