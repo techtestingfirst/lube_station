@@ -213,3 +213,16 @@ class TestPortalApis(IntegrationTestCase):
         # Guest gets no invoice detail.
         frappe.set_user("Guest")
         self.assertRaises(frappe.PermissionError, apis.my_invoice_detail, inv.name)
+
+    def test_update_account(self):
+        cust_name, user_name = _make_customer()
+        frappe.set_user(user_name)
+        out = apis.update_account(company="Acme", city="Springfield", phone="+1000")
+        self.assertTrue(out["updated"])
+        self.assertEqual(frappe.db.get_value("Hosting Customer", cust_name, "company"), "Acme")
+        self.assertEqual(frappe.db.get_value("Hosting Customer", cust_name, "city"), "Springfield")
+        # Protected fields unreachable: no such params, balance/status intact.
+        self.assertEqual(frappe.db.get_value("Hosting Customer", cust_name, "status"), "Active")
+        self.assertRaises(frappe.ValidationError, apis.update_account, country="No Such Country")
+        frappe.set_user("Guest")
+        self.assertRaises(frappe.PermissionError, apis.update_account, company="X")

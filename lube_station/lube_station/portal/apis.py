@@ -1346,6 +1346,65 @@ def my_account():
     return frappe.get_doc("Hosting Customer", customer).as_dict()
 
 
+EDITABLE_ACCOUNT_FIELDS = (
+    "company",
+    "phone",
+    "tax_id",
+    "billing_address",
+    "address_line1",
+    "city",
+    "state",
+    "postcode",
+    "country",
+)
+
+
+@frappe.whitelist(methods=["POST"])
+def update_account(
+    company: str | None = None,
+    phone: str | None = None,
+    tax_id: str | None = None,
+    billing_address: str | None = None,
+    address_line1: str | None = None,
+    city: str | None = None,
+    state: str | None = None,
+    postcode: str | None = None,
+    country: str | None = None,
+    marketing_opt_in: bool | None = None,
+) -> dict:
+    """Customer edits own profile. Strict field whitelist: identity, balance,
+    group, tos and status can never change through this endpoint."""
+    customer = my_customer()
+    values = {
+        "company": company,
+        "phone": phone,
+        "tax_id": tax_id,
+        "billing_address": billing_address,
+        "address_line1": address_line1,
+        "city": city,
+        "state": state,
+        "postcode": postcode,
+        "country": country,
+    }
+    cleaned = {}
+    for field in EDITABLE_ACCOUNT_FIELDS:
+        val = values[field]
+        if val is None:
+            continue
+        val = str(val).strip()[:140]
+        if field == "country" and val and not frappe.db.exists("Country", val):
+            frappe.throw("Select a valid country")
+        cleaned[field] = val
+    if marketing_opt_in is not None:
+        cleaned["marketing_opt_in"] = 1 if marketing_opt_in else 0
+    if not cleaned:
+        return {"updated": False}
+    doc = frappe.get_doc("Hosting Customer", customer)
+    doc.update(cleaned)
+    doc.save(ignore_permissions=True)
+    return {"updated": True, "fields": sorted(cleaned)}
+
+
 @frappe.whitelist(methods=["GET", "POST"])
 def cart_current():
     """Get open cart for logged-in customer, creating one if needed.
