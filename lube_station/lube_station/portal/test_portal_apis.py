@@ -132,13 +132,16 @@ class TestPortalApis(IntegrationTestCase):
             cust_name,
             {"company": "Acme Ltd", "phone": "+100000000", "tax_id": "VAT123", "address_line1": "1 Main St", "city": "Springfield", "country": "India"},
         )
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": f"Portal Inv Group {uuid.uuid4().hex[:6]}"}).insert()
+        plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"Portal Inv Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
+        svc = frappe.get_doc({"doctype": "Service", "customer": cust_name, "hosting_plan": plan.name, "status": "Active", "recurring_amount": 10, "primary_domain": "example.com"}).insert()
         inv = frappe.get_doc(
             {
                 "doctype": "Hosting Invoice",
                 "customer": cust_name,
                 "invoice_items": [
-                    {"description": "Shared Hosting - example.com", "service_ref": "SVC-1", "amount": 100},
-                    {"description": "SSL Certificate", "amount": 20},
+                    {"description": "Renewal", "service_ref": svc.name, "amount": 100},
+                    {"description": "Setup fee", "service_ref": plan.name, "amount": 20},
                 ],
                 "status": "Unpaid",
             }
@@ -147,7 +150,13 @@ class TestPortalApis(IntegrationTestCase):
         detail = apis.my_invoice_detail(inv.name)
         self.assertEqual(detail["invoice"]["name"], inv.name)
         self.assertEqual(len(detail["invoice"]["invoice_items"]), 2)
-        self.assertEqual(detail["invoice"]["invoice_items"][0]["description"], "Shared Hosting - example.com")
+        # Service ref resolves to plan name + purchased domain, never raw IDs.
+        first, second = detail["invoice"]["invoice_items"]
+        self.assertEqual(first["plan_name"], plan.plan_name)
+        self.assertEqual(first["domain"], "example.com")
+        self.assertNotIn(svc.name, (first["plan_name"], first["domain"]))
+        # Bare plan ref resolves to plan name.
+        self.assertEqual(second["plan_name"], plan.plan_name)
         # Billing identity for pre-payment verification.
         billing = detail["customer"]
         self.assertTrue(billing["name"])

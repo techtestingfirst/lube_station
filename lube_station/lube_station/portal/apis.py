@@ -434,8 +434,10 @@ def my_invoice_detail(invoice: str):
     address = cust.billing_address or ", ".join(
         p for p in (cust.address_line1, cust.city, cust.state, cust.postcode, cust.country) if p
     )
+    data = inv.as_dict()
+    data["invoice_items"] = _enriched_items(inv)
     return {
-        "invoice": inv.as_dict(),
+        "invoice": data,
         "customer": {
             "name": contact.get("full_name") or cust.user,
             "email": contact.get("email") or cust.user,
@@ -445,6 +447,56 @@ def my_invoice_detail(invoice: str):
             "address": address,
         },
     }
+
+
+def _enriched_items(inv):
+    """Resolve each line's plan name and purchased domain.
+
+    service_ref varies by source: Service ID (renewals/overage), Hosting
+    Plan ID (orders/upgrades/setup fees), or bare domain (domain lines).
+    Never raises: falls back to raw description on any miss.
+    """
+    order_map = {}
+    if inv.order_ref and frappe.db.exists("Order", inv.order_ref):
+        try:
+            for oi in frappe.get_doc("Order", inv.order_ref).items:
+                try:
+                    snap = json.loads(oi.configuration_snapshot or "{}")
+                except Exception:
+                    snap = {}
+                order_map.setdefault(
+                    oi.reference, {"item_type": oi.item_type, "domain": snap.get("_domain")}
+                )
+        except Exception:
+            pass
+    out = []
+    for it in inv.invoice_items:
+        ref = (it.service_ref or "").strip()
+        plan_name, domain = "", ""
+        try:
+            if ref and frappe.db.exists("Service", ref):
+                svc = frappe.db.get_value("Service", ref, ["hosting_plan", "primary_domain"], as_dict=True)
+                if svc:
+                    domain = svc.get("primary_domain") or ""
+                    if svc.get("hosting_plan"):
+                        plan_name = frappe.db.get_value("Hosting Plan", svc["hosting_plan"], "plan_name") or ""
+            if not plan_name and ref and frappe.db.exists("Hosting Plan", ref):
+                plan_name = frappe.db.get_value("Hosting Plan", ref, "plan_name") or ""
+            entry = order_map.get(ref)
+            if entry:
+                domain = domain or entry.get("domain") or ""
+                if not plan_name and entry.get("item_type") == "Domain":
+                    plan_name = "Domain"
+            if not domain and ref and frappe.db.exists("Registered Domain", {"domain_name": ref}):
+                domain = ref
+                plan_name = plan_name or "Domain"
+        except Exception:
+            pass
+        d = it.as_dict()
+        d["plan_name"] = plan_name
+        d["domain"] = domain
+        out.append(d)
+    return out
 
 
 @frappe.whitelist(methods=["GET"])
