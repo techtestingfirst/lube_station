@@ -82,6 +82,36 @@ const addrError = ref('')
 const aform = ref({ title: '', type: 'Billing', line1: '', line2: '', city: '', state: '', country: '', pincode: '', phone: '', primary: false, shipping: false })
 
 const ADDR_TYPES = ['Billing', 'Shipping', 'Office', 'Personal', 'Other']
+const addrCountries = ref<{ label: string; value: string }[]>([])
+const addrLookingUp = ref(false)
+const addrLookupHint = ref('')
+
+async function loadAddrCountries() {
+  try {
+    const list = await call<{ name: string }[]>('lube_station.lube_station.portal.apis.country_list', {}, 'GET')
+    addrCountries.value = list.map((c) => ({ label: c.name, value: c.name }))
+  } catch {
+    addrCountries.value = []
+  }
+}
+
+async function lookupAddrPin() {
+  if (!aform.value.pincode) return
+  addrLookingUp.value = true
+  addrLookupHint.value = ''
+  try {
+    const out = await call<{ city: string; state: string }>(
+      'lube_station.lube_station.portal.apis.pincode_lookup',
+      { postcode: aform.value.pincode, country: aform.value.country || undefined }, 'GET')
+    if (out.city) aform.value.city = out.city
+    if (out.state) aform.value.state = out.state
+    addrLookupHint.value = `Found: ${out.city}, ${out.state}`
+  } catch (e) {
+    addrLookupHint.value = friendlyError(e)
+  } finally {
+    addrLookingUp.value = false
+  }
+}
 
 async function refresh() {
   loading.value = true
@@ -179,7 +209,10 @@ async function addrRemove(name: string) {
   }
 }
 
-onMounted(refresh)
+onMounted(() => {
+  refresh()
+  loadAddrCountries()
+})
 
 async function save() {
   saveError.value = ''
@@ -288,8 +321,18 @@ async function save() {
             <TextInput v-model="aform.line2" label="Address line 2" class="sm:col-span-2" />
             <TextInput v-model="aform.city" label="City *" />
             <TextInput v-model="aform.state" label="State" />
-            <TextInput v-model="aform.country" label="Country *" placeholder="India" />
-            <TextInput v-model="aform.pincode" label="Pincode" />
+            <Select
+              v-if="addrCountries.length"
+              v-model="aform.country"
+              label="Country *"
+              :options="addrCountries"
+            />
+            <TextInput v-else v-model="aform.country" label="Country *" placeholder="India" />
+            <div>
+              <TextInput v-model="aform.pincode" label="Pincode" @blur="lookupAddrPin" @keyup.enter="lookupAddrPin" />
+              <Button class="mt-2" label="Find city" size="sm" :loading="addrLookingUp" @click="lookupAddrPin" />
+            </div>
+            <p v-if="addrLookupHint" class="text-xs text-ink-gray-5 sm:col-span-2">{{ addrLookupHint }}</p>
             <TextInput v-model="aform.phone" label="Phone" class="sm:col-span-2" />
           </div>
           <div class="flex flex-wrap gap-4">
