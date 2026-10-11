@@ -52,6 +52,33 @@ class TestInvoicePdf(IntegrationTestCase):
         self.assertNotIn(plan.name, html)
         self.assertNotIn(svc.name, html)
 
+    def test_unpaid_hides_period_paid_shows_cycle(self):
+        from frappe.utils import add_months, formatdate, getdate, today
+
+        cust = _customer()
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": f"PDF Cycle Group {uuid.uuid4().hex[:6]}"}).insert()
+        plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"PDF Cycle Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1}).insert()
+        svc = frappe.get_doc({"doctype": "Service", "customer": cust.name, "hosting_plan": plan.name, "status": "Active", "recurring_amount": 10, "primary_domain": "example.com", "billing_cycle": "Monthly"}).insert()
+        inv = frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": cust.name,
+                "invoice_items": [{"description": f"Hosting Plan: {plan.name} x2", "service_ref": svc.name, "amount": 200}],
+                "status": "Unpaid",
+            }
+        ).insert(ignore_permissions=True)
+        html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
+        self.assertIn("Qty", html)
+        self.assertIn(">2</td>", html)
+        # Unpaid: service not started, no period shown.
+        self.assertNotIn(formatdate(getdate(today())), html.replace(f"Due:</strong> {formatdate(inv.due_date)}", ""))
+        frappe.get_doc({"doctype": "Payment Transaction", "invoice": inv.name, "gateway": "Stripe", "status": "Success", "amount": 200}).insert(ignore_permissions=True)
+        inv.status = "Paid"
+        inv.save(ignore_permissions=True)
+        html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
+        self.assertIn(formatdate(getdate(today())), html)
+        self.assertIn(formatdate(add_months(getdate(today()), 1)), html)
+
     def test_owner_can_print_stranger_cannot(self):
         cust = _customer()
         inv = frappe.get_doc(

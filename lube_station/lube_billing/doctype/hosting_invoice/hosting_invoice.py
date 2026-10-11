@@ -2,6 +2,15 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import add_days, today
 
+CYCLE_MONTHS = {
+    "Monthly": 1,
+    "Quarterly": 3,
+    "Semi-Annually": 6,
+    "Annually": 12,
+    "Biennially": 24,
+    "Triennially": 36,
+}
+
 
 class HostingInvoice(Document):
     def validate(self):
@@ -382,26 +391,70 @@ def print_context(invoice_name: str) -> dict:
         d.setdefault("title", d.get("description"))
         d.setdefault("meta", "")
         d.setdefault("domain", "")
-        start, end = _line_period(inv, d.get("service_ref") or "")
-        d["start"] = start
-        d["end"] = end
+        d["qty"] = _qty_value(d.get("description") or "")
+        d["start"], d["end"] = _line_period_paid(inv, d.get("service_ref") or "")
     return {"billing": billing, "lines": items}
 
 
-def _line_period(inv, ref):
+def _line_period_paid(inv, ref):
     """(start, end) display dates for one line.
 
-    Service-linked lines span service creation to next due date;
-    anything else spans invoice creation to due date.
+    Unpaid invoices show no period: the service has not started.
+    Paid invoices start on the first successful payment posting;
+    the end follows the purchased billing cycle (service, else order).
     """
+    if inv.status != "Paid":
+        return "", ""
     try:
-        if ref and frappe.db.exists("Service", ref):
-            svc = frappe.db.get_value("Service", ref, ["creation", "next_due_date"], as_dict=True)
-            if svc:
-                return _fmt_date(svc.get("creation")), _fmt_date(svc.get("next_due_date"))
+        from frappe.utils import add_months, getdate
+
+        start = _paid_date(inv)
+        if not start:
+            return "", ""
+        start_d = getdate(start)
+        months = CYCLE_MONTHS.get(_line_cycle(inv, ref), 0)
+        if not months:
+            return _fmt_date(start_d), ""
+        return _fmt_date(start_d), _fmt_date(add_months(start_d, months))
+    except Exception:
+        return "", ""
+
+
+def _paid_date(inv):
+    """First successful payment posting for the invoice. None when unknown."""
+    try:
+        hit = frappe.db.get_value(
+            "Payment Transaction", {"invoice": inv.name, "status": "Success"}, "creation", order_by="creation asc"
+        )
+        if hit:
+            return hit
+        if inv.status == "Paid":
+            return inv.modified
     except Exception:
         pass
-    return _fmt_date(inv.creation), _fmt_date(inv.due_date)
+    return None
+
+
+def _line_cycle(inv, ref):
+    """Billing cycle name for one line: service first, else matching order item."""
+    try:
+        if ref and frappe.db.exists("Service", ref):
+            return frappe.db.get_value("Service", ref, "billing_cycle") or ""
+        if inv.order_ref and frappe.db.exists("Order", inv.order_ref):
+            for oi in frappe.get_doc("Order", inv.order_ref).items:
+                if oi.reference == ref and oi.billing_cycle:
+                    return oi.billing_cycle
+    except Exception:
+        pass
+    return ""
+
+
+def _qty_value(description):
+    """Quantity parsed from the stored line ('... x2'). Blank when absent."""
+    import re
+
+    m = re.search(r" x(\d+)$", description or "")
+    return int(m.group(1)) if m else ""
 
 
 def _fmt_date(d):
