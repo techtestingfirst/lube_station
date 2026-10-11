@@ -15,6 +15,7 @@ const result = ref('')
 const error = ref('')
 const fetching = ref(true)
 const paying = ref(false)
+const invoiceGateway = ref('')
 const methods = ref<{ name: string; gateway: string; last_four: string }[]>([])
 const savedMethod = ref('')
 const payingSaved = ref(false)
@@ -45,6 +46,7 @@ async function load() {
     gateways.value = g.map((x) => ({ label: x.name, value: x.name }))
     // Preselect the gateway chosen at checkout, if any.
     const current = (invs as { name: string; gateway: string }[]).find((i) => i.name === invoice)
+    invoiceGateway.value = current?.gateway || ''
     gateway.value = current?.gateway && gateways.value.some((x) => x.value === current.gateway)
       ? current.gateway
       : gateways.value[0]?.value || ''
@@ -166,7 +168,12 @@ async function verify() {
           </div>
           <div class="flex flex-wrap gap-2">
             <Button label="Use saved card" variant="subtle" @click="auto" />
-            <Button label="I've paid — verify" variant="subtle" @click="verify" />
+            <Button
+              v-if="invoiceGateway === 'Razorpay' || gateway === 'Razorpay'"
+              label="I've paid — verify Razorpay"
+              variant="subtle"
+              @click="verify"
+            />
           </div>
           <p class="text-sm text-ink-gray-5">Paid via UPI/app and page stuck? Click verify — it checks Razorpay directly.</p>
           <p v-if="result" class="text-sm text-ink-gray-8">{{ result }}</p>
