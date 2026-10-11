@@ -490,6 +490,7 @@ def print_context(invoice_name: str) -> dict:
         "name": frappe.db.get_single_value("Lube Station Settings", "company_name") or "",
         "address": frappe.db.get_single_value("Lube Station Settings", "company_address") or "",
         "tax_id": seller_tax or "",
+        "logo": frappe.db.get_single_value("Lube Station Settings", "company_logo") or "",
     }
     payment = {"gateway": inv.gateway or "", "txn_id": "", "show": inv.status == "Paid"}
     try:

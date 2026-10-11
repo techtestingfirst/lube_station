@@ -17,6 +17,11 @@
       "default": "Lube Station"
     },
     {
+      "fieldname": "company_logo",
+      "fieldtype": "Attach Image",
+      "label": "Company Logo"
+    },
+    {
       "fieldname": "section_break_0",
       "fieldtype": "Section Break",
       "label": "Company Address"

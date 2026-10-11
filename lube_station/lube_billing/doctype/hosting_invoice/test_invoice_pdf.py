@@ -129,6 +129,23 @@ class TestInvoicePdf(IntegrationTestCase):
         self.assertNotIn("SAC", thead)
         self.assertIn("Tax ID: 29TEST1234F1Z5", html)
 
+    def test_company_logo_slot(self):
+        cust = _customer()
+        inv = frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": cust.name,
+                "invoice_items": [{"description": "Hosting", "amount": 10}],
+                "status": "Unpaid",
+            }
+        ).insert(ignore_permissions=True)
+        html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
+        self.assertNotIn("<img", html)
+        frappe.db.set_single_value("Lube Station Settings", "company_logo", "/assets/lube_station/images/logo.svg")
+        html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
+        self.assertIn("/assets/lube_station/images/logo.svg", html)
+        frappe.db.set_single_value("Lube Station Settings", "company_logo", "")
+
     def test_tax_code_column_hidden_when_empty(self):
         cust = _customer()
         frappe.db.set_single_value("Lube Station Settings", "company_tax_id", "")
