@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { Button } from 'frappe-ui'
+import { Button, TabList, TabPanel, TabTrigger, Tabs } from 'frappe-ui'
 import { call, friendlyError } from '../api'
 import { formatDate, formatMoney } from '../format'
 import StatusBadge from '../components/StatusBadge.vue'
@@ -14,6 +14,10 @@ const list = ref<Inv[]>([])
 const loading = ref(true)
 const error = ref('')
 const router = useRouter()
+const active = ref('Unpaid')
+
+const unpaid = computed(() => list.value.filter((i) => i.status !== 'Paid'))
+const paid = computed(() => list.value.filter((i) => i.status === 'Paid'))
 
 async function load() {
   loading.value = true
@@ -47,26 +51,69 @@ onMounted(load)
     <ErrorState v-if="error && !loading" :message="error" @retry="load" />
     <LoadingBlock v-if="loading" :lines="4" />
     <template v-if="!loading && !error">
-      <div v-if="list.length" class="space-y-2">
-        <div
-          v-for="i in list"
-          :key="i.name"
-          class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3 sm:flex-nowrap"
-        >
-          <div class="min-w-0 flex-1">
-            <div class="truncate text-sm font-medium text-ink-gray-8">{{ i.name }}</div>
-            <div class="mt-0.5 text-sm text-ink-gray-5">Due {{ formatDate(i.due_date) }}</div>
+      <Tabs v-if="list.length" v-model="active">
+        <TabList>
+          <TabTrigger value="Unpaid" :label="`Unpaid (${unpaid.length})`" />
+          <TabTrigger value="Paid" :label="`Paid (${paid.length})`" />
+        </TabList>
+        <TabPanel value="Unpaid">
+          <div v-if="unpaid.length" class="space-y-2 pt-4">
+            <div
+              v-for="i in unpaid"
+              :key="i.name"
+              class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3 sm:flex-nowrap"
+            >
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-sm font-medium text-ink-gray-8">{{ i.name }}</div>
+                <div class="mt-0.5 text-sm text-ink-gray-5">Due {{ formatDate(i.due_date) }}</div>
+              </div>
+              <div class="w-28 shrink-0"><StatusBadge :status="i.status" /></div>
+              <div class="w-36 shrink-0 sm:text-right">
+                <div class="text-sm font-medium text-ink-gray-8">{{ formatMoney(i.total_due) }}</div>
+              </div>
+              <div class="flex shrink-0 gap-2">
+                <a :href="pdfUrl(i.name)" target="_blank" rel="noopener"><Button label="PDF" size="sm" /></a>
+                <RouterLink :to="`/pay/${i.name}`"><Button label="Pay" variant="solid" size="sm" /></RouterLink>
+              </div>
+            </div>
           </div>
-          <div class="w-28 shrink-0"><StatusBadge :status="i.status" /></div>
-          <div class="w-36 shrink-0 sm:text-right">
-            <div class="text-sm font-medium text-ink-gray-8">{{ formatMoney(i.total_due) }}</div>
+          <EmptyState
+            v-else
+            title="No unpaid invoices"
+            hint="You are all caught up. New charges will appear here."
+            action-label="Browse store"
+            @action="router.push('/store')"
+          />
+        </TabPanel>
+        <TabPanel value="Paid">
+          <div v-if="paid.length" class="space-y-2 pt-4">
+            <div
+              v-for="i in paid"
+              :key="i.name"
+              class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3 sm:flex-nowrap"
+            >
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-sm font-medium text-ink-gray-8">{{ i.name }}</div>
+                <div class="mt-0.5 text-sm text-ink-gray-5">Due {{ formatDate(i.due_date) }}</div>
+              </div>
+              <div class="w-28 shrink-0"><StatusBadge :status="i.status" /></div>
+              <div class="w-36 shrink-0 sm:text-right">
+                <div class="text-sm font-medium text-ink-gray-8">{{ formatMoney(i.total_due) }}</div>
+              </div>
+              <div class="flex shrink-0 gap-2">
+                <a :href="pdfUrl(i.name)" target="_blank" rel="noopener"><Button label="PDF" size="sm" /></a>
+              </div>
+            </div>
           </div>
-          <div class="flex shrink-0 gap-2">
-            <a :href="pdfUrl(i.name)" target="_blank" rel="noopener"><Button label="PDF" size="sm" /></a>
-            <RouterLink v-if="i.status !== 'Paid'" :to="`/pay/${i.name}`"><Button label="Pay" variant="solid" size="sm" /></RouterLink>
-          </div>
-        </div>
-      </div>
+          <EmptyState
+            v-else
+            title="No paid invoices yet"
+            hint="Receipts for settled invoices will appear here."
+            action-label="Browse store"
+            @action="router.push('/store')"
+          />
+        </TabPanel>
+      </Tabs>
       <EmptyState
         v-else
         title="No invoices yet"
