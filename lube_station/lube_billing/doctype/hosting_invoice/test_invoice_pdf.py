@@ -105,3 +105,39 @@ class TestInvoicePdf(IntegrationTestCase):
         self.assertNotIn("1=0", cond)
         self.assertIn(stranger_cust.name, cond)
         self.assertNotIn(cust.name, cond)
+
+    def test_tax_code_column_and_seller_tax_id(self):
+        cust = _customer()
+        group = frappe.get_doc({"doctype": "Product Group", "group_name": f"PDF Tax Group {uuid.uuid4().hex[:6]}"}).insert()
+        plan = frappe.get_doc({"doctype": "Hosting Plan", "plan_name": f"PDF Tax Plan {uuid.uuid4().hex[:6]}", "product_group": group.name, "product_type": "Shared Hosting", "is_active": 1, "tax_code": "9984"}).insert()
+        svc = frappe.get_doc({"doctype": "Service", "customer": cust.name, "hosting_plan": plan.name, "status": "Active", "recurring_amount": 10}).insert()
+        frappe.db.set_single_value("Lube Station Settings", "company_tax_id", "29TEST1234F1Z5")
+        inv = frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": cust.name,
+                "invoice_items": [{"description": "Hosting", "service_ref": svc.name, "amount": 25}],
+                "status": "Unpaid",
+            }
+        ).insert(ignore_permissions=True)
+        html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
+        # Seller-entered code resolved via service -> plan; neutral labels.
+        self.assertIn("Tax code", html)
+        self.assertIn("9984", html)
+        self.assertIn("Tax ID: 29TEST1234F1Z5", html)
+        self.assertNotIn("SAC", html)
+
+    def test_tax_code_column_hidden_when_empty(self):
+        cust = _customer()
+        frappe.db.set_single_value("Lube Station Settings", "company_tax_id", "")
+        frappe.db.set_single_value("Lube Station Settings", "default_tax_code", "")
+        inv = frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": cust.name,
+                "invoice_items": [{"description": "Hosting", "amount": 10}],
+                "status": "Unpaid",
+            }
+        ).insert(ignore_permissions=True)
+        html = frappe.get_print("Hosting Invoice", inv.name, "Hosting Invoice")
+        self.assertNotIn("Tax code", html)

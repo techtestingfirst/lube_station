@@ -90,6 +90,21 @@ def _invoice_context(inv) -> dict:
     return {"invoice": inv.name, "amount": inv.total_due, "customer": inv.customer, "order": inv.order_ref, "due": str(inv.due_date or "")}
 
 
+def _plan_tax_code(ref: str | None) -> str:
+    """Seller-entered tax code (SAC/HSN/...) for a line ref. Blank when unknown."""
+    try:
+        plan = None
+        if ref and frappe.db.exists("Service", ref):
+            plan = frappe.db.get_value("Service", ref, "hosting_plan")
+        elif ref and frappe.db.exists("Hosting Plan", ref):
+            plan = ref
+        if plan:
+            return frappe.db.get_value("Hosting Plan", plan, "tax_code") or ""
+    except Exception:
+        pass
+    return ""
+
+
 def _notify_invoice(doc, is_renewal: bool = False):
     """Best-effort invoice + renewal + credit notices. Never breaks billing."""
     try:
@@ -226,7 +241,7 @@ def _from_order(order_name: str, key: str, gateway: str | None = None, include_s
     customer = order.customer
     if not customer:
         frappe.throw("Order has no customer")
-    items = [{"description": f"{i.item_type}: {i.reference} x{i.quantity}", "service_ref": i.reference, "amount": (i.unit_price or 0) * (i.quantity or 1)} for i in order.items]
+    items = [{"description": f"{i.item_type}: {i.reference} x{i.quantity}", "service_ref": i.reference, "amount": (i.unit_price or 0) * (i.quantity or 1), "tax_code": _plan_tax_code(i.reference)} for i in order.items]
     if include_setup:
         # WHMCS setup fee: first invoice only, never on renewals.
         for i in order.items:
@@ -234,7 +249,7 @@ def _from_order(order_name: str, key: str, gateway: str | None = None, include_s
                 continue
             setup = frappe.db.get_value("Plan Pricing", {"hosting_plan": i.reference, "billing_cycle": i.billing_cycle}, "setup_fee") or 0
             if setup:
-                items.append({"description": f"Setup fee: {i.reference} x{i.quantity}", "service_ref": i.reference, "amount": setup * (i.quantity or 1)})
+                items.append({"description": f"Setup fee: {i.reference} x{i.quantity}", "service_ref": i.reference, "amount": setup * (i.quantity or 1), "tax_code": _plan_tax_code(i.reference)})
     items_total = sum(i["amount"] for i in items)
     # WHMCS per-product Apply Tax: hosting plans carry their own flag,
     # domain lines follow Settings; untaxed lines still bill, just tax-free.
@@ -421,12 +436,29 @@ def print_context(invoice_name: str) -> dict:
         items = _enriched_items(inv)
     except Exception:
         items = [i.as_dict() for i in inv.invoice_items]
+    try:
+        default_code = frappe.db.get_single_value("Lube Station Settings", "default_tax_code") or ""
+    except Exception:
+        default_code = ""
     for d in items:
         d.setdefault("title", d.get("description"))
         d.setdefault("meta", "")
         d.setdefault("domain", "")
+        if not d.get("tax_code"):
+            d["tax_code"] = _plan_tax_code(d.get("service_ref")) or default_code
         d["qty"] = _qty_value(d.get("description") or "")
         d["start"], d["end"] = _line_period_paid(inv, d.get("service_ref") or "")
+    try:
+        seller_tax = frappe.db.get_single_value("Lube Station Settings", "company_tax_id") or frappe.db.get_single_value(
+            "GST Settings", "gstin"
+        )
+    except Exception:
+        seller_tax = ""
+    seller = {
+        "name": frappe.db.get_single_value("Lube Station Settings", "company_name") or "",
+        "address": frappe.db.get_single_value("Lube Station Settings", "company_address") or "",
+        "tax_id": seller_tax or "",
+    }
     payment = {"gateway": inv.gateway or "", "txn_id": "", "show": inv.status == "Paid"}
     try:
         txn = frappe.db.get_value(
@@ -446,6 +478,7 @@ def print_context(invoice_name: str) -> dict:
         pass
     return {
         "billing": billing,
+        "seller": seller,
         "lines": items,
         "payment": payment,
         "status_color": STATUS_COLORS.get(inv.status, "#6b7280"),

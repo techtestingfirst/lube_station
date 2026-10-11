@@ -1104,6 +1104,8 @@ def request_upgrade(service: str, new_plan: str) -> dict:
         from lube_station.lube_customers.doctype.credit_note.credit_note import apply_credit
 
         credit = apply_credit(svc.get("customer"), quote["total_due"] + tax)
+    from lube_station.lube_billing.doctype.hosting_invoice.hosting_invoice import _plan_tax_code
+
     inv = frappe.get_doc(
         {
             "doctype": "Hosting Invoice",
@@ -1114,6 +1116,7 @@ def request_upgrade(service: str, new_plan: str) -> dict:
                     "description": f"Upgrade {service}: {quote['old_plan']} -> {new_plan} ({quote['remaining_days']}/{quote['cycle_days']} days)",
                     "service_ref": new_plan,
                     "amount": quote["total_due"],
+                    "tax_code": _plan_tax_code(new_plan),
                 }
             ],
             "tax_amount": tax,
