@@ -41,28 +41,28 @@ async function signOut() {
         <SidebarHeader title="Lube Station" subtitle="Client portal" />
         <div class="flex-1 overflow-y-auto">
           <SidebarSection>
-            <SidebarItem label="Dashboard" route="/" />
-            <SidebarItem label="Store" route="/store" />
+            <SidebarItem label="Dashboard" route="/" icon="layout-dashboard" />
+            <SidebarItem label="Store" route="/store" icon="store" />
           </SidebarSection>
           <SidebarSection>
             <SidebarLabel>Manage</SidebarLabel>
-            <SidebarItem label="Services" route="/services" />
-            <SidebarItem label="VPS" route="/vps" />
-            <SidebarItem label="Dedicated" route="/dedicated" />
-            <SidebarItem label="Domains" route="/domains" />
-            <SidebarItem label="Downloads" route="/downloads" />
-            <SidebarItem label="Support" route="/support" />
-            <SidebarItem label="Knowledge Base" route="/kb" />
+            <SidebarItem label="Services" route="/services" icon="server" />
+            <SidebarItem label="VPS" route="/vps" icon="cpu" />
+            <SidebarItem label="Dedicated" route="/dedicated" icon="hard-drive" />
+            <SidebarItem label="Domains" route="/domains" icon="globe" />
+            <SidebarItem label="Downloads" route="/downloads" icon="download" />
+            <SidebarItem label="Support" route="/support" icon="life-buoy" />
+            <SidebarItem label="Knowledge Base" route="/kb" icon="book-open" />
           </SidebarSection>
           <SidebarSection>
             <SidebarLabel>Billing</SidebarLabel>
-            <SidebarItem label="Cart" route="/cart" />
-            <SidebarItem label="Orders" route="/orders" />
-            <SidebarItem label="Invoices" route="/invoices" />
-            <SidebarItem label="Wallet" route="/wallet" />
+            <SidebarItem label="Cart" route="/cart" icon="shopping-cart" />
+            <SidebarItem label="Orders" route="/orders" icon="package" />
+            <SidebarItem label="Invoices" route="/invoices" icon="receipt" />
+            <SidebarItem label="Wallet" route="/wallet" icon="wallet" />
           </SidebarSection>
           <SidebarSection>
-            <SidebarItem label="Account" route="/account" />
+            <SidebarItem label="Account" route="/account" icon="user" />
           </SidebarSection>
         </div>
       </Sidebar>
