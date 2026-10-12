@@ -45,6 +45,12 @@ class Service(Document):
     def activate(self):
         if self.status == "Terminated":
             frappe.throw("Terminated services stay terminated")
+        try:
+            from lube_station.lube_customers.doctype.customer_kyc_verification.customer_kyc_verification import is_kyc_verified
+        except Exception:
+            is_kyc_verified = None
+        if is_kyc_verified and not is_kyc_verified(self.get("customer")):
+            frappe.throw("KYC pending for customer. Verify KYC before activation.", frappe.PermissionError)
         was = self.status
         self.status = "Active"
         self.save(ignore_permissions=True)

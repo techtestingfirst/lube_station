@@ -555,6 +555,25 @@
         ],
         "integration_test": "test_vendor_registry"
       }
+    },
+    {
+      "feature_id": "P13-KYC",
+      "dependencies": [
+        "P12"
+      ],
+      "status": "in-progress (Manual/Mock tracer, Digio live pending creds)",
+      "acceptance_criteria": [
+        "KYC per Hosting Customer, block provision only",
+        "Customer KYC Verification queryable, Manual + Digio Mock work without creds",
+        "Service.activate throws until Verified, foreign Passport via manual review",
+        "test_kyc_gate passes"
+      ],
+      "auto_check": {
+        "doctype_exists": [
+          "Customer KYC Verification"
+        ],
+        "integration_test": "test_kyc_gate"
+      }
     }
   ]
 }

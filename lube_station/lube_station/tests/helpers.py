@@ -21,6 +21,6 @@ def make_user(prefix: str = "t") -> str:
 
 def make_customer(prefix: str = "t", **kwargs) -> str:
     """Create a unique User + Hosting Customer. Returns customer name."""
-    doc = {"doctype": "Hosting Customer", "user": make_user(prefix), "status": "Active"}
+    doc = {"doctype": "Hosting Customer", "user": make_user(prefix), "status": "Active", "kyc_status": "Verified"}
     doc.update(kwargs)
     return frappe.get_doc(doc).insert().name

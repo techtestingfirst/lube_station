@@ -29,7 +29,16 @@
     {"fieldname": "tos_accepted", "fieldtype": "Check", "label": "TOS Accepted", "default": "0"},
     {"fieldname": "column_break_2", "fieldtype": "Column Break"},
     {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nSuspended\nClosed", "default": "Active", "reqd": 1},
-    {"fieldname": "marketing_opt_in", "fieldtype": "Check", "label": "Marketing Opt-In", "default": "0"}
+    {"fieldname": "marketing_opt_in", "fieldtype": "Check", "label": "Marketing Opt-In", "default": "0"},
+    {"fieldname": "section_break_kyc", "fieldtype": "Section Break", "label": "KYC (CERT-In)"},
+    {"fieldname": "kyc_status", "fieldtype": "Select", "label": "KYC Status", "options": "Pending\nVerified\nFailed\nManual Review\nExpired", "default": "Pending", "reqd": 1},
+    {"fieldname": "kyc_provider", "fieldtype": "Select", "label": "KYC Provider", "options": "Manual\nDigio Mock\nDigio", "default": "Manual"},
+    {"fieldname": "column_break_kyc", "fieldtype": "Column Break"},
+    {"fieldname": "kyc_reference", "fieldtype": "Data", "label": "KYC Reference"},
+    {"fieldname": "ovd_type", "fieldtype": "Select", "label": "OVD Type", "options": "\nAadhaar\nPAN\nDigiLocker\nPassport\nDriving License\nVoter ID", "default": ""},
+    {"fieldname": "kyc_verified_on", "fieldtype": "Datetime", "label": "KYC Verified On", "read_only": 1},
+    {"fieldname": "consent", "fieldtype": "Check", "label": "KYC Consent", "default": "0"},
+    {"fieldname": "consent_on", "fieldtype": "Datetime", "label": "Consent On", "read_only": 1}
   ],
   "permissions": [
     {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},

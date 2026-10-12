@@ -7,7 +7,7 @@ from frappe.tests import IntegrationTestCase
 def _unique_customer():
     email = f"svc-{uuid.uuid4().hex[:8]}@test.com"
     user = frappe.get_doc({"doctype": "User", "email": email, "first_name": "Svc", "enabled": 1}).insert(ignore_permissions=True)
-    return frappe.get_doc({"doctype": "Hosting Customer", "user": user.name, "status": "Active"}).insert()
+    return frappe.get_doc({"doctype": "Hosting Customer", "user": user.name, "status": "Active", "kyc_status": "Verified"}).insert()
 
 
 class TestServiceLifecycle(IntegrationTestCase):

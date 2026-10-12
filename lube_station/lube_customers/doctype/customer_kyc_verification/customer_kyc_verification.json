@@ -1,0 +1,24 @@
+{
+  "name": "Customer KYC Verification",
+  "module": "Lube Customers",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "modified": "2026-10-12 21:30:00.000000",
+  "autoname": "format:KYC-{####}",
+  "naming_rule": "Expression",
+  "track_changes": 1,
+  "fields": [
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Hosting Customer", "reqd": 1},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending\nVerified\nFailed\nManual Review\nExpired", "default": "Pending", "reqd": 1},
+    {"fieldname": "provider", "fieldtype": "Select", "label": "Provider", "options": "Manual\nDigio Mock\nDigio", "default": "Manual", "reqd": 1},
+    {"fieldname": "column_break_0", "fieldtype": "Column Break"},
+    {"fieldname": "request_id", "fieldtype": "Data", "label": "Provider Request ID", "unique": 1},
+    {"fieldname": "ovd_type", "fieldtype": "Select", "label": "OVD Type", "options": "\nAadhaar\nPAN\nDigiLocker\nPassport\nDriving License\nVoter ID", "default": ""},
+    {"fieldname": "verified_on", "fieldtype": "Datetime", "label": "Verified On", "read_only": 1},
+    {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Customer", "read": 1, "write": 0, "create": 0, "delete": 0}
+  ]
+}
