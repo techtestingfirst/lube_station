@@ -11,7 +11,7 @@ def _customer(tag: str) -> str:
     email = f"fulfill-{tag}@example.com"
     if not frappe.db.exists("User", email):
         frappe.get_doc({"doctype": "User", "email": email, "first_name": "Fulfill", "enabled": 1, "roles": [{"role": "Customer"}]}).insert(ignore_permissions=True)
-    return frappe.get_doc({"doctype": "Hosting Customer", "user": email, "status": "Active"}).insert().name
+    return frappe.get_doc({"doctype": "Hosting Customer", "user": email, "status": "Active", "kyc_status": "Verified"}).insert().name
 
 
 def _order_with_plan(customer: str, tag: str):

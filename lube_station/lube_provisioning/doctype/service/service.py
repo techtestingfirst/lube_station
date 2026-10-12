@@ -213,6 +213,7 @@ def on_invoice_paid(invoice: str) -> dict:
     # Idempotent: already-swapped services are skipped.
     upgraded = _apply_upgrade_for_invoice(inv)
     out = []
+    kyc_pending = []
     if inv.order_ref:
         for svc in frappe.get_all("Service", {"order_ref": inv.order_ref}, ["name", "status"]):
             # Upgrade orders own no Service rows (order_ref points at the
@@ -221,11 +222,24 @@ def on_invoice_paid(invoice: str) -> dict:
                 continue
             doc = frappe.get_doc("Service", svc.name)
             if doc.status == "Pending":
-                doc.activate()
+                try:
+                    doc.activate()
+                except frappe.PermissionError as e:
+                    if "KYC pending" in str(e):
+                        kyc_pending.append(doc.name)
+                        continue
+                    raise
                 out.append(doc.name)
             elif doc.status == "Suspended":
                 doc.unsuspend()
                 out.append(doc.name)
+    if kyc_pending:
+        try:
+            from lube_station.lube_station.notifications.events import notify_customer
+
+            notify_customer(inv.customer, "invoice", invoice, {"note": "Payment received. Complete KYC to activate services.", "services": kyc_pending})
+        except Exception:
+            pass
     if upgraded:
         return {"action": "upgraded", "services": [u["service"] for u in upgraded]}
     if not out and inv.order_ref:

@@ -5,8 +5,9 @@ from frappe.tests import IntegrationTestCase
 def _customer():
     name = frappe.db.get_value("Hosting Customer", {"user": "Administrator"}, "name")
     if name:
+        frappe.db.set_value("Hosting Customer", name, "kyc_status", "Verified")
         return frappe.get_doc("Hosting Customer", name)
-    return frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active"}).insert()
+    return frappe.get_doc({"doctype": "Hosting Customer", "user": "Administrator", "status": "Active", "kyc_status": "Verified"}).insert()
 
 
 def _plan():

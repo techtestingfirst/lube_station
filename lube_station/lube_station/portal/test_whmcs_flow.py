@@ -9,10 +9,10 @@ class TestWhmcsFlow(IntegrationTestCase):
         cust_name = frappe.db.get_value("Hosting Customer", {"user": "Administrator"}, "name")
         if not cust_name:
             cust_name = frappe.get_doc(
-                {"doctype": "Hosting Customer", "user": "Administrator", "status": "Active", "tos_accepted": 1}
+                {"doctype": "Hosting Customer", "user": "Administrator", "status": "Active", "tos_accepted": 1, "kyc_status": "Verified"}
             ).insert().name
         else:
-            frappe.db.set_value("Hosting Customer", cust_name, "tos_accepted", 1)
+            frappe.db.set_value("Hosting Customer", cust_name, {"tos_accepted": 1, "kyc_status": "Verified"})
         group = frappe.db.get_value("Product Group", {"group_name": "Flow Group"}, "name") or frappe.get_doc(
             {"doctype": "Product Group", "group_name": "Flow Group"}
         ).insert().name
