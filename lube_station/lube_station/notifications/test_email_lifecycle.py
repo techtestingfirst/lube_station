@@ -37,9 +37,15 @@ class TestEmailLifecycle(IntegrationTestCase):
         self.assertTrue(frappe.db.exists("Notification Event", {"event_key": f"credit:{note.name}"}))
 
     def test_dunning_email(self):
+        from datetime import date
+
         from lube_station.lube_provisioning.doctype.service.service import apply_dunning
 
+        for name in frappe.get_all("Dunning Rule", pluck="name"):
+            frappe.delete_doc("Dunning Rule", name, force=True)
+        frappe.get_doc({"doctype": "Dunning Rule", "rule_name": "Email-Test-Rule", "grace_days": 7, "termination_days": 30, "active": 1}).insert()
+
         cust = _customer()
-        inv = frappe.get_doc({"doctype": "Hosting Invoice", "customer": cust.name, "invoice_items": [{"description": "x", "amount": 50}], "status": "Unpaid"}).insert(ignore_permissions=True)
+        inv = frappe.get_doc({"doctype": "Hosting Invoice", "customer": cust.name, "invoice_items": [{"description": "x", "amount": 50}], "due_date": date.today(), "status": "Unpaid"}).insert(ignore_permissions=True)
         apply_dunning(inv.name)
         self.assertTrue(frappe.db.exists("Notification Event", {"event_key": f"invoice_reminder:{inv.name}:reminder"}))
