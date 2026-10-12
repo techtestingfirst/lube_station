@@ -526,7 +526,7 @@
         "P10",
         "P11"
       ],
-      "status": "pending manual review (automated green)",
+      "status": "done",
       "acceptance_criteria": [
         "roles Customer/Support/Billing/Provisioning/SysMgr",
         "owner/payment/provider/inventory/download/invoice/lifecycle tests green",
