@@ -11,6 +11,7 @@ interface Kyc {
   status: string
   verified: boolean
   provider?: string | null
+  active_provider?: string | null
   ovd_type?: string | null
   verified_on?: string | null
   providers: string[]
@@ -21,14 +22,16 @@ interface Kyc {
 const kyc = ref<Kyc | null>(null)
 const loading = ref(true)
 const listError = ref('')
-const provider = ref('Manual')
 const ovd = ref('')
 const busy = ref(false)
 const error = ref('')
 const done = ref('')
 
-function providerOptions(list: string[]) {
-  return list.map((p) => ({ label: p, value: p }))
+function methodLabel(): string {
+  if (!kyc.value) return ''
+  return kyc.value.active_provider === 'Digio'
+    ? 'Digio eKYC — identity check on Digio with an emailed link'
+    : 'Manual review — staff verifies your ID in the back office'
 }
 
 function ovdOptions(list: string[]) {
@@ -40,9 +43,6 @@ async function load() {
   listError.value = ''
   try {
     kyc.value = await call('lube_station.lube_station.portal.apis.my_kyc_status', {}, 'GET')
-    if (kyc.value && !providerOptions(kyc.value.providers).some((o) => o.value === provider.value)) {
-      provider.value = kyc.value.providers[0] || 'Manual'
-    }
   } catch (e) {
     listError.value = friendlyError(e)
   } finally {
@@ -59,7 +59,7 @@ async function submit() {
   }
   busy.value = true
   try {
-    const out = await call<Kyc & { name?: string }>('lube_station.lube_station.portal.apis.request_my_kyc', { provider: provider.value, ovd_type: ovd.value }, 'POST')
+    const out = await call<Kyc & { name?: string }>('lube_station.lube_station.portal.apis.request_my_kyc', { ovd_type: ovd.value }, 'POST')
     if (out && typeof out === 'object' && 'kyc' in out) kyc.value = (out as unknown as { kyc: Kyc }).kyc
     else await load()
     done.value = 'Verification request recorded. Services activate automatically once staff verifies it.'
@@ -89,8 +89,8 @@ onMounted(load)
         <span v-else class="text-sm text-ink-gray-5">Start or restart verification below. Staff reviews Manual requests; mock providers verify instantly in test flows.</span>
       </div>
       <div v-if="!kyc.verified" class="space-y-3 rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-4">
+        <p class="text-xs text-ink-gray-5">Verification method: {{ methodLabel() }}.</p>
         <div class="grid gap-3 sm:grid-cols-2">
-          <Select v-model="provider" label="Provider" :options="providerOptions(kyc.providers)" />
           <Select v-model="ovd" label="ID type" :options="ovdOptions(kyc.ovd_types)" />
         </div>
         <ErrorMessage v-if="error" :message="error" />

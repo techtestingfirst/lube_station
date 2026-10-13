@@ -22,6 +22,7 @@ DEFAULTS = {
     "fraud_no_company_score": 5,
     "fraud_large_order_total": 1000,
     "fraud_large_order_score": 15,
+    "kyc_provider": "Manual",
     "razorpay_auto_capture": 1,
     "bank_details": "",
     "payu_merchant_key": "",

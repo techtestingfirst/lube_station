@@ -428,10 +428,13 @@ def _kyc_view(customer: str) -> dict:
     providers = ["Manual", "Digio Mock"]
     if frappe.db.exists("DocType", "Digio Request Log"):
         providers.append("Digio")
+    from lube_station.lube_station.kyc_digio import active_provider
+
     return {
         "status": status,
         "verified": status == "Verified",
         "provider": row.get("kyc_provider"),
+        "active_provider": active_provider(),
         "ovd_type": row.get("ovd_type"),
         "verified_on": str(row.get("kyc_verified_on") or "") or None,
         "providers": providers,
@@ -453,20 +456,25 @@ def my_kyc_status():
 
 
 @frappe.whitelist(methods=["POST"])
-def request_my_kyc(provider: str = "Manual", ovd_type: str | None = None) -> dict:
-    """Start/restart own verification. Returns the request + refreshed status."""
+def request_my_kyc(ovd_type: str | None = None) -> dict:
+    """Start/restart own verification with the seller-configured provider.
+
+    The customer picks only the ID type; the provider comes from Lube Station
+    Settings (Manual default, Digio when creds land). Digio failures raise a
+    friendly error while the local Pending row stays for retry.
+    """
     from lube_station.lube_customers.doctype.customer_kyc_verification.customer_kyc_verification import (
         request_kyc,
     )
+    from lube_station.lube_station.kyc_digio import active_provider, start_digio_verification
 
     customer = my_customer()
-    if provider not in KYC_PROVIDERS:
-        frappe.throw("Unknown provider")
-    if provider == "Digio" and not frappe.db.exists("DocType", "Digio Request Log"):
-        frappe.throw("Digio not configured")
+    provider = active_provider()
     if ovd_type and ovd_type not in KYC_OVD_TYPES:
         frappe.throw("Select a valid ID type")
     out = request_kyc(customer, provider, ovd_type)
+    if provider == "Digio":
+        start_digio_verification(customer)
     return {**out, "kyc": _kyc_view(customer)}
 
 

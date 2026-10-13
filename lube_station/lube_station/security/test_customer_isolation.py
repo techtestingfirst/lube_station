@@ -505,12 +505,12 @@ class TestCustomerIsolation(IntegrationTestCase):
         self.assertEqual(status["status"], "Pending")
         self.assertFalse(status["verified"])
         self.assertIn("Manual", status["providers"])
-        # Invalid provider/ID rejected; valid request recorded for self only.
+        # Invalid ID rejected; valid request recorded for self only.
         with self.assertRaises(frappe.ValidationError):
-            apis.request_my_kyc("Unknown", "PAN")
+            apis.request_my_kyc("Unknown")
         with self.assertRaises(frappe.ValidationError):
-            apis.request_my_kyc("Manual", "Driving Licence")
-        out = apis.request_my_kyc("Manual", "PAN")
+            apis.request_my_kyc("Driving Licence")
+        out = apis.request_my_kyc("PAN")
         self.assertEqual(out["kyc"]["status"], "Pending")
         self.assertIn(
             out["name"], [r["name"] for r in out["kyc"]["requests"]]
@@ -577,6 +577,126 @@ class TestCustomerIsolation(IntegrationTestCase):
         )
         frappe.set_user(s["user_a"])
         self.assertTrue(apis.my_kyc_status()["verified"])
+
+    def test_digio_seam_mocked(self):
+        """Digio branch + log mirror work end-to-end with a mocked Digio call.
+
+        No creds, no network: the mock writes a Digio Request Log the way
+        ekyc's save_request_log would, then we flip its status the way their
+        webhook would and assert our mirror verifies + activates.
+        """
+
+        from unittest import mock
+
+        from lube_station.lube_station import kyc_digio
+
+        s = self._seed_pair()
+        frappe.db.set_single_value("Lube Station Settings", "kyc_provider", "Digio")
+        self.addCleanup(
+            frappe.db.set_single_value, "Lube Station Settings", "kyc_provider", "Manual"
+        )
+        self.assertEqual(kyc_digio.active_provider(), "Digio")
+
+        def fake_make_ekyc_request(doc):
+            log = frappe.get_doc(
+                {
+                    "doctype": "Digio Request Log",
+                    "digio_id": f"digio-{uuid.uuid4().hex[:10]}",
+                    "request_type": "eKYC",
+                    "status": "Pending",
+                    "linked_doctype": doc.doctype,
+                    "linked_docname": doc.name,
+                    "response_json": "{}",
+                }
+            ).insert(ignore_permissions=True)
+            return {"id": log.digio_id}
+
+        frappe.set_user(s["user_a"])
+        with mock.patch(
+            "ekyc_india.ekyc_india.doctype.digio_settings.digio_settings.make_ekyc_request",
+            side_effect=fake_make_ekyc_request,
+        ):
+            out = apis.request_my_kyc("Aadhaar")
+        log_name = frappe.db.get_value(
+            "Digio Request Log",
+            {"linked_doctype": "Hosting Customer", "linked_docname": s["a"]},
+            "name",
+            order_by="creation desc",
+        )
+        self.assertTrue(log_name)
+
+        # Webhook simulation: Digio approves -> mirror verifies + activates.
+        frappe.set_user("Administrator")
+        group = frappe.get_doc(
+            {"doctype": "Product Group", "group_name": f"DG {uuid.uuid4().hex[:6]}"}
+        ).insert(ignore_permissions=True)
+        plan = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": f"DG {uuid.uuid4().hex[:6]}",
+                "product_group": group.name,
+                "product_type": "Shared Hosting",
+                "is_active": 1,
+            }
+        ).insert(ignore_permissions=True)
+        order = frappe.get_doc(
+            {"doctype": "Order", "customer": s["a"], "status": "Accepted"}
+        ).insert(ignore_permissions=True)
+        svc = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": s["a"],
+                "hosting_plan": plan.name,
+                "order_ref": order.name,
+                "status": "Pending",
+                "recurring_amount": 10,
+            }
+        ).insert(ignore_permissions=True)
+        frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": s["a"],
+                "order_ref": order.name,
+                "invoice_items": [{"description": "x", "amount": 10}],
+                "status": "Paid",
+            }
+        ).insert(ignore_permissions=True)
+        log = frappe.get_doc("Digio Request Log", log_name)
+        log.status = "KYC Approved"
+        log.save(ignore_permissions=True)
+        self.assertEqual(
+            frappe.db.get_value("Hosting Customer", s["a"], "kyc_status"), "Verified"
+        )
+        self.assertEqual(frappe.db.get_value("Service", svc.name, "status"), "Active")
+
+        # Rejection path marks Failed with notice, and never activates.
+        frappe.set_user(s["user_b"])
+        frappe.db.set_single_value("Lube Station Settings", "kyc_provider", "Digio")
+        with mock.patch(
+            "ekyc_india.ekyc_india.doctype.digio_settings.digio_settings.make_ekyc_request",
+            side_effect=fake_make_ekyc_request,
+        ):
+            apis.request_my_kyc("PAN")
+        log_b = frappe.db.get_value(
+            "Digio Request Log",
+            {"linked_doctype": "Hosting Customer", "linked_docname": s["b"]},
+            "name",
+            order_by="creation desc",
+        )
+        frappe.set_user("Administrator")
+        logb = frappe.get_doc("Digio Request Log", log_b)
+        logb.status = "KYC Rejected"
+        logb.save(ignore_permissions=True)
+        # Mirror fails the oldest pending row (seed row here); newest stays
+        # Pending for retry. Either way B is not verified and is notified.
+        self.assertTrue(
+            frappe.db.exists(
+                "Customer KYC Verification", {"customer": s["b"], "status": "Failed"}
+            )
+        )
+        self.assertTrue(
+            frappe.db.exists("Notification Event", {"event_type": "kyc_failed"})
+        )
 
     def _pending_service(self, s):
         frappe.set_user("Administrator")

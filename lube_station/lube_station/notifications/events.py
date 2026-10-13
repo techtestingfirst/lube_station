@@ -67,6 +67,7 @@ TEMPLATES = {
     "download": "Download available",
     "kyc_required": "Identity verification needed to activate services",
     "kyc_verified": "Identity verification complete",
+    "kyc_failed": "Identity verification needs attention",
 }
 
 

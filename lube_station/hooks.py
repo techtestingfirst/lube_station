@@ -164,6 +164,10 @@ has_permission = {
 doc_events = {
 	"HD Ticket": {
 		"after_insert": "lube_station.lube_station.support.tickets.auto_link_helpdesk_ticket",
+	},
+	"Digio Request Log": {
+		"on_update": "lube_station.lube_station.kyc_digio.on_digio_log_update",
+		"after_insert": "lube_station.lube_station.kyc_digio.on_digio_log_update",
 	}
 }
 

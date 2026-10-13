@@ -561,7 +561,7 @@
       "dependencies": [
         "P12"
       ],
-      "status": "in-progress (Manual/Mock tracer, Digio live pending creds)",
+      "status": "in-progress (portal surfacing done, Digio seam built+mocked, live creds pending)",
       "acceptance_criteria": [
         "KYC per Hosting Customer, block provision only",
         "Customer KYC Verification queryable, Manual + Digio Mock work without creds",

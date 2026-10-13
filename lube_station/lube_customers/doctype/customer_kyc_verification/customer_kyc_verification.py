@@ -55,6 +55,11 @@ def mark_verified(name: str, notes: str | None = None) -> dict:
     roles = set(frappe.get_roles())
     if not roles.intersection({"System Manager", "Billing Admin", "Support Agent"}):
         frappe.throw("Only staff can verify KYC", frappe.PermissionError)
+    return _apply_verified(name, notes)
+
+
+def _apply_verified(name: str, notes: str | None = None) -> dict:
+    """Core verify step without role checks (staff Desk + Digio mirror share it)."""
     doc = frappe.get_doc("Customer KYC Verification", name)
     doc.status = "Verified"
     doc.verified_on = now_datetime()
@@ -94,6 +99,11 @@ def mark_manual_review(name: str, notes: str | None = None) -> dict:
     roles = set(frappe.get_roles())
     if not roles.intersection({"System Manager", "Billing Admin", "Support Agent"}):
         frappe.throw("Only staff can flag manual review", frappe.PermissionError)
+    return _apply_manual_review(name, notes)
+
+
+def _apply_manual_review(name: str, notes: str | None = None) -> dict:
+    """Core manual-review step without role checks."""
     doc = frappe.get_doc("Customer KYC Verification", name)
     doc.status = "Manual Review"
     if notes:
@@ -101,3 +111,37 @@ def mark_manual_review(name: str, notes: str | None = None) -> dict:
     doc.save(ignore_permissions=True)
     _touch_customer(doc.customer, "Manual Review", doc.request_id)
     return {"status": "Manual Review"}
+
+
+def _apply_failed(name: str, notes: str | None = None) -> dict:
+    """Core reject step without role checks (Digio mirror + staff use)."""
+    doc = frappe.get_doc("Customer KYC Verification", name)
+    doc.status = "Failed"
+    if notes:
+        doc.notes = notes
+    doc.save(ignore_permissions=True)
+    _touch_customer(doc.customer, "Failed", doc.request_id)
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        notify_customer(doc.customer, "kyc_failed", doc.name, {"provider": doc.provider})
+    except Exception:
+        pass
+    return {"status": "Failed"}
+
+
+def _apply_expired(name: str, notes: str | None = None) -> dict:
+    """Core expiry step without role checks (Digio mirror + staff use)."""
+    doc = frappe.get_doc("Customer KYC Verification", name)
+    doc.status = "Expired"
+    if notes:
+        doc.notes = notes
+    doc.save(ignore_permissions=True)
+    _touch_customer(doc.customer, "Expired", doc.request_id)
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        notify_customer(doc.customer, "kyc_failed", doc.name, {"provider": doc.provider, "reason": "expired"})
+    except Exception:
+        pass
+    return {"status": "Expired"}
