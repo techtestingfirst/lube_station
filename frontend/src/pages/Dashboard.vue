@@ -7,7 +7,7 @@ import StatCard from '../components/StatCard.vue'
 import LoadingBlock from '../components/LoadingBlock.vue'
 import ErrorState from '../components/ErrorState.vue'
 
-const data = ref<Record<string, number> | null>(null)
+const data = ref<Record<string, number | string> | null>(null)
 const error = ref('')
 const loading = ref(true)
 
@@ -38,6 +38,10 @@ onMounted(load)
     <ErrorState v-if="error && !loading" :message="error" @retry="load" />
     <LoadingBlock v-if="loading" :lines="4" />
     <template v-if="data && !loading">
+      <div v-if="data.kyc_status && data.kyc_status !== 'Verified'" class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-yellow-2 px-4 py-3">
+        <span class="text-sm font-medium text-ink-gray-8">Identity verification {{ data.kyc_status }} — paid services stay Pending until it completes.</span>
+        <RouterLink to="/kyc"><Button label="Complete verification" size="sm" variant="solid" /></RouterLink>
+      </div>
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard :value="data.services ?? 0" label="Services" to="/services" />
         <StatCard :value="data.unpaid ?? 0" label="Unpaid invoices" to="/invoices" />

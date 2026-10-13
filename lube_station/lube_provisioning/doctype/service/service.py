@@ -258,7 +258,14 @@ def on_invoice_paid(invoice: str) -> dict:
         try:
             from lube_station.lube_station.notifications.events import notify_customer
 
-            notify_customer(inv.customer, "invoice", invoice, {"note": "Payment received. Complete KYC to activate services.", "services": kyc_pending})
+            # Dedicated key: the invoice key was already consumed at issue
+            # time, so reusing it would dedupe (silently drop) this notice.
+            notify_customer(
+                inv.customer,
+                "kyc_required",
+                invoice,
+                {"note": "Payment received. Complete KYC to activate services.", "services": kyc_pending},
+            )
         except Exception:
             pass
     if upgraded:

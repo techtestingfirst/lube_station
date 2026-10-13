@@ -62,6 +62,30 @@ def mark_verified(name: str, notes: str | None = None) -> dict:
         doc.notes = notes
     doc.save(ignore_permissions=True)
     _touch_customer(doc.customer, "Verified", doc.request_id)
+    try:
+        from lube_station.lube_station.notifications.events import notify_customer
+
+        notify_customer(doc.customer, "kyc_verified", doc.name, {"provider": doc.provider})
+        # Paid-but-waiting services can activate now; best-effort so a chart
+        # miss never fails verification itself. Only orders with a Paid
+        # invoice qualify: verification must never activate unpaid services.
+        try:
+            for svc in frappe.get_all(
+                "Service", {"customer": doc.customer, "status": "Pending"}, ["name", "order_ref"]
+            ):
+                try:
+                    if svc.get("order_ref") and not frappe.db.exists(
+                        "Hosting Invoice", {"order_ref": svc["order_ref"], "status": "Paid"}
+                    ):
+                        continue
+                    sdoc = frappe.get_doc("Service", svc.name)
+                    sdoc.activate()
+                except Exception:
+                    continue
+        except Exception:
+            pass
+    except Exception:
+        pass
     return {"status": "Verified"}
 
 

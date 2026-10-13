@@ -494,6 +494,116 @@ class TestCustomerIsolation(IntegrationTestCase):
             frappe.db.get_value("Service", made[0], "status"), "Active"
         )
 
+    def test_kyc_portal_flow(self):
+        from lube_station.lube_customers.doctype.customer_kyc_verification.customer_kyc_verification import (
+            mark_verified,
+        )
+
+        s = self._seed_pair()
+        frappe.set_user(s["user_a"])
+        status = apis.my_kyc_status()
+        self.assertEqual(status["status"], "Pending")
+        self.assertFalse(status["verified"])
+        self.assertIn("Manual", status["providers"])
+        # Invalid provider/ID rejected; valid request recorded for self only.
+        with self.assertRaises(frappe.ValidationError):
+            apis.request_my_kyc("Unknown", "PAN")
+        with self.assertRaises(frappe.ValidationError):
+            apis.request_my_kyc("Manual", "Driving Licence")
+        out = apis.request_my_kyc("Manual", "PAN")
+        self.assertEqual(out["kyc"]["status"], "Pending")
+        self.assertIn(
+            out["name"], [r["name"] for r in out["kyc"]["requests"]]
+        )
+        self.assertEqual(
+            frappe.db.get_value(
+                "Customer KYC Verification", out["name"], "customer"
+            ),
+            s["a"],
+        )
+        # Service detail exposes the block.
+        detail = apis.my_service_detail(
+            frappe.db.get_value("Service", {"customer": s["a"]}, "name")
+            or self._pending_service(s)
+        )
+        self.assertFalse(detail["kyc"]["verified"])
+        # Staff verification flips status, mails distinctly, and activates
+        # paid-pending services for that customer only.
+        frappe.set_user("Administrator")
+        frappe.db.set_value("Hosting Customer", s["a"], "kyc_status", "Pending")
+        order = frappe.get_doc(
+            {"doctype": "Order", "customer": s["a"], "status": "Accepted"}
+        ).insert(ignore_permissions=True)
+        group = frappe.get_doc(
+            {"doctype": "Product Group", "group_name": f"KV {uuid.uuid4().hex[:6]}"}
+        ).insert(ignore_permissions=True)
+        plan = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": f"KV {uuid.uuid4().hex[:6]}",
+                "product_group": group.name,
+                "product_type": "Shared Hosting",
+                "is_active": 1,
+            }
+        ).insert(ignore_permissions=True)
+        svc = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": s["a"],
+                "hosting_plan": plan.name,
+                "order_ref": order.name,
+                "status": "Pending",
+                "recurring_amount": 10,
+            }
+        ).insert(ignore_permissions=True)
+        frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": s["a"],
+                "order_ref": order.name,
+                "invoice_items": [{"description": "x", "amount": 10}],
+                "status": "Paid",
+            }
+        ).insert(ignore_permissions=True)
+        mark_verified(out["name"], "docs checked")
+        self.assertEqual(
+            frappe.db.get_value("Hosting Customer", s["a"], "kyc_status"), "Verified"
+        )
+        self.assertEqual(frappe.db.get_value("Service", svc.name, "status"), "Active")
+        self.assertTrue(
+            frappe.db.exists(
+                "Notification Event", {"event_type": "kyc_verified"}
+            )
+        )
+        frappe.set_user(s["user_a"])
+        self.assertTrue(apis.my_kyc_status()["verified"])
+
+    def _pending_service(self, s):
+        frappe.set_user("Administrator")
+        group = frappe.get_doc(
+            {"doctype": "Product Group", "group_name": f"PS {uuid.uuid4().hex[:6]}"}
+        ).insert(ignore_permissions=True)
+        plan = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": f"PS {uuid.uuid4().hex[:6]}",
+                "product_group": group.name,
+                "product_type": "Shared Hosting",
+                "is_active": 1,
+            }
+        ).insert(ignore_permissions=True)
+        svc = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": s["a"],
+                "hosting_plan": plan.name,
+                "status": "Pending",
+                "recurring_amount": 5,
+            }
+        ).insert(ignore_permissions=True)
+        frappe.set_user(s["user_a"])
+        return svc.name
+
     def test_orphan_vps_fail_closed(self):
         s = self._seed_pair()
         frappe.set_user("Administrator")

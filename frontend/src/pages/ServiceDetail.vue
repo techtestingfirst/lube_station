@@ -43,6 +43,7 @@ interface UsageSnap { name: string; snap_date: string; disk_used: number; bandwi
 interface VpsSnap { name: string; instance: string; label: string | null; status: string; creation: string }
 interface Detail {
   service: Svc
+  kyc: { status: string; verified: boolean } | null
   plan: { name: string; plan_name: string; product_type: string; product_group: string } | null
   server: { hostname: string; ip_address: string | null; control_panel: string | null; status: string } | null
   billing: { billing_cycle: string; recurring_amount: number; next_due_date: string | null; registration_date: string | null; payment_method: string | null; order_ref: string | null }
@@ -396,6 +397,12 @@ onMounted(load)
           <div class="flex justify-between gap-3"><dt class="text-ink-gray-5">Payment method</dt><dd class="text-ink-gray-8">{{ detail.billing.payment_method || '—' }}</dd></div>
           <div class="flex justify-between gap-3"><dt class="text-ink-gray-5">Order</dt><dd class="text-ink-gray-8">{{ detail.billing.order_ref || '—' }}</dd></div>
         </dl>
+      </div>
+
+      <div v-if="detail.kyc && !detail.kyc.verified" class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-outline-gray-1 bg-surface-yellow-2 px-4 py-3">
+        <span class="text-sm font-medium text-ink-gray-8">Activation blocked: identity verification is {{ detail.kyc.status }}.</span>
+        <span class="text-sm text-ink-gray-6">Payment is received — complete verification and this service activates automatically.</span>
+        <RouterLink to="/kyc"><Button label="Complete verification" size="sm" variant="solid" /></RouterLink>
       </div>
 
       <div class="rounded-lg border border-outline-gray-1 bg-surface-white px-4 py-3">

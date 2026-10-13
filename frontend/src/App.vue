@@ -63,6 +63,7 @@ async function signOut() {
           </SidebarSection>
           <SidebarSection>
             <SidebarItem label="Account" route="/account" icon="lucide-user" />
+            <SidebarItem label="Verification (KYC)" route="/kyc" icon="lucide-shield-check" />
           </SidebarSection>
         </div>
       </Sidebar>

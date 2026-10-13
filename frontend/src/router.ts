@@ -27,6 +27,7 @@ const routes = [
   { path: '/support', component: () => import('./pages/Support.vue') },
   { path: '/kb', component: () => import('./pages/Kb.vue') },
   { path: '/wallet', component: () => import('./pages/Wallet.vue') },
+  { path: '/kyc', component: () => import('./pages/Kyc.vue') },
   { path: '/account', component: () => import('./pages/Account.vue') },
   { path: '/:path(.*)*', component: () => import('./pages/NotFound.vue') },
 ]

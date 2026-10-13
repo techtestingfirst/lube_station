@@ -409,7 +409,65 @@ def dashboard():
         "domains": frappe.db.count("Registered Domain", {"customer": customer}),
         "tickets": frappe.db.count("Ticket Hosting Reference", {"customer": customer}),
         "wallet": float(frappe.db.get_value("Hosting Customer", customer, "credit_balance") or 0),
+        "kyc_status": frappe.db.get_value("Hosting Customer", customer, "kyc_status") or "Pending",
     }
+
+
+KYC_PROVIDERS = ("Manual", "Digio Mock", "Digio")
+KYC_OVD_TYPES = ("Aadhaar", "PAN", "DigiLocker", "Passport", "Driving License", "Voter ID")
+
+
+def _kyc_view(customer: str) -> dict:
+    status = frappe.db.get_value("Hosting Customer", customer, "kyc_status") or "Pending"
+    row = frappe.db.get_value(
+        "Hosting Customer",
+        customer,
+        ["kyc_provider", "ovd_type", "kyc_verified_on"],
+        as_dict=True,
+    ) or {}
+    providers = ["Manual", "Digio Mock"]
+    if frappe.db.exists("DocType", "Digio Request Log"):
+        providers.append("Digio")
+    return {
+        "status": status,
+        "verified": status == "Verified",
+        "provider": row.get("kyc_provider"),
+        "ovd_type": row.get("ovd_type"),
+        "verified_on": str(row.get("kyc_verified_on") or "") or None,
+        "providers": providers,
+        "ovd_types": list(KYC_OVD_TYPES),
+        "requests": frappe.get_all(
+            "Customer KYC Verification",
+            {"customer": customer},
+            ["name", "status", "provider", "ovd_type", "verified_on", "creation"],
+            order_by="creation desc",
+            limit=10,
+        ),
+    }
+
+
+@frappe.whitelist(methods=["GET"])
+def my_kyc_status():
+    """Own verification state + request history + available providers/OVDs."""
+    return _kyc_view(my_customer())
+
+
+@frappe.whitelist(methods=["POST"])
+def request_my_kyc(provider: str = "Manual", ovd_type: str | None = None) -> dict:
+    """Start/restart own verification. Returns the request + refreshed status."""
+    from lube_station.lube_customers.doctype.customer_kyc_verification.customer_kyc_verification import (
+        request_kyc,
+    )
+
+    customer = my_customer()
+    if provider not in KYC_PROVIDERS:
+        frappe.throw("Unknown provider")
+    if provider == "Digio" and not frappe.db.exists("DocType", "Digio Request Log"):
+        frappe.throw("Digio not configured")
+    if ovd_type and ovd_type not in KYC_OVD_TYPES:
+        frappe.throw("Select a valid ID type")
+    out = request_kyc(customer, provider, ovd_type)
+    return {**out, "kyc": _kyc_view(customer)}
 
 
 @frappe.whitelist(methods=["GET", "POST"])
@@ -791,6 +849,7 @@ def my_service_detail(service: str):
         "service": detail,
         "plan": plan,
         "server": server_info,
+        "kyc": _kyc_view(svc.get("customer")),
         "addons": frappe.get_all(
             "Service",
             {"parent_service": svc.name, "customer": svc.customer},
