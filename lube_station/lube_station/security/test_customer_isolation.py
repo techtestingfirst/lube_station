@@ -505,12 +505,11 @@ class TestCustomerIsolation(IntegrationTestCase):
         self.assertEqual(status["status"], "Pending")
         self.assertFalse(status["verified"])
         self.assertIn("Manual", status["providers"])
-        # Invalid ID rejected; valid request recorded for self only.
-        with self.assertRaises(frappe.ValidationError):
-            apis.request_my_kyc("Unknown")
+        # No ID-type question: Digio's flow collects the document itself;
+        # the portal only starts verification. Stale values still rejected.
         with self.assertRaises(frappe.ValidationError):
             apis.request_my_kyc("Driving Licence")
-        out = apis.request_my_kyc("PAN")
+        out = apis.request_my_kyc()
         self.assertEqual(out["kyc"]["status"], "Pending")
         self.assertIn(
             out["name"], [r["name"] for r in out["kyc"]["requests"]]
