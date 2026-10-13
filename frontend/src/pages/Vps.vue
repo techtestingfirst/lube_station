@@ -51,7 +51,7 @@ async function loadInstances() {
   loading.value = true
   listError.value = ''
   try {
-    instances.value = await call('frappe.client.get_list', { doctype: 'VPS Instance', fields: ['name', 'status', 'ipv4', 'location'] })
+    instances.value = await call('lube_station.lube_station.portal.apis.my_vps', {}, 'GET')
     if (!tabs.value.some((t) => t.label === tab.value)) tab.value = 'All'
   } catch (e) {
     instances.value = []

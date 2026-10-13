@@ -1181,15 +1181,42 @@ def dns_list(domain: str):
     return frappe.get_all("DNS Record", {"domain": domain}, ["name", "record_type", "hostname", "record_value", "ttl"])
 
 
+@frappe.whitelist(methods=["GET"])
+def my_vps():
+    """VPS instances owned by the logged-in customer, via their Orders.
+
+    Server decides visibility (ERPNext portal pattern); frontend only renders.
+    Fail-closed: instances without an order link are never listed.
+    """
+    customer = my_customer()
+    orders = frappe.get_all("Order", {"customer": customer}, pluck="name")
+    if not orders:
+        return []
+    return frappe.get_all(
+        "VPS Instance",
+        {"order_ref": ["in", orders]},
+        ["name", "status", "ipv4", "location", "image", "order_ref"],
+        order_by="creation desc",
+    )
+
+
+def _owns_vps_instance(instance: str):
+    """Owned instance or PermissionError. Fail closed on missing links."""
+    inst = frappe.get_doc("VPS Instance", instance)
+    if not inst.order_ref or not frappe.db.exists("Order", inst.order_ref):
+        frappe.throw("Cross-customer access denied", frappe.PermissionError)
+    order_customer = frappe.db.get_value("Order", inst.order_ref, "customer")
+    if not order_customer:
+        frappe.throw("Cross-customer access denied", frappe.PermissionError)
+    assert_owns(order_customer)
+    return inst
+
+
 @frappe.whitelist(methods=["POST"])
 def vps_control(instance: str, action: str, arg: str | None = None):
     from lube_station.lube_provisioning.doctype.vps_instance.vps_instance import vps_action
 
-    inst = frappe.get_doc("VPS Instance", instance)
-    if inst.order_ref:
-        order = frappe.get_doc("Order", inst.order_ref)
-        if order.customer:
-            assert_owns(order.customer)
+    _owns_vps_instance(instance)
     out = vps_action(instance, action, arg)
     if action == "snapshot":
         # Registry row so customers can pick a restore point later.
@@ -1219,15 +1246,6 @@ def _snapshots_for(instances: list) -> list:
         ["name", "instance", "snapshot_ref", "label", "status", "creation"],
         order_by="creation desc",
     )
-
-
-def _owns_vps_instance(instance: str):
-    inst = frappe.get_doc("VPS Instance", instance)
-    if inst.order_ref:
-        order = frappe.get_doc("Order", inst.order_ref)
-        if order.customer:
-            assert_owns(order.customer)
-    return inst
 
 
 @frappe.whitelist(methods=["GET"])

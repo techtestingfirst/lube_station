@@ -30,8 +30,27 @@ def _audit(instance: str, action: str, key: str):
     return {"instance": instance, "action": action}
 
 
+def _assert_vps_owner(order: str | None) -> None:
+    """Fail-closed ownership for direct VPS endpoints.
+
+    System Manager bypasses; everyone else must own the Order.
+    Missing order link = deny (orphans never customer-reachable).
+    """
+    if "System Manager" in frappe.get_roles():
+        return
+    if not order or not frappe.db.exists("Order", order):
+        frappe.throw("Cross-customer access denied", frappe.PermissionError)
+    customer = frappe.db.get_value("Order", order, "customer")
+    if not customer:
+        frappe.throw("Cross-customer access denied", frappe.PermissionError)
+    from lube_station.lube_station.portal.guards import assert_owns
+
+    assert_owns(customer)
+
+
 @frappe.whitelist(methods=["POST"])
 def create_vps_instance(order: str, configuration: str, image: str, location: str, provider: str | None = None) -> dict:
+    _assert_vps_owner(order)
     if not _paid(order):
         frappe.throw("Order unpaid, cannot provision VPS")
     if not image or not location:
@@ -47,6 +66,7 @@ def vps_action(instance: str, action: str, arg: str | None = None) -> dict:
     if action not in allowed:
         frappe.throw("Unknown VPS action")
     inst = frappe.get_doc("VPS Instance", instance)
+    _assert_vps_owner(inst.order_ref)
     if inst.status == "Terminated":
         frappe.throw("Instance terminated")
     if action == "set_ip" and arg:

@@ -137,10 +137,24 @@ after_migrate = "lube_station.lube_station.setup.ensure_all"
 permission_query_conditions = {
 	"Hosting Customer": "lube_station.lube_station.permissions.hosting_customer_query",
 	"Hosting Invoice": "lube_station.lube_station.permissions.hosting_invoice_query",
+	"Order": "lube_station.lube_station.permissions.order_query",
+	"Cart": "lube_station.lube_station.permissions.cart_query",
+	"Customer KYC Verification": "lube_station.lube_station.permissions.kyc_query",
+	"Registered Domain": "lube_station.lube_station.permissions.domain_query",
+	"Saved Payment Method": "lube_station.lube_station.permissions.payment_method_query",
+	"VPS Instance": "lube_station.lube_station.permissions.vps_instance_query",
+	"DNS Record": "lube_station.lube_station.permissions.dns_record_query",
 }
 
 has_permission = {
 	"Hosting Invoice": "lube_station.lube_station.permissions.has_customer_document_permission",
+	"Order": "lube_station.lube_station.permissions.has_customer_document_permission",
+	"Cart": "lube_station.lube_station.permissions.has_customer_document_permission",
+	"Customer KYC Verification": "lube_station.lube_station.permissions.has_customer_document_permission",
+	"Registered Domain": "lube_station.lube_station.permissions.has_customer_document_permission",
+	"Saved Payment Method": "lube_station.lube_station.permissions.has_customer_document_permission",
+	"VPS Instance": "lube_station.lube_station.permissions.has_vps_instance_permission",
+	"DNS Record": "lube_station.lube_station.permissions.has_dns_record_permission",
 }
 
 # Document Events
