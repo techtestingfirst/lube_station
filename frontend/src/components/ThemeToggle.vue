@@ -3,7 +3,7 @@ import { Button, useColorScheme } from 'frappe-ui'
 import { computed } from 'vue'
 
 const { resolvedColorScheme, toggleColorScheme } = useColorScheme()
-const icon = computed(() => (resolvedColorScheme.value === 'dark' ? 'sun' : 'moon'))
+const icon = computed(() => (resolvedColorScheme.value === 'dark' ? 'lucide-sun' : 'lucide-moon'))
 const label = computed(() => (resolvedColorScheme.value === 'dark' ? 'Switch to light' : 'Switch to dark'))
 </script>
 

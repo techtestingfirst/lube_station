@@ -326,10 +326,10 @@ def ensure_dashboard():
     for name in REVENUE_CHARTS:
         if default_currency and not frappe.db.get_value("Dashboard Chart", name, "currency"):
             frappe.db.set_value("Dashboard Chart", name, "currency", default_currency)
-    # Sync the staff workspaces (home command-center + setup) into the DB.
+    # Sync the staff workspaces (home command-center + setup + customers queue) into the DB.
     from frappe.modules.import_file import import_file_by_path
 
-    for ws in ("lube_home/lube_home", "lube_station_home/lube_station_home"):
+    for ws in ("lube_home/lube_home", "lube_station_home/lube_station_home", "lube_customers/lube_customers"):
         import_file_by_path(
             frappe.get_app_path("lube_station", "lube_station", "workspace", *ws.split("/")) + ".json",
             force=True,
