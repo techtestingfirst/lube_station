@@ -93,6 +93,37 @@ def _lookup(domain: str, registrar: str | None) -> dict:
     return {"domain": domain, "status": "Available", "premium_price": 0}
 
 
+def _is_staff() -> bool:
+    return "System Manager" in frappe.get_roles() or frappe.session.user == "Administrator"
+
+
+def _assert_domain_owner(domain_name: str) -> None:
+    """Staff bypass; customers only for owned domains. Unknown domain = deny."""
+    if _is_staff():
+        return
+    if not domain_name or not frappe.db.exists("Registered Domain", domain_name):
+        frappe.throw("Cross-customer access denied", frappe.PermissionError)
+    from lube_station.lube_station.portal.guards import assert_owns
+
+    customer = frappe.db.get_value("Registered Domain", domain_name, "customer")
+    if not customer:
+        frappe.throw("Cross-customer access denied", frappe.PermissionError)
+    assert_owns(customer)
+
+
+def _assert_customer_param(customer: str | None) -> None:
+    """register/transfer must target the caller's own customer (staff bypass)."""
+    if _is_staff():
+        return
+    from lube_station.lube_station.portal.guards import assert_owns, my_customer
+
+    if not customer:
+        frappe.throw("Customer is required: order the domain through the cart so it is invoiced")
+    assert_owns(customer)
+    if customer != my_customer():
+        frappe.throw("Cross-customer access denied", frappe.PermissionError)
+
+
 def _adapter_for(domain_name: str, registrar: str | None = None):
     from lube_station.lube_station.adapters.registry import get_registrar_adapter
 
@@ -124,6 +155,7 @@ def _notify_domain(customer: str | None, event_type: str, domain: str, extra: di
 def register_domain(domain: str, customer: str | None = None, registrar: str | None = None, years: int = 1) -> dict:
     if not customer or not frappe.db.exists("Hosting Customer", customer):
         frappe.throw("Customer is required: order the domain through the cart so it is invoiced")
+    _assert_customer_param(customer)
     adapter, name = _adapter_for(domain, registrar)
     out = adapter.register_domain(domain, {}, [])
     if not frappe.db.exists("Registered Domain", domain):
@@ -138,6 +170,7 @@ def register_domain(domain: str, customer: str | None = None, registrar: str | N
 def renew_domain(domain: str, years: int = 1) -> dict:
     from lube_station.lube_domains.doctype.tld_pricing.tld_pricing import domain_price
 
+    _assert_domain_owner(domain)
     adapter, name = _adapter_for(domain)
     out = adapter.renew_domain(domain, years)
     if frappe.db.exists("Registered Domain", domain):
@@ -160,6 +193,7 @@ def renew_domain(domain: str, years: int = 1) -> dict:
 def transfer_domain(domain: str, auth_code: str, registrar: str | None = None, customer: str | None = None) -> dict:
     if not customer or not frappe.db.exists("Hosting Customer", customer):
         frappe.throw("Customer is required: order the domain through the cart so it is invoiced")
+    _assert_customer_param(customer)
     adapter, name = _adapter_for(domain, registrar)
     _notify_domain(customer, "domain_transfer_initiated", domain, {"registrar": name})
     out = adapter.transfer_domain(domain, auth_code)
@@ -176,6 +210,7 @@ def transfer_domain(domain: str, auth_code: str, registrar: str | None = None, c
 
 @frappe.whitelist(methods=["POST"])
 def update_nameservers(domain: str, nameservers: list | str) -> dict:
+    _assert_domain_owner(domain)
     adapter, _ = _adapter_for(domain)
     if isinstance(nameservers, str):
         nameservers = [n.strip() for n in nameservers.split(",")]

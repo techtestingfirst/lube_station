@@ -793,7 +793,7 @@ def my_service_detail(service: str):
         "server": server_info,
         "addons": frappe.get_all(
             "Service",
-            {"parent_service": svc.name},
+            {"parent_service": svc.name, "customer": svc.customer},
             ["name", "hosting_plan", "status", "billing_cycle", "next_due_date"],
         ),
         "parent_service": svc.get("parent_service"),

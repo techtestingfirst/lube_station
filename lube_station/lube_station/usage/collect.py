@@ -16,6 +16,10 @@ def _pull(service: str) -> dict:
 
 @frappe.whitelist(methods=["POST"])
 def collect_usage(service: str, snap_date: str | None = None, disk: float | None = None, bandwidth: float | None = None) -> dict:
+    # Server-measured counters: customers must never inject usage (would mint
+    # overage invoices). Daily cron runs as Administrator (staff bypass).
+    if "System Manager" not in frappe.get_roles() and frappe.session.user != "Administrator":
+        frappe.throw("Only staff can collect usage", frappe.PermissionError)
     snap_date = snap_date or today()
     if frappe.db.exists("Usage Snapshot", {"service_ref": service, "snap_date": snap_date}):
         doc = frappe.get_doc("Usage Snapshot", {"service_ref": service, "snap_date": snap_date})

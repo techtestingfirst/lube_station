@@ -217,6 +217,213 @@ class TestCustomerIsolation(IntegrationTestCase):
         self.assertIn(s["inst_b"], mine_b)
         self.assertNotIn(s["inst_a"], mine_b)
 
+    def test_dedicated_isolation(self):
+        from lube_station.lube_station.provisioning import dedicated as ded
+
+        s = self._seed_pair()
+        frappe.set_user("Administrator")
+        group = frappe.get_doc(
+            {"doctype": "Product Group", "group_name": f"DD {uuid.uuid4().hex[:6]}"}
+        ).insert(ignore_permissions=True)
+        plan = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": f"DD {uuid.uuid4().hex[:6]}",
+                "product_group": group.name,
+                "product_type": "Dedicated Server",
+                "is_active": 1,
+            }
+        ).insert(ignore_permissions=True)
+        svc_a = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": s["a"],
+                "hosting_plan": plan.name,
+                "status": "Active",
+                "recurring_amount": 100,
+            }
+        ).insert(ignore_permissions=True)
+        svc_b = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": s["b"],
+                "hosting_plan": plan.name,
+                "status": "Active",
+                "recurring_amount": 100,
+            }
+        ).insert(ignore_permissions=True)
+        inv_a = frappe.get_doc(
+            {
+                "doctype": "Dedicated Server Inventory",
+                "asset_id": f"AST-A-{uuid.uuid4().hex[:6]}",
+                "cpu": "Xeon",
+                "ram_gb": 64,
+                "location": "fsn1",
+                "status": "Assigned",
+                "assigned_service": svc_a.name,
+            }
+        ).insert(ignore_permissions=True)
+        inv_b = frappe.get_doc(
+            {
+                "doctype": "Dedicated Server Inventory",
+                "asset_id": f"AST-B-{uuid.uuid4().hex[:6]}",
+                "cpu": "Xeon",
+                "ram_gb": 64,
+                "location": "fsn1",
+                "status": "Assigned",
+                "assigned_service": svc_b.name,
+            }
+        ).insert(ignore_permissions=True)
+        frappe.set_user(s["user_a"])
+        mine = [r["name"] for r in apis.my_dedicated()]
+        self.assertIn(inv_a.name, mine)
+        self.assertNotIn(inv_b.name, mine)
+        with self.assertRaises(frappe.PermissionError):
+            apis.dedicated_control(inv_b.name, "install_os")
+        # Direct provisioning endpoints: customers blocked entirely.
+        with self.assertRaises(frappe.PermissionError):
+            ded.provision_step(inv_b.name, "install_os")
+        with self.assertRaises(frappe.PermissionError):
+            ded.reserve_inventory("whatever", "lease-x")
+        with self.assertRaises(frappe.PermissionError):
+            ded.release_inventory(inv_a.name, wipe_confirmed=True)
+        # Owner path still works through the portal guard.
+        out = apis.dedicated_control(inv_a.name, "install_os")
+        self.assertTrue(out["queued"])
+
+    def test_domain_isolation(self):
+        from lube_station.lube_domains.doctype.registered_domain import (
+            registered_domain as rd,
+        )
+
+        s = self._seed_pair()
+        frappe.set_user(s["user_a"])
+        # Renew / nameserver changes on someone else's domain denied.
+        with self.assertRaises(frappe.PermissionError):
+            rd.renew_domain(s["dom_b"])
+        with self.assertRaises(frappe.PermissionError):
+            rd.update_nameservers(s["dom_b"], ["ns1.evil.test"])
+        # register/transfer pinned to own customer.
+        with self.assertRaises(frappe.PermissionError):
+            rd.register_domain("evil.example.com", customer=s["b"])
+        with self.assertRaises(frappe.PermissionError):
+            rd.transfer_domain("evil2.example.com", "epp", customer=s["b"])
+        # Portal readers stay scoped.
+        self.assertEqual(
+            [d["domain_name"] for d in apis.my_domains()], [s["dom_a"]]
+        )
+        with self.assertRaises(frappe.PermissionError):
+            apis.dns_list(s["dom_b"])
+
+    def test_download_entitlement_self_only(self):
+        from lube_station.lube_catalog.doctype.downloadable_asset import (
+            downloadable_asset as da,
+        )
+
+        s = self._seed_pair()
+        frappe.set_user("Administrator")
+        group = frappe.get_doc(
+            {"doctype": "Product Group", "group_name": f"DL {uuid.uuid4().hex[:6]}"}
+        ).insert(ignore_permissions=True)
+        plan = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": f"DL {uuid.uuid4().hex[:6]}",
+                "product_group": group.name,
+                "product_type": "Shared Hosting",
+                "is_active": 1,
+            }
+        ).insert(ignore_permissions=True)
+        # Only B holds an Active service on this plan.
+        frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": s["b"],
+                "hosting_plan": plan.name,
+                "status": "Active",
+                "recurring_amount": 10,
+            }
+        ).insert(ignore_permissions=True)
+        asset = frappe.get_doc(
+            {
+                "doctype": "Downloadable Asset",
+                "title": f"DL {uuid.uuid4().hex[:6]}",
+                "storage_type": "Remote URL",
+                "remote_url": "https://example.com/f.iso",
+                "access_policy": "Active Service",
+                "allowed_products": [{"hosting_plan": plan.name}],
+            }
+        ).insert(ignore_permissions=True)
+        frappe.set_user(s["user_a"])
+        self.assertFalse(da.check_entitlement(asset.name)["allowed"])
+        # Probing another user's entitlement must not flip to True.
+        self.assertFalse(da.check_entitlement(asset.name, s["user_b"])["allowed"])
+        frappe.set_user(s["user_b"])
+        self.assertTrue(da.check_entitlement(asset.name)["allowed"])
+        # Portal download list respects it.
+        frappe.set_user(s["user_a"])
+        self.assertNotIn(asset.name, [a["name"] for a in apis.downloads()])
+        frappe.set_user(s["user_b"])
+        self.assertIn(asset.name, [a["name"] for a in apis.downloads()])
+
+    def test_addon_isolation(self):
+        s = self._seed_pair()
+        frappe.set_user("Administrator")
+        group = frappe.get_doc(
+            {"doctype": "Product Group", "group_name": f"AO {uuid.uuid4().hex[:6]}"}
+        ).insert(ignore_permissions=True)
+        plan = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": f"AO {uuid.uuid4().hex[:6]}",
+                "product_group": group.name,
+                "product_type": "Backup Addon",
+                "is_active": 1,
+            }
+        ).insert(ignore_permissions=True)
+        parent_a = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": s["a"],
+                "hosting_plan": plan.name,
+                "status": "Active",
+                "recurring_amount": 10,
+            }
+        ).insert(ignore_permissions=True)
+        child_a = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": s["a"],
+                "hosting_plan": plan.name,
+                "status": "Active",
+                "recurring_amount": 5,
+                "parent_service": parent_a.name,
+            }
+        ).insert(ignore_permissions=True)
+        parent_b = frappe.get_doc(
+            {
+                "doctype": "Service",
+                "customer": s["b"],
+                "hosting_plan": plan.name,
+                "status": "Active",
+                "recurring_amount": 10,
+            }
+        ).insert(ignore_permissions=True)
+        frappe.set_user(s["user_a"])
+        detail = apis.my_service_detail(parent_a.name)
+        addon_names = [a["name"] for a in detail["addons"]]
+        self.assertIn(child_a.name, addon_names)
+        self.assertNotIn(parent_b.name, addon_names)
+        # Other customer's service detail denied outright.
+        with self.assertRaises(frappe.PermissionError):
+            apis.my_service_detail(parent_b.name)
+        # Add-on cart line cannot attach to someone else's parent.
+        cart = apis.cart_current()
+        with self.assertRaises(frappe.PermissionError):
+            apis.cart_add(
+                plan.name, "Monthly", parent_service=parent_b.name, cart=cart["cart"]
+            )
+
     def test_orphan_vps_fail_closed(self):
         s = self._seed_pair()
         frappe.set_user("Administrator")

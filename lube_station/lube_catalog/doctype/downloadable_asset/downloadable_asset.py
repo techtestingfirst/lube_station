@@ -65,6 +65,9 @@ def _active_service_access(asset, user: str) -> bool:
 @frappe.whitelist(methods=["GET", "POST"])
 def check_entitlement(asset: str, user: str | None = None) -> dict:
     doc = frappe.get_doc("Downloadable Asset", asset)
+    # Non-staff can only probe their own entitlement (no cross-user oracle).
+    if user and user != frappe.session.user and "System Manager" not in frappe.get_roles():
+        user = frappe.session.user
     user = user or frappe.session.user
     if not doc.active:
         return {"allowed": False, "reason": "inactive"}
