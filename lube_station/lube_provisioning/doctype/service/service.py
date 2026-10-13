@@ -107,11 +107,31 @@ def _cascade(parent, action: str, reason: str):
             continue
 
 
+def _is_staff() -> bool:
+    return "System Manager" in frappe.get_roles() or frappe.session.user == "Administrator"
+
+
+def _assert_invoice_owner(invoice: str) -> None:
+    """Staff bypass; customers only for their own invoices."""
+    if _is_staff():
+        return
+    customer = frappe.db.get_value("Hosting Invoice", invoice, "customer")
+    if not customer:
+        frappe.throw("Cross-customer access denied", frappe.PermissionError)
+    from lube_station.lube_station.portal.guards import assert_owns
+
+    assert_owns(customer)
+
+
 @frappe.whitelist(methods=["POST"])
 def create_from_order(order: str) -> dict:
     order_doc = frappe.get_doc("Order", order)
     if not order_doc.customer:
         frappe.throw("Order has no customer")
+    if not _is_staff():
+        from lube_station.lube_station.portal.guards import assert_owns
+
+        assert_owns(order_doc.customer)
     made = []
     for item in order_doc.items:
         if item.item_type != "Hosting Plan" or not frappe.db.exists("Hosting Plan", item.reference):
@@ -204,6 +224,7 @@ def _make_username(domain: str | None) -> str | None:
 
 @frappe.whitelist(methods=["POST"])
 def on_invoice_paid(invoice: str) -> dict:
+    _assert_invoice_owner(invoice)
     inv = frappe.get_doc("Hosting Invoice", invoice)
     if inv.status != "Paid":
         return {"action": "none"}
@@ -354,6 +375,10 @@ def _apply_upgrade_for_invoice(inv) -> list:
 
 @frappe.whitelist(methods=["POST"])
 def apply_dunning(invoice: str) -> dict:
+    # Billing enforcement: staff-only. Customers must never trigger
+    # suspend/terminate evaluation on anyone's (or their own) invoices.
+    if not _is_staff():
+        frappe.throw("Only staff can run dunning", frappe.PermissionError)
     from lube_station.lube_billing.doctype.dunning_rule.dunning_rule import evaluate_invoice
 
     result = evaluate_invoice(invoice)

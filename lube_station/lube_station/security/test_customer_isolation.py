@@ -424,6 +424,76 @@ class TestCustomerIsolation(IntegrationTestCase):
                 plan.name, "Monthly", parent_service=parent_b.name, cart=cart["cart"]
             )
 
+    def test_billing_fulfillment_isolation(self):
+        from lube_station.lube_provisioning.doctype.service import service as svcmod
+
+        s = self._seed_pair()
+        frappe.set_user("Administrator")
+        group = frappe.get_doc(
+            {"doctype": "Product Group", "group_name": f"BL {uuid.uuid4().hex[:6]}"}
+        ).insert(ignore_permissions=True)
+        plan = frappe.get_doc(
+            {
+                "doctype": "Hosting Plan",
+                "plan_name": f"BL {uuid.uuid4().hex[:6]}",
+                "product_group": group.name,
+                "product_type": "Shared Hosting",
+                "is_active": 1,
+            }
+        ).insert(ignore_permissions=True)
+        frappe.get_doc(
+            {
+                "doctype": "Plan Pricing",
+                "hosting_plan": plan.name,
+                "billing_cycle": "Monthly",
+                "recurring_amount": 50,
+            }
+        ).insert(ignore_permissions=True)
+        cart = frappe.get_doc(
+            {"doctype": "Cart", "customer": s["a"]}
+        ).insert(ignore_permissions=True)
+        cart.append(
+            "items",
+            {
+                "item_type": "Hosting Plan",
+                "hosting_plan": plan.name,
+                "billing_cycle": "Monthly",
+                "quantity": 1,
+            },
+        )
+        cart.save(ignore_permissions=True)
+        from lube_station.lube_customers.doctype.order.order import place_order
+
+        order = place_order(cart.name, s["a"])["order"]
+        inv = frappe.get_doc(
+            {
+                "doctype": "Hosting Invoice",
+                "customer": s["a"],
+                "order_ref": order,
+                "invoice_items": [{"description": "t", "amount": 50}],
+                "status": "Paid",
+            }
+        ).insert(ignore_permissions=True)
+        # Stranger cannot create services, fire paid-fulfillment, or run dunning.
+        frappe.set_user(s["user_b"])
+        with self.assertRaises(frappe.PermissionError):
+            svcmod.create_from_order(order)
+        with self.assertRaises(frappe.PermissionError):
+            svcmod.on_invoice_paid(inv.name)
+        with self.assertRaises(frappe.PermissionError):
+            svcmod.apply_dunning(inv.name)
+        # Owner's own paid invoice still fulfills (idempotent re-fire allowed).
+        frappe.set_user("Administrator")
+        frappe.db.set_value("Hosting Customer", s["a"], "kyc_status", "Verified")
+        made = svcmod.create_from_order(order)["services"]
+        self.assertTrue(made)
+        frappe.set_user(s["user_a"])
+        out = svcmod.on_invoice_paid(inv.name)
+        self.assertIn("action", out)
+        self.assertEqual(
+            frappe.db.get_value("Service", made[0], "status"), "Active"
+        )
+
     def test_orphan_vps_fail_closed(self):
         s = self._seed_pair()
         frappe.set_user("Administrator")
