@@ -11,7 +11,8 @@ class HostingCustomer(Document):
         if self.flags.ignore_permissions:
             return True
         user = user or frappe.session.user
-        if "System Manager" in frappe.get_roles(user):
+        roles = frappe.get_roles(user)
+        if "System Manager" in roles or {"Support Agent", "Billing Admin", "Provisioning Operator"}.intersection(roles):
             return True
         if permtype == "read":
             linked = frappe.db.get_value("Hosting Customer", {"user": user}, "name")

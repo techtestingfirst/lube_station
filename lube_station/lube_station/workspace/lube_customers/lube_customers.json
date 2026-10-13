@@ -1,7 +1,7 @@
 {
  "app": "lube_station",
  "charts": [],
- "content": "[{\"id\": \"lube_customers_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lube Customers</b></span><br><span class=\\\"text-muted\\\">Customers, carts, orders, coupons and credit notes.</span>\", \"col\": 12}}, {\"id\": \"lube_customers_sc_hosting_cust\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hosting Customer\", \"col\": 3}}, {\"id\": \"lube_customers_sc_order\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Order\", \"col\": 3}}, {\"id\": \"lube_customers_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"lube_customers_card_customers\", \"type\": \"card\", \"data\": {\"card_name\": \"Customers\", \"col\": 4}}, {\"id\": \"lube_customers_card_orders\", \"type\": \"card\", \"data\": {\"card_name\": \"Orders\", \"col\": 4}}]",
+ "content": "[{\"id\": \"lube_customers_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lube Customers</b></span><br><span class=\\\"text-muted\\\">Customers, carts, orders, coupons and credit notes.</span>\", \"col\": 12}}, {\"id\": \"lube_customers_sc_hosting_cust\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hosting Customer\", \"col\": 3}}, {\"id\": \"lube_customers_sc_order\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Order\", \"col\": 3}}, {\"id\": \"lube_customers_sc_kyc\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Customer KYC Verification\", \"col\": 3}}, {\"id\": \"lube_customers_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"lube_customers_card_customers\", \"type\": \"card\", \"data\": {\"card_name\": \"Customers\", \"col\": 4}}, {\"id\": \"lube_customers_card_orders\", \"type\": \"card\", \"data\": {\"card_name\": \"Orders\", \"col\": 4}}]",
  "creation": "2026-10-07 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -18,7 +18,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Customers",
-   "link_count": 2,
+   "link_count": 3,
    "link_to": "",
    "link_type": "",
    "onboard": 0,
@@ -44,6 +44,17 @@
    "link_to": "Client Group",
    "link_type": "DocType",
    "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "KYC Verification",
+   "link_count": 0,
+   "link_to": "Customer KYC Verification",
+   "link_type": "DocType",
+   "onboard": 0,
    "type": "Link"
   },
   {
@@ -123,6 +134,11 @@
   {
    "label": "Order",
    "link_to": "Order",
+   "type": "DocType"
+  },
+  {
+   "label": "KYC Verification",
+   "link_to": "Customer KYC Verification",
    "type": "DocType"
   }
  ],

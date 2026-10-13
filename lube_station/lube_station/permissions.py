@@ -3,7 +3,8 @@ import frappe
 
 def hosting_customer_query(user=None):
     user = user or frappe.session.user
-    if "System Manager" in frappe.get_roles(user):
+    roles = frappe.get_roles(user)
+    if "System Manager" in roles or STAFF_ROLES.intersection(roles):
         return ""
     linked = frappe.db.get_value("Hosting Customer", {"user": user}, "name")
     if not linked:
@@ -23,7 +24,8 @@ def customer_document_query(doctype):
 
     def query(user=None):
         user = user or frappe.session.user
-        if "System Manager" in frappe.get_roles(user):
+        roles = frappe.get_roles(user)
+        if "System Manager" in roles or STAFF_ROLES.intersection(roles):
             return ""
         linked = _linked_customer(user)
         if not linked:
@@ -34,13 +36,14 @@ def customer_document_query(doctype):
 
 
 def has_customer_document_permission(doc, user=None, ptype="read", debug=False) -> bool:
-    """Row check: Customer role may access own rows, nothing else.
+    """Row check: owner customers and staff may access; strangers may not.
 
     Arg order keeps backward compat with direct (doc, user) calls;
     Frappe's hook caller passes doc/ptype/user as kwargs.
     """
     user = user or frappe.session.user
-    if "System Manager" in frappe.get_roles(user):
+    roles = frappe.get_roles(user)
+    if "System Manager" in roles or STAFF_ROLES.intersection(roles):
         return True
     linked = _linked_customer(user)
     return bool(linked and doc.get("customer") == linked)
@@ -60,7 +63,8 @@ def vps_instance_query(user=None):
     Orphan rows (empty order_ref) match nothing: fail closed.
     """
     user = user or frappe.session.user
-    if "System Manager" in frappe.get_roles(user):
+    roles = frappe.get_roles(user)
+    if "System Manager" in roles or STAFF_ROLES.intersection(roles):
         return ""
     linked = _linked_customer(user)
     if not linked:
@@ -75,7 +79,8 @@ def vps_instance_query(user=None):
 def has_vps_instance_permission(doc, user=None, ptype="read", debug=False) -> bool:
     """Row check: instance is visible only via an owned Order. No order = deny."""
     user = user or frappe.session.user
-    if "System Manager" in frappe.get_roles(user):
+    roles = frappe.get_roles(user)
+    if "System Manager" in roles or STAFF_ROLES.intersection(roles):
         return True
     linked = _linked_customer(user)
     if not linked:
@@ -89,7 +94,8 @@ def has_vps_instance_permission(doc, user=None, ptype="read", debug=False) -> bo
 def dns_record_query(user=None):
     """List filter: customers see only records under their own domains."""
     user = user or frappe.session.user
-    if "System Manager" in frappe.get_roles(user):
+    roles = frappe.get_roles(user)
+    if "System Manager" in roles or STAFF_ROLES.intersection(roles):
         return ""
     linked = _linked_customer(user)
     if not linked:
@@ -104,7 +110,8 @@ def dns_record_query(user=None):
 def has_dns_record_permission(doc, user=None, ptype="read", debug=False) -> bool:
     """Row check: record is visible only via an owned domain. No domain = deny."""
     user = user or frappe.session.user
-    if "System Manager" in frappe.get_roles(user):
+    roles = frappe.get_roles(user)
+    if "System Manager" in roles or STAFF_ROLES.intersection(roles):
         return True
     linked = _linked_customer(user)
     if not linked:
