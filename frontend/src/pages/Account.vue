@@ -282,7 +282,7 @@ async function save() {
             <div v-if="account.phone" class="mt-1 text-sm text-ink-gray-5">{{ account.phone }}</div>
             <div v-if="account.tax_id" class="mt-1 text-sm text-ink-gray-5">Tax / VAT: {{ account.tax_id }}</div>
           </div>
-          <Button label="Sign out" variant="outline" size="sm" class="shrink-0" @click="logout" />
+          <Button label="Sign out" theme="red" variant="outline" size="sm" iconLeft="lucide-log-out" class="shrink-0" @click="logout" />
         </div>
         <div v-else class="mt-2 space-y-3">
           <div class="grid gap-3 sm:grid-cols-2">
