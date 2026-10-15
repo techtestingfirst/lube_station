@@ -1716,10 +1716,12 @@ def cart_apply_coupon(cart: str, coupon_code: str):
 
 @frappe.whitelist(methods=["GET", "POST"])
 def payment_gateways() -> list:
-    """Enabled gateways with a real bridge behind them, in Settings order.
+    """Active one-time gateways in Settings display order.
 
-    PayPal Checkout stays hidden: classic NVP API has no INR support and
-    Hosting Invoices are INR-only. Re-add when invoice currency lands.
+    Currency support is enforced per adapter at link time: Mollie and PayPal
+    REST throw an informative error on INR invoices until invoice currency
+    lands. GoCardless and 2Checkout stay out through supports_one_time = 0
+    (mandate flow and panel buy-links have no one-time hosted step).
     """
     from lube_station.lube_station.payments.links import gateway_order
 

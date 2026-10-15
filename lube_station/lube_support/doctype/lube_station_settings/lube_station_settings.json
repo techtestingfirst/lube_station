@@ -1,9 +1,69 @@
 {
- "name": "Lube Station Settings",
+ "actions": [],
+ "creation": "2026-10-15 20:12:31.697881",
  "doctype": "DocType",
- "module": "Lube Support",
- "issingle": 1,
- "modified": "2026-10-10 17:30:00.000000",
+ "engine": "InnoDB",
+ "field_order": [
+  "company_section",
+  "company_name",
+  "company_logo",
+  "section_break_0",
+  "company_address",
+  "column_break_hnuj",
+  "company_tax_id",
+  "default_tax_code",
+  "support_email",
+  "catalog_section",
+  "domain_year_price",
+  "section_break_1",
+  "free_subdomain_suffixes",
+  "section_break_2",
+  "enabled_gateways",
+  "checkout_section",
+  "tos_required",
+  "column_break_0",
+  "show_cancellation_link",
+  "tax_section",
+  "tax_mode",
+  "tax_domains",
+  "column_break_1",
+  "invoice_due_days",
+  "renewal_advance_days",
+  "fraud_section",
+  "fraud_free_email_score",
+  "fraud_no_company_score",
+  "column_break_2",
+  "fraud_large_order_total",
+  "fraud_large_order_score",
+  "kyc_section",
+  "kyc_provider",
+  "payments_section",
+  "razorpay_auto_capture",
+  "section_break_3",
+  "bank_details",
+  "payu_merchant_key",
+  "payu_merchant_salt",
+  "payu_sandbox",
+  "cashfree_app_id",
+  "cashfree_secret_key",
+  "cashfree_sandbox",
+  "mollie_secret_key",
+  "column_break_3",
+  "ccavenue_merchant_id",
+  "ccavenue_access_code",
+  "ccavenue_working_key",
+  "gocardless_access_token",
+  "gocardless_webhook_secret",
+  "gocardless_sandbox",
+  "twocheckout_merchant_code",
+  "twocheckout_secret_key",
+  "twocheckout_sandbox",
+  "aws_section",
+  "aws_access_key_id",
+  "aws_secret_access_key",
+  "column_break_ciac",
+  "aws_region"
+ ],
  "fields": [
   {
    "fieldname": "company_section",
@@ -11,10 +71,10 @@
    "label": "Business"
   },
   {
+   "default": "Lube Station",
    "fieldname": "company_name",
    "fieldtype": "Data",
-   "label": "Company Name",
-   "default": "Lube Station"
+   "label": "Company Name"
   },
   {
    "fieldname": "company_logo",
@@ -54,10 +114,10 @@
    "label": "Catalog & Cart"
   },
   {
+   "default": "15",
    "fieldname": "domain_year_price",
    "fieldtype": "Currency",
-   "label": "Domain Price / Year",
-   "default": "15"
+   "label": "Domain Price / Year"
   },
   {
    "fieldname": "section_break_1",
@@ -65,10 +125,10 @@
    "label": "Free Subdomains"
   },
   {
+   "description": "WHMCS free-subdomain parity: hosting orders may use prefix + suffix instead of a domain. Empty disables.",
    "fieldname": "free_subdomain_suffixes",
    "fieldtype": "Small Text",
-   "label": "Free Subdomain Suffixes (one per line)",
-   "description": "WHMCS free-subdomain parity: hosting orders may use prefix + suffix instead of a domain. Empty disables."
+   "label": "Free Subdomain Suffixes (one per line)"
   },
   {
    "fieldname": "section_break_2",
@@ -76,10 +136,10 @@
    "label": "Payment Gateways"
   },
   {
+   "default": "Stripe\nRazorpay\nBank Transfer",
    "fieldname": "enabled_gateways",
    "fieldtype": "Small Text",
-   "label": "Enabled Gateways (one per line, in display order)",
-   "default": "Stripe\nRazorpay\nBank Transfer"
+   "label": "Enabled Gateways (one per line, in display order)"
   },
   {
    "fieldname": "checkout_section",
@@ -87,21 +147,21 @@
    "label": "Checkout"
   },
   {
+   "default": "1",
    "fieldname": "tos_required",
    "fieldtype": "Check",
-   "label": "Require TOS Acceptance",
-   "default": "1"
+   "label": "Require TOS Acceptance"
   },
   {
    "fieldname": "column_break_0",
    "fieldtype": "Column Break"
   },
   {
+   "default": "1",
+   "description": "WHMCS General Settings parity: when off, customers cannot request cancellation from the portal",
    "fieldname": "show_cancellation_link",
    "fieldtype": "Check",
-   "label": "Show Cancellation Link",
-   "default": "1",
-   "description": "WHMCS General Settings parity: when off, customers cannot request cancellation from the portal"
+   "label": "Show Cancellation Link"
   },
   {
    "fieldname": "tax_section",
@@ -109,33 +169,33 @@
    "label": "Tax (WHMCS pattern)"
   },
   {
+   "default": "Exclusive",
    "fieldname": "tax_mode",
    "fieldtype": "Select",
    "label": "Tax Mode",
-   "options": "Exclusive\nInclusive",
-   "default": "Exclusive"
+   "options": "Exclusive\nInclusive"
   },
   {
+   "default": "1",
    "fieldname": "tax_domains",
    "fieldtype": "Check",
-   "label": "Tax Domain Items",
-   "default": "1"
+   "label": "Tax Domain Items"
   },
   {
    "fieldname": "column_break_1",
    "fieldtype": "Column Break"
   },
   {
+   "default": "7",
    "fieldname": "invoice_due_days",
    "fieldtype": "Int",
-   "label": "Invoice Due In (days)",
-   "default": "7"
+   "label": "Invoice Due In (days)"
   },
   {
+   "default": "14",
    "fieldname": "renewal_advance_days",
    "fieldtype": "Int",
-   "label": "Renewal Advance Days",
-   "default": "14"
+   "label": "Renewal Advance Days"
   },
   {
    "fieldname": "fraud_section",
@@ -143,32 +203,32 @@
    "label": "Fraud Screening (0 disables a rule)"
   },
   {
+   "default": "10",
    "fieldname": "fraud_free_email_score",
    "fieldtype": "Int",
-   "label": "Free-Email Score",
-   "default": "10"
+   "label": "Free-Email Score"
   },
   {
+   "default": "5",
    "fieldname": "fraud_no_company_score",
    "fieldtype": "Int",
-   "label": "No-Company Score",
-   "default": "5"
+   "label": "No-Company Score"
   },
   {
    "fieldname": "column_break_2",
    "fieldtype": "Column Break"
   },
   {
+   "default": "1000",
    "fieldname": "fraud_large_order_total",
    "fieldtype": "Currency",
-   "label": "Large Order Above",
-   "default": "1000"
+   "label": "Large Order Above"
   },
   {
+   "default": "15",
    "fieldname": "fraud_large_order_score",
    "fieldtype": "Int",
-   "label": "Large-Order Score",
-   "default": "15"
+   "label": "Large-Order Score"
   },
   {
    "fieldname": "kyc_section",
@@ -176,12 +236,12 @@
    "label": "Identity Verification (KYC)"
   },
   {
+   "default": "Manual",
+   "description": "Manual: staff verifies in Desk. Digio: eKYC via ekyc_india app (needs Digio Settings creds + e-Signature Document row for Hosting Customer).",
    "fieldname": "kyc_provider",
    "fieldtype": "Select",
    "label": "KYC Provider",
-   "options": "Manual\nDigio",
-   "default": "Manual",
-   "description": "Manual: staff verifies in Desk. Digio: eKYC via ekyc_india app (needs Digio Settings creds + e-Signature Document row for Hosting Customer)."
+   "options": "Manual\nDigio"
   },
   {
    "fieldname": "payments_section",
@@ -189,10 +249,10 @@
    "label": "Payments"
   },
   {
+   "default": "1",
    "fieldname": "razorpay_auto_capture",
    "fieldtype": "Check",
-   "label": "Razorpay Auto-Capture",
-   "default": "1"
+   "label": "Razorpay Auto-Capture"
   },
   {
    "fieldname": "section_break_3",
@@ -200,10 +260,10 @@
    "label": "Bank Details"
   },
   {
+   "description": "Shown on bank-transfer instructions",
    "fieldname": "bank_details",
    "fieldtype": "Small Text",
-   "label": "Bank Details",
-   "description": "Shown on bank-transfer instructions"
+   "label": "Bank Details"
   },
   {
    "fieldname": "payu_merchant_key",
@@ -216,10 +276,10 @@
    "label": "PayU Merchant Salt"
   },
   {
+   "default": "1",
    "fieldname": "payu_sandbox",
    "fieldtype": "Check",
-   "label": "PayU Sandbox",
-   "default": "1"
+   "label": "PayU Sandbox"
   },
   {
    "fieldname": "cashfree_app_id",
@@ -232,16 +292,16 @@
    "label": "Cashfree Secret Key"
   },
   {
+   "default": "1",
    "fieldname": "cashfree_sandbox",
    "fieldtype": "Check",
-   "label": "Cashfree Sandbox",
-   "default": "1"
+   "label": "Cashfree Sandbox"
   },
   {
+   "description": "test_ key for sandbox, live_ key for production",
    "fieldname": "mollie_secret_key",
    "fieldtype": "Password",
-   "label": "Mollie Secret Key",
-   "description": "test_ key for sandbox, live_ key for production"
+   "label": "Mollie Secret Key"
   },
   {
    "fieldname": "gocardless_access_token",
@@ -254,10 +314,10 @@
    "label": "GoCardless Webhook Secret"
   },
   {
+   "default": "1",
    "fieldname": "gocardless_sandbox",
    "fieldtype": "Check",
-   "label": "GoCardless Sandbox",
-   "default": "1"
+   "label": "GoCardless Sandbox"
   },
   {
    "fieldname": "column_break_3",
@@ -279,6 +339,11 @@
    "label": "CCAvenue Working Key"
   },
   {
+   "fieldname": "aws_section",
+   "fieldtype": "Section Break",
+   "label": "AWS (Provisioning / Storage)"
+  },
+  {
    "fieldname": "aws_access_key_id",
    "fieldtype": "Data",
    "label": "AWS Access Key ID"
@@ -289,10 +354,10 @@
    "label": "AWS Secret Access Key"
   },
   {
+   "default": "us-east-1",
    "fieldname": "aws_region",
    "fieldtype": "Data",
-   "label": "AWS Region",
-   "default": "us-east-1"
+   "label": "AWS Region"
   },
   {
    "fieldname": "twocheckout_merchant_code",
@@ -305,19 +370,38 @@
    "label": "2Checkout Secret Key"
   },
   {
+   "default": "1",
    "fieldname": "twocheckout_sandbox",
    "fieldtype": "Check",
-   "label": "2Checkout Sandbox",
-   "default": "1"
+   "label": "2Checkout Sandbox"
+  },
+  {
+   "fieldname": "column_break_hnuj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_ciac",
+   "fieldtype": "Column Break"
   }
  ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-15 20:17:05.181472",
+ "modified_by": "Administrator",
+ "module": "Lube Support",
+ "name": "Lube Station Settings",
+ "owner": "Administrator",
  "permissions": [
   {
-   "role": "System Manager",
-   "read": 1,
-   "write": 1,
    "create": 1,
-   "delete": 1
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
   }
- ]
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
 }

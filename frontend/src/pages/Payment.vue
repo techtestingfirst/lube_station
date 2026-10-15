@@ -77,15 +77,94 @@ async function useWalletHere() {
 
 onMounted(load)
 
+
+function formFields(out: {
+  params?: Record<string, string>
+  enc_request?: string
+  access_code?: string
+}): Record<string, string> {
+  if (out.params) return out.params
+  // CCAvenue posts one encrypted blob plus its access code.
+  return { encRequest: out.enc_request || '', access_code: out.access_code || '' }
+}
+
+function postForm(url: string, fields: Record<string, string>) {
+  const form = document.createElement('form')
+  form.method = 'POST'
+  form.action = url
+  for (const [k, v] of Object.entries(fields)) {
+    if (v === undefined || v === null) continue
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = k
+    input.value = String(v)
+    form.appendChild(input)
+  }
+  document.body.appendChild(form)
+  form.submit()
+}
+
+function loadCashfreeSdk(): Promise<void> {
+  if ((window as unknown as { Cashfree?: unknown }).Cashfree) return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js'
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Cashfree SDK failed to load'))
+    document.head.appendChild(script)
+  })
+}
+
+async function cashfreeCheckout(paymentSessionId: string, sandbox: boolean) {
+  try {
+    await loadCashfreeSdk()
+    const cf = (window as unknown as { Cashfree: (opts: { mode: string }) => {
+      checkout: (opts: { paymentSessionId: string; redirectTarget: string }) => void
+    } }).Cashfree({ mode: sandbox ? 'sandbox' : 'production' })
+    cf.checkout({ paymentSessionId, redirectTarget: '_self' })
+  } catch (e) {
+    throw new Error('Cashfree checkout could not start. Quote this invoice id to support.')
+  }
+}
+
 async function pay() {
   paying.value = true
   try {
-    const out = await call<{ url?: string; manual?: boolean; instructions?: string }>('lube_station.lube_station.portal.apis.invoice_payment_link', { invoice, gateway: gateway.value })
+    const out = await call<{
+      url?: string
+      manual?: boolean
+      instructions?: string
+      post_url?: string
+      params?: Record<string, string>
+      enc_request?: string
+      access_code?: string
+      payment_session_id?: string
+      order_id?: string
+      sandbox?: boolean
+      hint?: string
+      customer_id?: string
+    }>('lube_station.lube_station.portal.apis.invoice_payment_link', { invoice, gateway: gateway.value })
     if (out.manual) {
       result.value = out.instructions || 'Bank transfer instructions issued. Reference your invoice.'
       return
     }
-    // Hosted gateway page (Razorpay checkout) — full redirect.
+    if (out.hint) {
+      // Mandate flow (GoCardless): no one-time charge URL. Staff continue
+      // from the Dashboard with the customer id below.
+      result.value = out.customer_id ? `${out.hint} (ref ${out.customer_id})` : out.hint
+      return
+    }
+    if (out.post_url) {
+      // Form-POST gateways (PayU, CCAvenue) — auto-submit a hidden form.
+      postForm(out.post_url, formFields(out))
+      return
+    }
+    if (out.payment_session_id) {
+      // Cashfree hosted checkout through the Cashfree JS SDK.
+      await cashfreeCheckout(out.payment_session_id, out.sandbox !== false)
+      return
+    }
+    // Hosted gateway page (Razorpay/Stripe checkout, Mollie/PayPal approval) — full redirect.
     window.location.href = out.url as string
   } catch (e) {
     error.value = friendlyError(e)

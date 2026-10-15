@@ -46,8 +46,23 @@ DEFAULTS = {
     "aws_region": "us-east-1",
 }
 
-# Gateways with a real payment bridge behind them.
-BRIDGED_GATEWAYS = ("Stripe", "Razorpay", "Bank Transfer")
+# Gateways the checkout bridge knows by Adapter Name. One-time availability
+# is still gated per row by Payment Gateway Adapter.active + supports_one_time,
+# so GoCardless (mandate flow) and 2Checkout (panel buy-links) stay out of
+# one-time checkout through their own flags. Currency support is enforced by
+# each adapter (Mollie/PayPal throw on INR until invoice currency lands).
+BRIDGED_GATEWAYS = (
+    "Stripe",
+    "Razorpay",
+    "PayPal Checkout",
+    "Bank Transfer",
+    "CCAvenue",
+    "PayU India",
+    "Cashfree Payments",
+    "Mollie",
+    "GoCardless",
+    "2Checkout / Verifone",
+)
 
 
 def get_setting(key: str):
@@ -62,7 +77,7 @@ def get_setting(key: str):
 
 
 def gateway_order() -> list:
-    """Enabled gateways in display order, restricted to real bridges."""
+    """Enabled gateways in display order, restricted to known registry names."""
     raw = get_setting("enabled_gateways") or ""
     configured = [line.strip() for line in str(raw).splitlines() if line.strip()]
     if not configured:
