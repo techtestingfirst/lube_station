@@ -62,6 +62,8 @@ BRIDGED_GATEWAYS = (
     "Mollie",
     "GoCardless",
     "2Checkout / Verifone",
+    "PayTM",
+    "Braintree",
 )
 
 

@@ -13,6 +13,8 @@ PAYMENT_PATHS = {
     "Mollie": "lube_station.lube_station.adapters.payments.mollie.MollieAdapter",
     "GoCardless": "lube_station.lube_station.adapters.payments.gocardless.GoCardlessAdapter",
     "2Checkout / Verifone": "lube_station.lube_station.adapters.payments.twocheckout.TwoCheckoutAdapter",
+    "PayTM": "lube_station.lube_station.adapters.payments.paytm.PaytmAdapter",
+    "Braintree": "lube_station.lube_station.adapters.payments.braintree.BraintreeAdapter",
 }
 
 PROVISIONING_PATHS = {

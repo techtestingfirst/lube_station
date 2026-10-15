@@ -46,7 +46,7 @@ class TestCheckoutBridges(IntegrationTestCase):
         seed()
         self._was_active = {
             name: frappe.db.get_value("Payment Gateway Adapter", name, "active")
-            for name in ("PayU India", "CCAvenue", "Cashfree Payments", "Mollie", "PayPal Checkout")
+            for name in ("PayU India", "CCAvenue", "Cashfree Payments", "Mollie", "PayPal Checkout", "PayTM", "Braintree")
             if frappe.db.exists("Payment Gateway Adapter", name)
         }
         self.addCleanup(self._restore)
@@ -54,6 +54,9 @@ class TestCheckoutBridges(IntegrationTestCase):
     def _restore(self):
         for name, active in self._was_active.items():
             frappe.db.set_value("Payment Gateway Adapter", name, "active", active)
+        for name in ("PayTM", "Braintree"):
+            if frappe.db.exists("Payment Gateway Adapter", name) and name not in self._was_active:
+                frappe.db.delete("Payment Gateway Adapter", name)
         for key in (
             "payu_merchant_key",
             "payu_merchant_salt",
@@ -120,6 +123,62 @@ class TestCheckoutBridges(IntegrationTestCase):
         _activate("Mollie")
         inv = frappe.get_doc("Hosting Invoice", _invoice().name)
         self.assertRaises(frappe.ValidationError, _adapter_url, inv, "Mollie")
+
+    def _paytm_keys(self, merchant_id="mid", merchant_key="mk"):
+        if not frappe.db.exists("Paytm Settings", "Paytm Settings"):
+            frappe.get_doc({"doctype": "Paytm Settings"}).insert(ignore_permissions=True)
+        doc = frappe.get_doc("Paytm Settings", "Paytm Settings")
+        doc.merchant_id = merchant_id
+        doc.merchant_key = merchant_key
+        doc.save(ignore_permissions=True)
+
+    def _braintree_keys(self):
+        if not frappe.db.exists("DocType", "Braintree Settings"):
+            self.skipTest("Braintree Settings (payments app) not installed")
+        doc = None
+        for row in frappe.get_all("Braintree Settings", ["name"]):
+            doc = frappe.get_doc("Braintree Settings", row.name)
+            break
+        if doc is None:
+            doc = frappe.get_doc({"doctype": "Braintree Settings", "gateway_name": "Test"})
+            doc.flags.ignore_mandatory = True
+            doc.insert(ignore_permissions=True)
+        doc.merchant_id = "mid"
+        doc.public_key = "pub"
+        doc.private_key = "priv"
+        doc.use_sandbox = 1
+        doc.save(ignore_permissions=True)
+        return doc
+
+    def test_paytm_checkout_shape(self):
+        self._paytm_keys()
+        _activate("PayTM")
+        self.addCleanup(frappe.db.set_value, "Paytm Settings", "Paytm Settings", "merchant_id", "")
+        out = payment_link(_invoice().name, gateway="PayTM")
+        self.assertIn("paytm_checkout", out["url"])
+
+    def test_paytm_verify_rejects_bad_checksum(self):
+        from lube_station.lube_station.adapters.payments.paytm import PaytmAdapter
+
+        self._paytm_keys()
+        out = PaytmAdapter().verify_payment({"ORDERID": "IR-1", "TXN_AMOUNT": "700.00", "CHECKSUMHASH": "bad"})
+        self.assertFalse(out["verified"])
+        self.assertEqual(out["gateway_reference"], "IR-1")
+        self.assertRaises(frappe.ValidationError, PaytmAdapter().verify_payment, {"ORDERID": "IR-1"})
+
+    def test_paytm_missing_keys_throws(self):
+        _activate("PayTM")
+        self.addCleanup(frappe.db.set_value, "Payment Gateway Adapter", "PayTM", "active", 0)
+        if frappe.db.exists("Paytm Settings", "Paytm Settings"):
+            frappe.db.set_value("Paytm Settings", "Paytm Settings", "merchant_id", "")
+        inv = frappe.get_doc("Hosting Invoice", _invoice().name)
+        self.assertRaises(frappe.ValidationError, _adapter_url, inv, "PayTM")
+
+    def test_braintree_checkout_shape(self):
+        self._braintree_keys()
+        _activate("Braintree")
+        out = payment_link(_invoice().name, gateway="Braintree")
+        self.assertIn("braintree_checkout", out["url"])
 
     def test_mandate_and_panel_gateways_stay_out(self):
         inv = _invoice().name

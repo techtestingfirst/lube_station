@@ -12,11 +12,19 @@ from lube_station.lube_station.adapters.seed import seed
 class TestVendorRegistry(IntegrationTestCase):
     def test_registry(self):
         seed()
-        self.assertEqual(frappe.db.count("Payment Gateway Adapter"), 10)
+        self.assertEqual(frappe.db.count("Payment Gateway Adapter"), 12)
         self.assertEqual(frappe.db.count("Provisioning Adapter"), 8)
         self.assertEqual(frappe.db.count("Registrar Adapter"), 10)
         stripe = get_payment_adapter("Stripe")
         self.assertTrue(hasattr(stripe, "handle_webhook"))
+        from lube_station.lube_station.adapters.registry import PAYMENT_PATHS, _load
+
+        # Seed rows ship inactive until keys are set; load the class directly.
+        for name in ("PayTM", "Braintree"):
+            adapter = _load(PAYMENT_PATHS[name])
+            self.assertEqual(adapter.adapter_name, name)
+            for method in ("create_payment", "verify_payment", "handle_webhook", "refund_payment"):
+                self.assertTrue(hasattr(adapter, method), f"{name} lacks {method}")
         cpanel = get_provisioning_adapter("cPanel / WHM")
         self.assertTrue(hasattr(cpanel, "create_account"))
         opensrs = get_registrar_adapter("OpenSRS")
@@ -47,6 +55,6 @@ class TestVendorRegistry(IntegrationTestCase):
         from lube_station.lube_station.setup import ensure_all
 
         ensure_all()
-        self.assertEqual(frappe.db.count("Payment Gateway Adapter"), 10)
+        self.assertEqual(frappe.db.count("Payment Gateway Adapter"), 12)
         self.assertEqual(frappe.db.count("Provisioning Adapter"), 8)
         self.assertEqual(frappe.db.count("Registrar Adapter"), 10)

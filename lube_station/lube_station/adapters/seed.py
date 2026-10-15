@@ -13,6 +13,8 @@ PAYMENTS = [
     ("Mollie", "Mollie", "lube_station.lube_station.adapters.payments.mollie.MollieAdapter", 1, 1, 1, 1, 1, 0),
     ("GoCardless", "GoCardless", "lube_station.lube_station.adapters.payments.gocardless.GoCardlessAdapter", 0, 1, 1, 1, 1, 0),
     ("2Checkout / Verifone", "2Checkout", "lube_station.lube_station.adapters.payments.twocheckout.TwoCheckoutAdapter", 0, 0, 0, 1, 0, 0),
+    ("PayTM", "PayTM", "lube_station.lube_station.adapters.payments.paytm.PaytmAdapter", 1, 0, 0, 0, 0, 0),
+    ("Braintree", "Braintree", "lube_station.lube_station.adapters.payments.braintree.BraintreeAdapter", 1, 0, 0, 0, 0, 0),
 ]
 
 PROVISIONING = [
