@@ -75,6 +75,9 @@ class TestCheckoutBridges(IntegrationTestCase):
             frappe.db.set_value("Payment Gateway Adapter", name, "active", active)
         for (dt, f), v in self._was_singles.items():
             frappe.db.set_single_value(dt, f, v or "")
+        # Explicit commit: this runner does not roll back Singles writes,
+        # so restores must commit or test keys leak onto the site.
+        frappe.db.commit()
         for name in ("PayTM", "Braintree"):
             if frappe.db.exists("Payment Gateway Adapter", name) and name not in self._was_active:
                 frappe.db.delete("Payment Gateway Adapter", name)
@@ -188,6 +191,7 @@ class TestCheckoutBridges(IntegrationTestCase):
             if self._was_braintree_pw:
                 doc.set("private_key", self._was_braintree_pw)
             doc.save(ignore_permissions=True)
+        frappe.db.commit()
 
     def test_paytm_checkout_shape(self):
         self._paytm_keys()
