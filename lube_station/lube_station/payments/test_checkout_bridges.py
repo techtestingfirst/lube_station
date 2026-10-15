@@ -41,9 +41,28 @@ def _activate(name):
 
 
 class TestCheckoutBridges(IntegrationTestCase):
+    SINGLE_FIELDS = {
+        "Lube Station Settings": (
+            "payu_merchant_key",
+            "payu_merchant_salt",
+            "ccavenue_merchant_id",
+            "ccavenue_access_code",
+            "ccavenue_working_key",
+            "cashfree_app_id",
+            "cashfree_secret_key",
+            "mollie_secret_key",
+        ),
+        "Paytm Settings": ("merchant_id", "merchant_key"),
+    }
+
     def setUp(self):
         super().setUp()
         seed()
+        # Snapshot singles: test keys must never leak onto the site.
+        self._was_singles = {
+            (dt, f): frappe.db.get_single_value(dt, f) for dt, fields in self.SINGLE_FIELDS.items() for f in fields
+        }
+        self._braintree_created = False
         self._was_active = {
             name: frappe.db.get_value("Payment Gateway Adapter", name, "active")
             for name in ("PayU India", "CCAvenue", "Cashfree Payments", "Mollie", "PayPal Checkout", "PayTM", "Braintree")
@@ -54,6 +73,8 @@ class TestCheckoutBridges(IntegrationTestCase):
     def _restore(self):
         for name, active in self._was_active.items():
             frappe.db.set_value("Payment Gateway Adapter", name, "active", active)
+        for (dt, f), v in self._was_singles.items():
+            frappe.db.set_single_value(dt, f, v or "")
         for name in ("PayTM", "Braintree"):
             if frappe.db.exists("Payment Gateway Adapter", name) and name not in self._was_active:
                 frappe.db.delete("Payment Gateway Adapter", name)
@@ -143,12 +164,30 @@ class TestCheckoutBridges(IntegrationTestCase):
             doc = frappe.get_doc({"doctype": "Braintree Settings", "gateway_name": "Test"})
             doc.flags.ignore_mandatory = True
             doc.insert(ignore_permissions=True)
+            self._braintree_created = True
+        self._was_braintree = {f: doc.get(f) for f in ("merchant_id", "public_key", "use_sandbox")}
+        self._was_braintree_pw = doc.get_password("private_key", raise_exception=False)
         doc.merchant_id = "mid"
         doc.public_key = "pub"
         doc.private_key = "priv"
         doc.use_sandbox = 1
         doc.save(ignore_permissions=True)
+        self.addCleanup(self._restore_braintree, doc.name)
         return doc
+
+    def _restore_braintree(self, name):
+        if self._braintree_created:
+            for gw in frappe.get_all("Payment Gateway", {"gateway_controller": name}, ["name"]):
+                frappe.delete_doc("Payment Gateway", gw.name, ignore_permissions=True, force=True)
+            frappe.delete_doc("Braintree Settings", name, ignore_permissions=True, force=True)
+            return
+        if frappe.db.exists("Braintree Settings", name):
+            doc = frappe.get_doc("Braintree Settings", name)
+            for f, v in self._was_braintree.items():
+                doc.set(f, v)
+            if self._was_braintree_pw:
+                doc.set("private_key", self._was_braintree_pw)
+            doc.save(ignore_permissions=True)
 
     def test_paytm_checkout_shape(self):
         self._paytm_keys()
