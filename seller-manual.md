@@ -71,7 +71,7 @@ Lube Station uses five records. Each record has one job.
 2. Provisioning Module: seller-facing pointer. You pick this on the Hosting Plan. It links to one adapter and records the control panel name.
 3. Infrastructure Provider: upstream account. Holds the API endpoint, the masked credential, and Active or Maintenance or Disabled status.
 4. Provider Product: upstream catalog entry. Holds the vendor product code and the regions and plans JSON that feed checkout choices.
-5. Reseller Agreement: commercial terms. Holds billing model, markup, and terms JSON.
+5. Reseller Agreement: commercial terms. Holds billing model, markup type/value, and terms JSON. Linked on the Hosting Plan (`reseller_agreement`); its markup is applied to the Plan Pricing `wholesale_cost` to derive the customer-facing `recurring_amount`.
 
 Use this rule:
 
@@ -482,7 +482,8 @@ Every field:
 - Hosting Plan (`hosting_plan`, Link, required). Purpose: plan this price belongs to. One plan has many pricing rows, one per cycle.
 - Billing Cycle (`billing_cycle`, Select, required): Monthly, Quarterly, Semi-Annually, Annually, Biennially, Triennially, One Time. Purpose: invoicing rhythm and Service Next Due Date math. Use Recurring cycles for hosting. Use One Time for fixed Migration and lifetime licenses. Use Annually for most SSL.
 - Setup Fee (`setup_fee`, Currency, default 0). Purpose: one-time charge on the first invoice only. Use for provisioning or installation work. Leave 0 when there is no setup charge.
-- Recurring Amount (`recurring_amount`, Currency, required). Purpose: amount billed every cycle. This is the number the customer compares. Enter the cycle total, not monthly equivalent.
+- Recurring Amount (`recurring_amount`, Currency, required). Purpose: amount billed every cycle. This is the number the customer compares. Enter the cycle total, not monthly equivalent. When the plan links a Reseller Agreement and you set `Wholesale Cost`, this is auto-computed on save from cost + markup; leave `Wholesale Cost` at 0 to keep entering it manually.
+- Wholesale Cost (`wholesale_cost`, Currency, default 0). Purpose: what you pay the upstream provider per cycle. When set and the plan links an active Reseller Agreement (billing model not Per Usage), `Recurring Amount` is auto-computed as `wholesale_cost + markup` (Percentage or Fixed). Set 0 to price manually.
 - Currency (`currency`, Link to Currency). Purpose: ISO currency for this row. Must be a currency your gateway settles. Create one row per currency you accept when you sell multi-currency.
 
 Steps:
@@ -490,11 +491,14 @@ Steps:
 1. Open Plan Pricing > New.
 2. Select Hosting Plan.
 3. Select Billing Cycle.
-4. Enter Recurring Amount.
-5. Enter Setup Fee when any.
-6. Select Currency.
-7. Save.
-8. Repeat for each cycle you sell. Example: Monthly and Annually.
+4. Enter Wholesale Cost when you resell upstream capacity and want auto-markup; leave 0 to price manually.
+5. Enter Recurring Amount when pricing manually (wholesale cost 0). Otherwise it is auto-computed from wholesale cost + Reseller Agreement markup on save.
+6. Enter Setup Fee when any.
+7. Select Currency.
+8. Save.
+9. Repeat for each cycle you sell. Example: Monthly and Annually.
+
+Note: auto-markup only applies when the Hosting Plan links an active Reseller Agreement whose billing model is not Per Usage. Per Usage and inactive agreements skip markup; recurring_amount defaults to the wholesale cost.
 
 WHMCS difference: WHMCS pricing lives on tabs inside the product. Lube Station stores one Plan Pricing record per cycle.
 
@@ -641,7 +645,7 @@ Steps:
 3. Create Provider Product. Select Product Type VPS. Fill Regions JSON and Plans JSON. Set External Product ID to the vendor size code, for example `cx22`.
 4. Create Reseller Agreement when you resell upstream capacity. Pick Billing Model and markup.
 5. Create schema `VPS Default`. Check Requires Hostname, Requires Root Password, Requires OS, and Requires Location. Leave Requires Domain cleared unless you bundle a domain. Set Options Source to OS Image Catalog or Location Catalog where you want live lists.
-6. Create Hosting Plan with Product Type VPS.
+6. Create Hosting Plan with Product Type VPS. Link the Reseller Agreement in `Reseller Agreement` so Plan Pricing can apply markup.
 7. Create VPS Configuration for that plan. Enter CPU, RAM, storage, bandwidth, IPv4 count, OS images, and locations. Set overage rates when you bill overage.
 8. Lock fixed plans by keeping specs only in VPS Configuration. Expose choices through schema fields only for customizable plans.
 9. Create Plan Pricing rows with Recurring cycles.
@@ -721,8 +725,8 @@ Reseller Agreement fields:
 
 - Provider (`provider`, Link, required). Purpose: which provider these terms cover.
 - Agreement Name (`agreement_name`, Data, required). Example: `Hetzner Resale 2026`. Purpose: admin label.
-- Billing Model (`billing_model`, Select, required): Wholesale Recurring, Prepaid Credit, Per Usage, Commission. Purpose: how upstream bills you. Wholesale Recurring means flat per cycle. Per Usage means metered and needs Usage Snapshot. Match this to your Plan Pricing promise.
-- Markup Type (`markup_type`, Select): Percentage, Fixed. Plus Markup Value (`markup_value`, Float, default 0). Purpose: your margin math. Percentage adds a share. Fixed adds currency. Example: Percentage 20 on a 100 cost sells at 120.
+- Billing Model (`billing_model`, Select, required): Wholesale Recurring, Prepaid Credit, Per Usage, Commission. Purpose: how upstream bills you. Wholesale Recurring means flat per cycle. Per Usage means metered and needs Usage Snapshot. Match this to your Plan Pricing promise. When Per Usage, markup is skipped — the wholesale cost is the customer price until metered billing lands.
+- Markup Type (`markup_type`, Select): Percentage, Fixed. Plus Markup Value (`markup_value`, Float, default 0). Purpose: your margin math, applied to the Plan Pricing `wholesale_cost` to derive the customer `recurring_amount`. Percentage adds a share (`cost × (1 + markup/100)`). Fixed adds currency (`cost + markup`). Example: Percentage 20 on a 100 cost sells at 120; Fixed 20 on 100 sells at 120.
 - Terms JSON (`terms_json`, Code). Purpose: contract notes in JSON, for example credit limits or SLA text.
 - Active (`active`, Check, default on). Purpose: inactive agreements block new sales on that provider.
 
@@ -733,7 +737,7 @@ Steps:
 3. Create Provider Product with Product Type Cloud. Fill Regions JSON and Plans JSON.
 4. Create Reseller Agreement with the matching Billing Model. Use Per Usage only when Usage Snapshot and overage rates are set.
 5. Create schema `Cloud Default`. Check Requires Hostname, Requires OS, and Requires Location.
-6. Create Hosting Plan with Product Type Cloud.
+6. Create Hosting Plan with Product Type Cloud. Link the Reseller Agreement in `Reseller Agreement` so Plan Pricing can apply markup.
 7. Reuse VPS Configuration fields where the adapter expects them, or map through Plan Config Field rows.
 8. Create Plan Pricing rows. Use Per Usage billing model on the agreement when the plan bills by usage.
 9. Test provision, resize, snapshot, and usage pull through Usage Snapshot.
