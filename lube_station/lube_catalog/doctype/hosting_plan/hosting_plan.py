@@ -24,6 +24,7 @@ class HostingPlan(Document):
         stock_control: DF.Check
         taxable: DF.Check
         welcome_email_template: DF.Link | None
+        reseller_agreement: DF.Link | None
     # end: auto-generated types
 
     def validate(self):

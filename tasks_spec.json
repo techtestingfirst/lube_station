@@ -337,7 +337,8 @@
       "status": "done",
       "acceptance_criteria": [
         "Infrastructure Provider + Provider Product + Reseller Agreement queryable",
-        "adapter contract 11 methods + retries + audit log + manual adapter"
+        "adapter contract 11 methods + retries + audit log + manual adapter",
+        "Hosting Plan links to Reseller Agreement; Plan Pricing wholesale_cost drives recurring_amount via markup_type/markup_value (Percentage/Fixed), skipping Per Usage and inactive agreements"
       ],
       "auto_check": {
         "doctype_exists": [

@@ -123,6 +123,12 @@
       "fieldtype": "Link",
       "label": "Tax Code (SAC/HSN)",
       "options": "Tax Code"
+    },
+    {
+      "fieldname": "reseller_agreement",
+      "fieldtype": "Link",
+      "label": "Reseller Agreement",
+      "options": "Reseller Agreement"
     }
   ],
   "links": [],

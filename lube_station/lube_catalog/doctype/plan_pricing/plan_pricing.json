@@ -43,6 +43,12 @@
    "reqd": 1
   },
   {
+   "default": "0",
+   "fieldname": "wholesale_cost",
+   "fieldtype": "Currency",
+   "label": "Wholesale Cost"
+  },
+  {
    "fieldname": "currency",
    "fieldtype": "Link",
    "label": "Currency",
