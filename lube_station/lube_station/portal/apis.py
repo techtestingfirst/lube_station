@@ -391,6 +391,24 @@ def _cart_view(cart_doc) -> dict:
 
 
 @frappe.whitelist(methods=["GET"], allow_guest=True)
+def product_groups():
+    """Public product groups for the storefront.
+
+    Returns only groups flagged Show On Portal, ordered by Sort Order.
+    Each row carries group_name, slug, rich-text description, icon, and sort_order
+    so the portal can render a group header (icon + name + description) above its plans.
+    """
+    groups = frappe.get_all(
+        "Product Group",
+        {"show_on_portal": 1},
+        ["name", "group_name", "slug", "description", "icon", "sort_order"],
+        order_by="sort_order asc",
+        ignore_permissions=True,
+    )
+    return groups
+
+
+@frappe.whitelist(methods=["GET"], allow_guest=True)
 def storefront():
     plans = frappe.get_all("Hosting Plan", {"is_active": 1}, ["name", "plan_name", "product_type", "product_group"])
     out = []

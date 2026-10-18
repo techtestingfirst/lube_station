@@ -481,7 +481,8 @@
       ],
       "status": "done",
       "acceptance_criteria": [
-        "portal auth/dashboard/store/checkout/cart/invoices/services/domains/downloads/support/pages via server APIs + permissions"
+        "portal auth/dashboard/store/checkout/cart/invoices/services/domains/downloads/support/pages via server APIs + permissions",
+        "Product Group icon + rich-text description rendered on storefront group page (respects Show On Portal / Sort Order)"
       ],
       "auto_check": {
         "integration_test": "test_portal_apis"
